@@ -1,3 +1,10 @@
+# 1.1.0 — Em desenvolvimento
+
+- Sugestões automáticas de divisão, prioridade e duração na criação de tarefas.
+- Gestão de divisões e categorias nas definições.
+- Subtarefas, objetivos semanais, tempos estimados e filtro «Tenho 15 minutos».
+- Versão experimental: requer testes funcionais e revisão antes de ser lançada.
+
 # Histórico de versões
 
 ## 1.0.1 — Preparação da instalação
