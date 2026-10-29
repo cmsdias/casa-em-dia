@@ -1,0 +1,25 @@
+name: Verificar Casa em Dia
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [develop]
+    paths:
+      - 'casa_em_dia/**'
+      - '.github/workflows/test.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar sintaxe
+        run: npm run check
+        working-directory: casa_em_dia
+      - name: Testes de integração (servidor e persistência)
+        run: npm test
+        working-directory: casa_em_dia
