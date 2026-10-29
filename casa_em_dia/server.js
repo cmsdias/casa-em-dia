@@ -36,6 +36,7 @@ function patchTask(t,b){
   if('title'in b){if(!cleanStr(b.title,180))throw Error('Introduz o nome da tarefa.');t.title=cleanStr(b.title,180);}
   if('room'in b)t.room=cleanStr(b.room,70);
   if('notes'in b)t.notes=cleanStr(b.notes,1500);
+  if('estimatedMinutes'in b){const n=b.estimatedMinutes;if(n===''||n===null||n===undefined)t.estimatedMinutes=null;else if(!Number.isInteger(Number(n))||Number(n)<0||Number(n)>10080)throw Error('Duração inválida.');else t.estimatedMinutes=Number(n);}
   if('priority'in b){if(!['P1','P2','P3','P4'].includes(b.priority))throw Error('Prioridade inválida.');t.priority=b.priority;}
   if('kind'in b){if(!['project','routine'].includes(b.kind))throw Error('Tipo inválido.');t.kind=b.kind;}
   if('status'in b){if(!['todo','doing','waiting','done'].includes(b.status))throw Error('Estado inválido.');t.status=b.status;}
@@ -84,7 +85,7 @@ const server=http.createServer(async (req,res)=>{
       const staged=[];
       for(const raw of b.tasks){
         if(!raw||typeof raw!=='object'||!cleanStr(raw.title,180)){skipped++;continue;}
-        const t={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P3',status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString()};
+        const t={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P3',estimatedMinutes:null,status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString()};
         const allowed={};
         for(const field of ['title','room','notes','kind','priority','status','repeat','dueDate','suggested']){
           if(Object.prototype.hasOwnProperty.call(raw,field))allowed[field]=raw[field];
@@ -97,7 +98,7 @@ const server=http.createServer(async (req,res)=>{
       db.tasks.push(...staged);save();return send(res,200,{imported,skipped});
     }
     if(p==='/api/tasks'&&req.method==='POST'){
-      const task={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P3',status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString()};patchTask(task,b);if(!task.title)return fail(res,400,'Introduz o nome da tarefa.');db.tasks.push(task);save();return send(res,201,{task});
+      const task={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P3',estimatedMinutes:null,status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString()};patchTask(task,b);if(!task.title)return fail(res,400,'Introduz o nome da tarefa.');db.tasks.push(task);save();return send(res,201,{task});
     }
     const match=p.match(/^\/api\/tasks\/([^/]+)(\/complete)?$/);
     if(match){const t=db.tasks.find(x=>x.id===match[1]);if(!t)return fail(res,404,'Tarefa não encontrada.');
