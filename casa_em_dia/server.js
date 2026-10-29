@@ -37,7 +37,7 @@ function patchTask(t,b){
   if('room'in b)t.room=cleanStr(b.room,70);
   if('notes'in b)t.notes=cleanStr(b.notes,1500);
   if('category'in b)t.category=cleanStr(b.category,70);
-  if('thisWeek'in b)t.thisWeek=!!b.thisWeek;
+  if('thisWeek'in b){if(typeof b.thisWeek!=='boolean')throw Error('Plano semanal inválido.');t.thisWeek=b.thisWeek;}
   if('subtasks'in b){if(!Array.isArray(b.subtasks)||b.subtasks.length>40)throw Error('Subtarefas inválidas.');t.subtasks=b.subtasks.map((x,i)=>({id:cleanStr(x.id,80)||String(i),title:cleanStr(x.title,180),done:!!x.done})).filter(x=>x.title);}
   if('estimatedMinutes'in b){const n=b.estimatedMinutes;if(n===''||n===null||n===undefined)t.estimatedMinutes=null;else if(!Number.isInteger(Number(n))||Number(n)<0||Number(n)>10080)throw Error('Duração inválida.');else t.estimatedMinutes=Number(n);}
   if('priority'in b){if(!['P1','P2','P3','P4'].includes(b.priority))throw Error('Prioridade inválida.');t.priority=b.priority;}
@@ -102,7 +102,7 @@ const server=http.createServer(async (req,res)=>{
     }
     if(p==='/api/settings'&&req.method==='PATCH'){
       if(user.role!=='admin')return fail(res,403,'Só um administrador pode alterar definições.');
-      const normalize=a=>{if(!Array.isArray(a)||a.length>100)throw Error('Lista inválida.');return [...new Set(a.map(x=>cleanStr(x,70)).filter(Boolean))];};
+      const normalize=a=>{if(!Array.isArray(a)||a.length>100||a.some(x=>typeof x!=='string'))throw Error('Lista inválida.');return [...new Set(a.map(x=>cleanStr(x,70)).filter(Boolean))];};
       db.settings=db.settings||{rooms:[],categories:[]};
       if('rooms'in b)db.settings.rooms=normalize(b.rooms);
       if('categories'in b)db.settings.categories=normalize(b.categories);
@@ -119,7 +119,7 @@ const server=http.createServer(async (req,res)=>{
         if(t.kind==='routine'&&t.repeat!=='none') {t.status='todo';t.dueDate=nextDate(t.dueDate,t.repeat);t.suggested=false;}else t.status='done';
         t.updatedAt=time;save();return send(res,200,{task:t});
       }
-      if(!match[2]&&req.method==='PATCH'){patchTask(t,b);save();return send(res,200,{task:t});}
+      if(!match[2]&&req.method==='PATCH'){const updated={...t};patchTask(updated,b);Object.assign(t,updated);save();return send(res,200,{task:t});}
       if(!match[2]&&req.method==='DELETE'){if(user.role!=='admin')return fail(res,403,'Só um administrador pode eliminar tarefas.');db.tasks=db.tasks.filter(x=>x.id!==t.id);save();return send(res,200,{ok:true});}
     }
     if(p==='/api/people'&&req.method==='POST'){
