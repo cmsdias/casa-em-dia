@@ -132,3 +132,5 @@ button,input,select,textarea {font-family:inherit;}
 .suggestion-bar{margin:10px 0 18px;padding:12px 14px;border-radius:12px;background:#e9eee7;color:#345043;font-size:12px;line-height:1.5}
 
 .daily-planner{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:26px;margin:18px 0;border-radius:22px;background:#e9ede5;color:#1a251e}.daily-planner h2{margin:9px 0}.daily-planner p{font-size:13px}.progress-track{height:7px;background:#d1d8cb;border-radius:9px;overflow:hidden}.progress-track span{display:block;height:100%;background:#304837}.time-buttons,.time-filter{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.time-buttons button,.time-filter button,.week-pin{border:1px solid #cbd1c8;background:white;color:#293c30;padding:8px 12px;border-radius:12px;cursor:pointer}.week-pin{font-size:19px;padding:5px 9px}.settings-card textarea{display:block;width:100%;padding:12px;margin:8px 0 16px;border:1px solid #ddd;border-radius:10px;font-family:inherit}@media(max-width:700px){.daily-planner{grid-template-columns:1fr;padding:18px}}
+
+/* Preview Casa em Dia 1.1.0 */
