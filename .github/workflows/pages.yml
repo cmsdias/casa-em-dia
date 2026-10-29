@@ -1,0 +1,41 @@
+name: Publicar demonstração Casa em Dia
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'casa_em_dia/public/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obter codigo
+        uses: actions/checkout@v4
+      - name: Montar demonstracao sem dados privados
+        run: |
+          mkdir -p _site
+          cp docs/index.html _site/index.html
+          cp casa_em_dia/public/style.css casa_em_dia/public/app.js _site/
+          cp -R casa_em_dia/public/assets _site/assets
+          touch _site/.nojekyll
+      - name: Configurar Pages
+        uses: actions/configure-pages@v5
+      - name: Carregar site estatico
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Publicar
+        id: deployment
+        uses: actions/deploy-pages@v4
