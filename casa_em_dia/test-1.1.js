@@ -13,6 +13,17 @@ const net=require('node:net');
  try{
   let ready=false;for(let i=0;i<80;i++){try{if((await req('/health')).status===200){ready=true;break;}}catch{}await new Promise(r=>setTimeout(r,100));}
   assert(ready,'Servidor não arrancou');
+  const page=await fetch('http://127.0.0.1:'+port+'/');
+  const html=await page.text();
+  assert.match(html,/app\.js\?v=1\.1\.1/,'HTML deve invalidar a cache do JavaScript');
+  assert.match(html,/style\.css\?v=1\.1\.1/,'HTML deve invalidar a cache do CSS');
+  assert.match(page.headers.get('cache-control'),/no-cache/);
+  for(const f of ['app.js','style.css','sw.js']){
+   const response=await fetch('http://127.0.0.1:'+port+'/'+f);
+   assert.equal(response.status,200);
+   assert.match(response.headers.get('cache-control'),/no-cache/,'Os ficheiros de interface devem ser revalidados');
+  }
+
   assert.equal((await req('/api/bootstrap')).data.setup,true);
   assert.equal((await req('/api/setup','POST',{name:'Pessoa de teste',username:'teste',password:'senha-de-teste-123'})).status,200);
   assert.equal((await req('/api/state')).data.user.role,'admin');
