@@ -14,7 +14,7 @@ let db;
 if (fs.existsSync(DB_FILE)) {db=JSON.parse(fs.readFileSync(DB_FILE,'utf8'));}
 else {
   const s=JSON.parse(fs.readFileSync(path.join(ROOT,'seed.json'),'utf8'));
-  db={version:1,secret:crypto.randomBytes(32).toString('hex'),people:[],tasks:s.tasks.map(t=>({...t,id:crypto.randomUUID()})),history:[]};
+  db={version:1,secret:crypto.randomBytes(32).toString('hex'),people:[],tasks:s.tasks.map(t=>({...t,id:crypto.randomUUID()})),history:[],settings:{rooms:['Cozinha','Lavandaria','Sala','Escritório','WC completo','WC serviço','WC suite','Exterior','Organização geral'],categories:['Manutenção','Arrumação','Limpeza','Compras','Obras','Geral']}};
   save();
 }
 function save(){const tmp=DB_FILE+'.tmp'; fs.writeFileSync(tmp,JSON.stringify(db,null,2),{mode:0o600});fs.renameSync(tmp,DB_FILE);}
@@ -31,11 +31,15 @@ function cookie(req,token){const secure=(req.headers['x-forwarded-proto']==='htt
 async function parseBody(req){let size=0;let chunks=[];for await(const c of req){size+=c.length;if(size>256_000)throw new Error('Pedido demasiado grande.');chunks.push(c);}try{return JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}catch{throw new Error('JSON inválido.');}}
 function publicPeople(){return db.people.map(({id,name,username,role,avatar},i)=>({id,name,username,role,avatar:avatar||'●'}));}
 function publicTasks(){return db.tasks;}
-function state(){return {people:publicPeople(),tasks:publicTasks(),history:db.history.slice(-200),serverTime:new Date().toISOString()};}
+function state(){return {people:publicPeople(),tasks:publicTasks(),history:db.history.slice(-200),settings:db.settings||{rooms:[],categories:[]},serverTime:new Date().toISOString()};}
 function patchTask(t,b){
   if('title'in b){if(!cleanStr(b.title,180))throw Error('Introduz o nome da tarefa.');t.title=cleanStr(b.title,180);}
   if('room'in b)t.room=cleanStr(b.room,70);
   if('notes'in b)t.notes=cleanStr(b.notes,1500);
+  if('category'in b)t.category=cleanStr(b.category,70);
+  if('thisWeek'in b){if(typeof b.thisWeek!=='boolean')throw Error('Plano semanal inválido.');t.thisWeek=b.thisWeek;}
+  if('subtasks'in b){if(!Array.isArray(b.subtasks)||b.subtasks.length>40)throw Error('Subtarefas inválidas.');t.subtasks=b.subtasks.map((x,i)=>({id:cleanStr(x.id,80)||String(i),title:cleanStr(x.title,180),done:!!x.done})).filter(x=>x.title);}
+  if('estimatedMinutes'in b){const n=b.estimatedMinutes;if(n===''||n===null||n===undefined)t.estimatedMinutes=null;else if(!Number.isInteger(Number(n))||Number(n)<0||Number(n)>10080)throw Error('Duração inválida.');else t.estimatedMinutes=Number(n);}
   if('priority'in b){if(!['P1','P2','P3','P4'].includes(b.priority))throw Error('Prioridade inválida.');t.priority=b.priority;}
   if('kind'in b){if(!['project','routine'].includes(b.kind))throw Error('Tipo inválido.');t.kind=b.kind;}
   if('status'in b){if(!['todo','doing','waiting','done'].includes(b.status))throw Error('Estado inválido.');t.status=b.status;}
@@ -84,9 +88,9 @@ const server=http.createServer(async (req,res)=>{
       const staged=[];
       for(const raw of b.tasks){
         if(!raw||typeof raw!=='object'||!cleanStr(raw.title,180)){skipped++;continue;}
-        const t={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P3',status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString()};
+        const t={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P3',estimatedMinutes:null,category:'Geral',thisWeek:false,subtasks:[],status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString()};
         const allowed={};
-        for(const field of ['title','room','notes','kind','priority','status','repeat','dueDate','suggested']){
+        for(const field of ['title','room','notes','kind','priority','status','repeat','dueDate','suggested','estimatedMinutes','category','thisWeek','subtasks']){
           if(Object.prototype.hasOwnProperty.call(raw,field))allowed[field]=raw[field];
         }
         try{patchTask(t,allowed);}catch{skipped++;continue;}
@@ -96,8 +100,16 @@ const server=http.createServer(async (req,res)=>{
       }
       db.tasks.push(...staged);save();return send(res,200,{imported,skipped});
     }
+    if(p==='/api/settings'&&req.method==='PATCH'){
+      if(user.role!=='admin')return fail(res,403,'Só um administrador pode alterar definições.');
+      const normalize=a=>{if(!Array.isArray(a)||a.length>100||a.some(x=>typeof x!=='string'))throw Error('Lista inválida.');return [...new Set(a.map(x=>cleanStr(x,70)).filter(Boolean))];};
+      db.settings=db.settings||{rooms:[],categories:[]};
+      if('rooms'in b)db.settings.rooms=normalize(b.rooms);
+      if('categories'in b)db.settings.categories=normalize(b.categories);
+      save();return send(res,200,{settings:db.settings});
+    }
     if(p==='/api/tasks'&&req.method==='POST'){
-      const task={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P3',status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString()};patchTask(task,b);if(!task.title)return fail(res,400,'Introduz o nome da tarefa.');db.tasks.push(task);save();return send(res,201,{task});
+      const task={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P3',estimatedMinutes:null,category:'Geral',thisWeek:false,subtasks:[],status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString()};patchTask(task,b);if(!task.title)return fail(res,400,'Introduz o nome da tarefa.');db.tasks.push(task);save();return send(res,201,{task});
     }
     const match=p.match(/^\/api\/tasks\/([^/]+)(\/complete)?$/);
     if(match){const t=db.tasks.find(x=>x.id===match[1]);if(!t)return fail(res,404,'Tarefa não encontrada.');
@@ -107,7 +119,7 @@ const server=http.createServer(async (req,res)=>{
         if(t.kind==='routine'&&t.repeat!=='none') {t.status='todo';t.dueDate=nextDate(t.dueDate,t.repeat);t.suggested=false;}else t.status='done';
         t.updatedAt=time;save();return send(res,200,{task:t});
       }
-      if(!match[2]&&req.method==='PATCH'){patchTask(t,b);save();return send(res,200,{task:t});}
+      if(!match[2]&&req.method==='PATCH'){const updated={...t};patchTask(updated,b);Object.assign(t,updated);save();return send(res,200,{task:t});}
       if(!match[2]&&req.method==='DELETE'){if(user.role!=='admin')return fail(res,403,'Só um administrador pode eliminar tarefas.');db.tasks=db.tasks.filter(x=>x.id!==t.id);save();return send(res,200,{ok:true});}
     }
     if(p==='/api/people'&&req.method==='POST'){
