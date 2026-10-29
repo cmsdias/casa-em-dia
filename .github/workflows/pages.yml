@@ -23,12 +23,21 @@ jobs:
     steps:
       - name: Obter codigo
         uses: actions/checkout@v4
+      - name: Obter versão de desenvolvimento
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          path: dev-source
       - name: Montar demonstracao sem dados privados
         run: |
           mkdir -p _site
           cp docs/index.html _site/index.html
           cp casa_em_dia/public/style.css casa_em_dia/public/app.js _site/
           cp -R casa_em_dia/public/assets _site/assets
+          mkdir -p _site/dev
+          cp dev-source/docs/index.html _site/dev/index.html
+          cp dev-source/casa_em_dia/public/style.css dev-source/casa_em_dia/public/app.js _site/dev/
+          cp -R dev-source/casa_em_dia/public/assets _site/dev/assets
           touch _site/.nojekyll
       - name: Configurar Pages
         uses: actions/configure-pages@v5
