@@ -33,6 +33,11 @@ jobs:
         with:
           ref: main
           path: stable-source
+      - name: Obter beta 1.2
+        uses: actions/checkout@v4
+        with:
+          ref: feature/1.2-household
+          path: beta-source
       - name: Montar demonstracao sem dados privados
         run: |
           mkdir -p _site
@@ -43,6 +48,10 @@ jobs:
           cp dev-source/docs/index.html _site/dev/index.html
           cp dev-source/casa_em_dia/public/style.css dev-source/casa_em_dia/public/app.js _site/dev/
           cp -R dev-source/casa_em_dia/public/assets _site/dev/assets
+          mkdir -p _site/beta
+          cp beta-source/docs/index.html _site/beta/index.html
+          cp beta-source/casa_em_dia/public/style.css beta-source/casa_em_dia/public/app.js _site/beta/
+          cp -R beta-source/casa_em_dia/public/assets _site/beta/assets
           touch _site/.nojekyll
       - name: Configurar Pages
         uses: actions/configure-pages@v5
