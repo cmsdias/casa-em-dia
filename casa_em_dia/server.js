@@ -27,16 +27,13 @@ const originalAdmin=db.people.find(p=>p.role==='admin')?.id||null;
 for(const t of db.tasks){if(!t.createdBy)t.createdBy=originalAdmin;if(!t.visibility)t.visibility='shared';}
 function roleOf(u){return u.role==='member'?'resident':u.role;}
 function elevated(u){return ['admin','manager'].includes(roleOf(u));}
-function canSeeTask(u,t){if(roleOf(u)==='admin')return true;
- if(roleOf(u)==='collaborator')return t.createdBy===u.id||t.assignedTo===u.id;
- return t.visibility!=='private'||t.createdBy===u.id;
-}
+function canSeeTask(u,t){if(roleOf(u)==='admin')return true;if(t.visibility==='private')return t.createdBy===u.id;if(roleOf(u)==='collaborator')return t.createdBy===u.id||t.assignedTo===u.id;return true;}
 function canEditTask(u,t){return (roleOf(u)==='admin'||(roleOf(u)==='manager'&&t.visibility!=='private')||t.createdBy===u.id);}
 function canCompleteTask(u,t){return canEditTask(u,t)||t.assignedTo===u.id;}
 function allowedTaskPatch(u,t,b){if(canEditTask(u,t))return true;
  return canCompleteTask(u,t)&&Object.keys(b).every(k=>['status','subtasks'].includes(k));}
 function logAction(u,action,entityId){db.audit.push({id:id(),actor:u.id,action,entityId,at:new Date().toISOString()});if(db.audit.length>3000)db.audit=db.audit.slice(-3000);}
-function visibleState(u){const allowed=db.tasks.filter(t=>canSeeTask(u,t));const ids=new Set(allowed.map(t=>t.id));return {...state(),tasks:allowed,history:db.history.filter(h=>!h.taskId||ids.has(h.taskId)).slice(-200),shopping:db.shopping,workLogs:db.workLogs.filter(l=>elevated(u)||l.userId===u.id||l.actor===u.id),audit:elevated(u)?db.audit.slice(-300):[],permissions:{manageUsers:u.role==='admin',manageSettings:elevated(u),manageAllShared:elevated(u)}};}
+function visibleState(u){const allowed=db.tasks.filter(t=>canSeeTask(u,t));const ids=new Set(allowed.map(t=>t.id));const users=roleOf(u)==='collaborator'?db.people.filter(p=>p.id===u.id||allowed.some(t=>t.assignedTo===p.id||t.createdBy===p.id)):db.people;const people=users.map(({id,name,username,role,avatar})=>({id,name,username:roleOf(u)==='collaborator'?'':username,role:roleOf({role}),avatar:avatar||'●'}));return {...state(),people,tasks:allowed,history:db.history.filter(h=>h.taskId?ids.has(h.taskId):h.by===u.id).slice(-200),shopping:db.shopping,workLogs:db.workLogs.filter(l=>elevated(u)?(!l.taskId||ids.has(l.taskId)):l.userId===u.id||l.actor===u.id),audit:roleOf(u)==='admin'?db.audit.slice(-300):elevated(u)?db.audit.filter(a=>!a.action.startsWith('task.')||ids.has(a.entityId)).slice(-300):[],permissions:{manageUsers:roleOf(u)==='admin',manageSettings:elevated(u),manageAllShared:elevated(u)}};}
 
 function save(){const tmp=DB_FILE+'.tmp'; fs.writeFileSync(tmp,JSON.stringify(db,null,2),{mode:0o600});fs.renameSync(tmp,DB_FILE);}
 function send(res,status,data,extra={}){const body=JSON.stringify(data);res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...extra});res.end(body);}
@@ -110,7 +107,7 @@ const server=http.createServer(async (req,res)=>{
       const staged=[];
       for(const raw of b.tasks){
         if(!raw||typeof raw!=='object'||!cleanStr(raw.title,180)){skipped++;continue;}
-        const t={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P3',estimatedMinutes:null,category:'Geral',thisWeek:false,subtasks:[],status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString()};
+        const t={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P3',estimatedMinutes:null,category:'Geral',thisWeek:false,subtasks:[],status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString(),createdBy:user.id,visibility:'shared'};
         const allowed={};
         for(const field of ['title','room','notes','kind','priority','status','repeat','dueDate','suggested','estimatedMinutes','category','thisWeek','subtasks','visibility']){
           if(Object.prototype.hasOwnProperty.call(raw,field))allowed[field]=raw[field];
@@ -120,18 +117,16 @@ const server=http.createServer(async (req,res)=>{
         if(existing.has(k)){skipped++;continue;}
         existing.add(k);staged.push(t);imported++;
       }
-      db.tasks.push(...staged);save();return send(res,200,{imported,skipped});
+      db.tasks.push(...staged);logAction(user,'tasks.import',String(imported));save();return send(res,200,{imported,skipped});
     }
     if(p==='/api/settings'&&req.method==='PATCH'){
       if(!elevated(user))return fail(res,403,'Sem permissão para alterar definições.');
       const normalize=a=>{if(!Array.isArray(a)||a.length>100||a.some(x=>typeof x!=='string'))throw Error('Lista inválida.');return [...new Set(a.map(x=>cleanStr(x,70)).filter(Boolean))];};
       db.settings=db.settings||{rooms:[],categories:[]};
-      if('rooms'in b)db.settings.rooms=normalize(b.rooms);
-      if('categories'in b)db.settings.categories=normalize(b.categories);
-      save();return send(res,200,{settings:db.settings});
+      const incoming={...db.settings};if('rooms'in b)incoming.rooms=normalize(b.rooms);if('categories'in b)incoming.categories=normalize(b.categories);db.settings=incoming;logAction(user,'settings.update','global');save();return send(res,200,{settings:db.settings});
     }
     if(p==='/api/tasks'&&req.method==='POST'){
-      const task={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P3',estimatedMinutes:null,category:'Geral',thisWeek:false,subtasks:[],status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString(),createdBy:user.id,visibility:'shared'};patchTask(task,b);if(!elevated(user)&&task.assignedTo&&task.assignedTo!==user.id)return fail(res,403,'Não podes atribuir esta tarefa a outra pessoa.');if(roleOf(user)==='collaborator')task.visibility='shared';if(!task.title)return fail(res,400,'Introduz o nome da tarefa.');db.tasks.push(task);logAction(user,'task.create',task.id);save();return send(res,201,{task});
+      const task={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P3',estimatedMinutes:null,category:'Geral',thisWeek:false,subtasks:[],status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString(),createdBy:user.id,visibility:'shared'};patchTask(task,b);if(!elevated(user)&&task.assignedTo&&task.assignedTo!==user.id)return fail(res,403,'Não podes atribuir esta tarefa a outra pessoa.');if(roleOf(user)==='collaborator'&&task.visibility==='private')return fail(res,403,'Colaboradores não podem criar tarefas privadas.');if(task.visibility==='private'&&task.assignedTo&&task.assignedTo!==user.id)return fail(res,403,'Uma tarefa privada não pode ser atribuída a outra pessoa.');if(!task.title)return fail(res,400,'Introduz o nome da tarefa.');db.tasks.push(task);logAction(user,'task.create',task.id);save();return send(res,201,{task});
     }
     const match=p.match(/^\/api\/tasks\/([^/]+)(\/complete)?$/);
     if(match){const t=db.tasks.find(x=>x.id===match[1]);if(!t||!canSeeTask(user,t))return fail(res,404,'Tarefa não encontrada.');
@@ -142,7 +137,7 @@ const server=http.createServer(async (req,res)=>{
         if(t.kind==='routine'&&t.repeat!=='none') {t.status='todo';t.dueDate=nextDate(t.dueDate,t.repeat);t.suggested=false;}else t.status='done';
         t.updatedAt=time;logAction(user,'task.complete',t.id);save();return send(res,200,{task:t});
       }
-      if(!match[2]&&req.method==='PATCH'){if(!allowedTaskPatch(user,t,b))return fail(res,403,'Sem permissão para alterar esta tarefa.');const updated={...t};patchTask(updated,b);if(!canEditTask(user,t)){if('status'in b && !['doing','done'].includes(b.status))return fail(res,403,'Só podes iniciar ou concluir esta tarefa.');if('subtasks'in b){if(!Array.isArray(b.subtasks)||b.subtasks.length!==(t.subtasks||[]).length||b.subtasks.some((v,i)=>v.title!==t.subtasks[i].title||v.id!==t.subtasks[i].id))return fail(res,403,'Só podes marcar subtarefas como concluídas.');}}if(!elevated(user)&&('assignedTo'in b)&&updated.assignedTo!==t.assignedTo)return fail(res,403,'Sem permissão para atribuir tarefas.');Object.assign(t,updated);logAction(user,'task.update',t.id);save();return send(res,200,{task:t});}
+      if(!match[2]&&req.method==='PATCH'){if(!allowedTaskPatch(user,t,b))return fail(res,403,'Sem permissão para alterar esta tarefa.');const updated={...t};patchTask(updated,b);if(!canEditTask(user,t)){if('status'in b && !['doing','done'].includes(b.status))return fail(res,403,'Só podes iniciar ou concluir esta tarefa.');if('subtasks'in b){if(!Array.isArray(b.subtasks)||b.subtasks.length!==(t.subtasks||[]).length||b.subtasks.some((v,i)=>v.title!==t.subtasks[i].title||v.id!==t.subtasks[i].id))return fail(res,403,'Só podes marcar subtarefas como concluídas.');}}if(!elevated(user)&&('assignedTo'in b)&&updated.assignedTo!==t.assignedTo)return fail(res,403,'Sem permissão para atribuir tarefas.');if(updated.visibility==='private'&&updated.assignedTo&&updated.assignedTo!==updated.createdBy)return fail(res,403,'Uma tarefa privada não pode ser atribuída a outra pessoa.');if(roleOf(user)==='collaborator'&&updated.visibility==='private')return fail(res,403,'Colaboradores não podem criar tarefas privadas.');Object.assign(t,updated);logAction(user,'task.update',t.id);save();return send(res,200,{task:t});}
       if(!match[2]&&req.method==='DELETE'){if(roleOf(user)!=='admin')return fail(res,403,'Só um administrador pode eliminar tarefas.');db.tasks=db.tasks.filter(x=>x.id!==t.id);logAction(user,'task.delete',t.id);save();return send(res,200,{ok:true});}
     }
     if(p==='/api/shopping'&&req.method==='POST'){
@@ -176,7 +171,7 @@ const server=http.createServer(async (req,res)=>{
       if(roleOf(user)!=='admin')return fail(res,403,'Apenas administradores podem alterar perfis.');
       const target=db.people.find(x=>x.id===roleMatch[1]);if(!target)return fail(res,404,'Pessoa não encontrada.');
       if(!['admin','manager','resident','collaborator'].includes(b.role))return fail(res,400,'Perfil inválido.');
-      if(target.id===user.id&&b.role!=='admin')return fail(res,403,'Não podes retirar o teu próprio acesso de administrador.');
+      if(target.id===user.id&&b.role!=='admin')return fail(res,403,'Não podes retirar o teu próprio acesso de administrador.');if(target.role==='admin'&&b.role!=='admin'&&db.people.filter(x=>roleOf(x)==='admin').length===1)return fail(res,403,'É obrigatório manter um administrador.');
       target.role=b.role;target.authVersion=(target.authVersion||1)+1;logAction(user,'person.role',target.id);save();return send(res,200,{people:publicPeople()});
     }
     if(p==='/api/people'&&req.method==='POST'){
@@ -184,13 +179,13 @@ const server=http.createServer(async (req,res)=>{
       const name=cleanStr(b.name,80),username=cleanStr(b.username,40).toLowerCase(),pw=String(b.password||'');
       if(name.length<2||!/^[a-z0-9._-]{3,40}$/.test(username)||pw.length<10)return fail(res,400,'Nome, utilizador (mín. 3 caracteres) e palavra-passe (mín. 10 caracteres) obrigatórios.');
       if(db.people.some(p=>p.username===username))return fail(res,409,'Esse nome de utilizador já existe.');
-      db.people.push({id:id(),name,username,passwordHash:passwordHash(pw),role:['manager','resident','collaborator'].includes(b.role)?b.role:'resident',authVersion:1,avatar:'●'});save();return send(res,201,{people:publicPeople()});
+      const person={id:id(),name,username,passwordHash:passwordHash(pw),role:['manager','resident','collaborator'].includes(b.role)?b.role:'resident',authVersion:1,avatar:'●'};db.people.push(person);logAction(user,'person.create',person.id);save();return send(res,201,{people:publicPeople()});
     }
     const personMatch=p.match(/^\/api\/people\/([^/]+)\/password$/);
     if(personMatch&&req.method==='POST'){
       if(user.role!=='admin'&&user.id!==personMatch[1])return fail(res,403,'Sem permissão.');const target=db.people.find(u=>u.id===personMatch[1]);if(!target)return fail(res,404,'Pessoa não encontrada.');
       if(String(b.password||'').length<10)return fail(res,400,'A nova palavra-passe deve ter pelo menos 10 caracteres.');
-      target.passwordHash=passwordHash(b.password);target.authVersion=(target.authVersion||1)+1;save();return send(res,200,{ok:true});
+      target.passwordHash=passwordHash(b.password);target.authVersion=(target.authVersion||1)+1;logAction(user,'person.password',target.id);save();return send(res,200,{ok:true});
     }
     return fail(res,404,'Rota não encontrada.');
   }catch(e){console.error('Request error:',e);return fail(res,400,e.message||'Ocorreu um erro.');}
