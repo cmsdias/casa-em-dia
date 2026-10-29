@@ -1,3 +1,9 @@
+# 1.2.0 — Trabalho em desenvolvimento
+
+- Perfis de administrador, gestor, morador e colaborador com controlo de acesso no servidor.
+- Tarefas privadas, lista de compras partilhada, registo de trabalhos e auditoria básica.
+- Conservação de dados anteriores. Testes e revisão de permissões ainda pendentes.
+
 # 1.1.1 — Correção de atualização da interface
 
 - Corrigida a apresentação de código antigo após atualizações do Home Assistant, causada pela cache do service worker.
