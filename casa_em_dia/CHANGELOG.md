@@ -1,3 +1,9 @@
+# 1.1.1 — Correção de atualização da interface
+
+- Corrigida a apresentação de código antigo após atualizações do Home Assistant, causada pela cache do service worker.
+- Ficheiros JavaScript e CSS passam a ser revalidados, com versão no URL dos recursos.
+- Mantidos dados e configuração persistentes em `/data` sem alterações de esquema.
+
 # 1.1.0 — Candidata a lançamento
 
 - Sugestões automáticas de divisão, prioridade e duração na criação de tarefas.
