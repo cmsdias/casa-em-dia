@@ -1,7 +1,7 @@
 name: Publicar demonstração Casa em Dia
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
     paths:
       - 'docs/**'
       - 'casa_em_dia/public/**'
@@ -28,12 +28,17 @@ jobs:
         with:
           ref: develop
           path: dev-source
+      - name: Obter versão estável
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: stable-source
       - name: Montar demonstracao sem dados privados
         run: |
           mkdir -p _site
-          cp docs/index.html _site/index.html
-          cp casa_em_dia/public/style.css casa_em_dia/public/app.js _site/
-          cp -R casa_em_dia/public/assets _site/assets
+          cp stable-source/docs/index.html _site/index.html
+          cp stable-source/casa_em_dia/public/style.css stable-source/casa_em_dia/public/app.js _site/
+          cp -R stable-source/casa_em_dia/public/assets _site/assets
           mkdir -p _site/dev
           cp dev-source/docs/index.html _site/dev/index.html
           cp dev-source/casa_em_dia/public/style.css dev-source/casa_em_dia/public/app.js _site/dev/
