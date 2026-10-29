@@ -128,3 +128,5 @@ button,input,select,textarea {font-family:inherit;}
 .daily-card h3{max-width:80%}
 }
 @media(prefers-reduced-motion:reduce){.room-tile{transition:none}}
+
+.suggestion-bar{margin:10px 0 18px;padding:12px 14px;border-radius:12px;background:#e9eee7;color:#345043;font-size:12px;line-height:1.5}
