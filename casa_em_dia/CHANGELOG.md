@@ -1,4 +1,4 @@
-# 1.1.0 — Em desenvolvimento
+# 1.1.0 — Candidata a lançamento
 
 - Sugestões automáticas de divisão, prioridade e duração na criação de tarefas.
 - Gestão de divisões e categorias nas definições.
