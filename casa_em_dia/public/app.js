@@ -45,14 +45,14 @@ const initials=name=>String(name||'?').split(/\s+/).filter(Boolean).slice(0,2).m
 const shortDate=d=>{if(!d)return 'Sem data';try{return new Date(d+'T12:00:00').toLocaleDateString('pt-PT',{day:'numeric',month:'short'});}catch{return d;}};
 const cleanDesc=t=>[t.room||'Geral',t.dueDate?shortDate(t.dueDate):null,t.assignedTo?owner(t.assignedTo):null].filter(Boolean);
 function toast(s){let el=$('#toast');el.textContent=s;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);}
-function initDemo(){let saved;try{saved=JSON.parse(localStorage.getItem('casa-demo'))}catch{};
+function initDemo(){let saved;try{saved=JSON.parse(localStorage.getItem('casa-demo-beta-1-2'))}catch{};
  if(saved&&saved.tasks){store=saved;store.settings=store.settings||{rooms:[],categories:[]};}else{
   const users=[{id:'demo-1',name:'Tu',username:'tu',role:'admin'},{id:'demo-2',name:'Pessoa 2',username:'pessoa2',role:'member'},{id:'demo-3',name:'Pessoa 3',username:'pessoa3',role:'member'}];
   store={people:users,tasks:window.__CASA_SEED__.tasks.map((x,i)=>({...x,id:'example-'+i})),history:[],shopping:[],workLogs:[],settings:{rooms:['Cozinha','Lavandaria','Sala','Escritório','WC completo','WC serviço','WC suite','Exterior','Organização geral'],categories:['Manutenção','Arrumação','Limpeza','Compras','Obras','Geral']},user:{id:'demo-1',name:'Tu',role:'admin'}};
   persistDemo();
  }store.user=store.user||{id:'demo-1',name:'Tu',role:'admin'};
 }
-function persistDemo(){if(demo)try{localStorage.setItem('casa-demo',JSON.stringify(store))}catch{}}
+function persistDemo(){if(demo)try{localStorage.setItem('casa-demo-beta-1-2',JSON.stringify(store))}catch{}}
 async function api(endpoint,method='GET',data){if(demo){await new Promise(r=>setTimeout(r,40));return demoApi(endpoint,method,data);}const opts={method,credentials:'same-origin',headers:{'Accept':'application/json'}};if(method!=='GET'){opts.headers['Content-Type']='application/json';opts.headers['X-Casa-Request']='1';opts.body=JSON.stringify(data||{});}let res;
  try{res=await fetch(endpoint.replace(/^\//,''),opts);offline=false;}catch(e){offline=true;throw Error('Não foi possível contactar o servidor. Verifica a ligação.');}
  const json=await res.json();if(!res.ok)throw Error(json.error||'Erro ao guardar.');return json;
@@ -142,7 +142,7 @@ async function action(name,el){if(name==='shopping-toggle'){const x=shopping().f
  if(name==='add-person'){modal={type:'person'};renderModal();return;}
  if(name==='password-self'||name==='password-admin'){modal={type:'password',admin:name==='password-admin'};renderModal();return;}
  if(name==='logout'){try{await api('/api/logout','POST',{});}catch{}try{localStorage.removeItem('casa-cache');}catch{}store={people:[],tasks:[],history:[],user:null};modal=null;renderAuth('login');return;}
- if(name==='reset-demo'){if(!confirm('Repor a demonstração e perder todas as alterações feitas neste dispositivo?'))return;localStorage.removeItem('casa-demo');initDemo();modal=null;page='dashboard';render();toast('Demonstração reposta.');return;}
+ if(name==='reset-demo'){if(!confirm('Repor a demonstração e perder todas as alterações feitas neste dispositivo?'))return;localStorage.removeItem('casa-demo-beta-1-2');initDemo();modal=null;page='dashboard';render();toast('Demonstração reposta.');return;}
  if(name==='import'){
    if(!demo && store.user.role!=='admin')return toast('Apenas administradores podem importar.');
    const input=$('#casa-import-file');if(!input)return toast('Abre Definições para importar.');
