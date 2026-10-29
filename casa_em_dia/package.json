@@ -1,12 +1,12 @@
 {
   "name": "casa-em-dia",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "private": true,
   "description": "Gestão partilhada das tarefas e rotinas da casa, instalável como PWA.",
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check public/app.js && node --check test-1.1.js",
-    "test": "node test-1.1.js"
+    "check": "node --check server.js && node --check public/app.js && node --check test-1.1.js && node --check test-roles.js",
+    "test": "node test-1.1.js && node test-roles.js"
   },
   "engines": {
     "node": ">=20"
