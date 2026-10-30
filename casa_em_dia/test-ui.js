@@ -57,7 +57,7 @@ const {chromium}=require('playwright');
      await page.locator('[data-action="advanced-task"]').click();
      assert.equal(await page.locator('#task-advanced').isVisible(),true);
      if(vp.width<500)await page.screenshot({path:path.join(root,'ui-screens','03-tarefa-iphone.png'),fullPage:true});
-     await page.locator('.modal [data-action="close"]').click();
+     await page.locator('.modal .close[data-action="close"]').click();
      await page.locator('.swipe-nav [data-page="shopping"]').click();
      await page.locator('.shopping-switch').waitFor();
      assert(await page.locator('.shopping-category').count()>=1,'Grouped shopping categories visible');
