@@ -80,11 +80,11 @@ function renderAuth(mode,err=''){const isSetup=mode==='setup';app.innerHTML=`<di
 const nav=[['dashboard','Painel','grid'],['tasks','Tarefas','list'],['routines','Rotinas','calendar'],['people','Pessoas','users'],['shopping','Compras','list'],['worklogs','Trabalhos','calendar'],...(store.user?.role==='collaborator'?[]:[['finance','Finanças','wallet']]),['settings','Definições','sliders-horizontal']];
 function navbutton([id,label,icon]){return `<button class="nav-link ${page===id?'active':''}" data-action="nav" data-page="${id}">${ico(icon)}<span>${label}</span>${id==='tasks'?`<span class="count">${tasks().filter(t=>t.kind==='project'&&t.status!=='done').length}</span>`:''}</button>`;}
 
-const quickOptions=[['task','Nova tarefa','list'],['routine','Nova rotina','calendar'],['shopping','Produto de compras','shopping-cart'],['worklog','Trabalho realizado','clock'],['finance','Despesa ou receita','wallet']];
+const quickOptions=[['task','Nova tarefa','list'],['routine','Nova rotina','calendar'],['shopping','Produto de compras','box'],['worklog','Trabalho realizado','clock'],['finance','Despesa ou receita','wallet']];
 function quickCreateMenu(){
  if(!quickCreateOpen)return '';
  const items=quickOptions.filter(i=>i[0]!=='finance'||store.user?.role!=='collaborator');
- const menuItems=items.map(i=>'<button type="button" role="menuitem" data-action="quick-new" data-kind="'+i[0]+'">'+ico(i[2])+'<span>'+i[1]+'</span>'+ico('chevron-right')+'</button>').join('');
+ const menuItems=items.map(i=>'<button type="button" role="menuitem" data-action="quick-new" data-kind="'+i[0]+'">'+ico(i[2])+'<span>'+i[1]+'</span>'+ico('chevron')+'</button>').join('');
  return '<button class="quick-create-dismiss" type="button" data-action="quick-close" tabindex="-1" aria-label="Fechar menu"></button><div class="quick-create-menu" id="quick-create-menu" role="menu" aria-label="Criar novo"><span class="quick-create-heading">CRIAR NOVO</span>'+menuItems+'</div>';
 }
 function render(){if(!store.user){renderAuth('login');return;}const current=store.user;const visibleNav=nav.filter(x=>current.role!=='collaborator'||x[0]!=='finance');const tcount=tasks().filter(t=>t.kind==='project'&&t.status!=='done').length;
