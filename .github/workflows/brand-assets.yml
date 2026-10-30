@@ -21,11 +21,13 @@ jobs:
         run: |
           pip install cairosvg pillow
           python casa_em_dia/build_brand.py
+          pip install fonttools
+          python casa_em_dia/build_logo_vectors.py
       - name: Guardar assets na branch beta
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add casa_em_dia/public/*.png casa_em_dia/icon.png casa_em_dia/logo.png
+          git add casa_em_dia/public/*.png casa_em_dia/icon.png casa_em_dia/logo.png casa_em_dia/public/logo-primary-*.svg casa_em_dia/public/logo-horizontal.svg
           if ! git diff --cached --quiet; then
             git commit -m "Atualizar PNG da marca aprovada Casa em Dia 1.5"
             git push origin HEAD:feature/1.5-product-experience
