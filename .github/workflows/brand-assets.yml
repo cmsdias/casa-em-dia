@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feature/1.5-product-experience
+          ref: feature/1.5.1-mobile-quick-create
           persist-credentials: true
       - uses: actions/setup-python@v5
         with:
@@ -30,5 +30,5 @@ jobs:
           git add casa_em_dia/public/*.png casa_em_dia/icon.png casa_em_dia/logo.png casa_em_dia/public/logo-primary-*.svg casa_em_dia/public/logo-horizontal.svg
           if ! git diff --cached --quiet; then
             git commit -m "Atualizar PNG da marca aprovada Casa em Dia 1.5"
-            git push origin HEAD:feature/1.5-product-experience
+            git push origin HEAD:feature/1.5.1-mobile-quick-create
           fi
