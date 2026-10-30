@@ -45,6 +45,11 @@ jobs:
         with:
           ref: main
           path: ux-source
+      - name: Obter próxima versão 1.5
+        uses: actions/checkout@v4
+        with:
+          ref: feature/1.5-product-experience
+          path: next-source
       - name: Montar demonstracao sem dados privados
         run: |
           mkdir -p _site
@@ -63,6 +68,10 @@ jobs:
           cp ux-source/docs/index.html _site/ux/index.html
           cp ux-source/casa_em_dia/public/style.css ux-source/casa_em_dia/public/app.js _site/ux/
           cp -R ux-source/casa_em_dia/public/assets _site/ux/assets
+          mkdir -p _site/next
+          cp next-source/docs/index.html _site/next/index.html
+          cp next-source/casa_em_dia/public/style.css next-source/casa_em_dia/public/app.js _site/next/
+          cp -R next-source/casa_em_dia/public/assets _site/next/assets
           touch _site/.nojekyll
       - name: Configurar Pages
         uses: actions/configure-pages@v5
