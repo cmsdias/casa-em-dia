@@ -1,7 +1,7 @@
 name: Publicar demonstração Casa em Dia
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, 'design/ux-refresh-1.3']
     paths:
       - 'docs/**'
       - 'casa_em_dia/public/**'
@@ -38,6 +38,11 @@ jobs:
         with:
           ref: feature/1.2-household
           path: beta-source
+      - name: Obter variante UX
+        uses: actions/checkout@v4
+        with:
+          ref: design/ux-refresh-1.3
+          path: ux-source
       - name: Montar demonstracao sem dados privados
         run: |
           mkdir -p _site
@@ -52,6 +57,10 @@ jobs:
           cp beta-source/docs/index.html _site/beta/index.html
           cp beta-source/casa_em_dia/public/style.css beta-source/casa_em_dia/public/app.js _site/beta/
           cp -R beta-source/casa_em_dia/public/assets _site/beta/assets
+          mkdir -p _site/ux
+          cp ux-source/docs/index.html _site/ux/index.html
+          cp ux-source/casa_em_dia/public/style.css ux-source/casa_em_dia/public/app.js _site/ux/
+          cp -R ux-source/casa_em_dia/public/assets _site/ux/assets
           touch _site/.nojekyll
       - name: Configurar Pages
         uses: actions/configure-pages@v5
