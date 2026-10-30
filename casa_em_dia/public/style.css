@@ -462,3 +462,48 @@ select{
  .form-row{grid-template-columns:minmax(0,1fr)}
  .form-row>*{min-width:0}
 }
+
+/* Casa em Dia 1.5 — produto orientado à ação */
+:root{--ced-ink:#213027;--ced-muted:#607065;--ced-cream:#f7f8f5;--ced-accent:#c5a66c;--ced-border:#dce3da}
+.action-hub{background:#e9eee7;border:1px solid #d9e3d5;border-radius:24px;padding:clamp(18px,3vw,32px);margin:0 0 28px}
+.action-hub-header{display:flex;align-items:center;justify-content:space-between;gap:18px}
+.action-hub h2{font-size:clamp(23px,2.7vw,33px);line-height:1.17;letter-spacing:-.045em;margin:10px 0}
+.action-hub-header p{color:var(--ced-muted);font-size:13px}
+.action-hub-list{display:grid;gap:7px;margin:21px 0}
+.action-hub-task{background:#fff;border:1px solid var(--ced-border);display:flex;align-items:center;gap:13px;padding:12px;border-radius:15px;min-width:0}
+.action-check{display:grid;place-items:center;border:1px solid #cbd4ca;border-radius:50%;background:#f8faf7;flex:0 0 38px;height:38px;color:#304839}
+.action-check svg{width:19px}
+.action-hub-detail{flex:1;min-width:0;text-align:left;background:none;border:0;display:grid;gap:5px}
+.action-hub-detail strong{font-weight:750;color:var(--ced-ink);font-size:14px;white-space:normal}
+.action-hub-detail small{color:var(--ced-muted)}
+.action-duration{font-size:12px;color:var(--ced-muted);white-space:nowrap}
+.action-hub-shortcuts{display:flex;gap:9px;flex-wrap:wrap}
+.action-hub-shortcuts button{border:1px solid #d0dacf;background:#fff;border-radius:50px;padding:9px 14px;color:#37503d;font-weight:700;font-size:12px;min-height:40px}
+.filters-summary{display:flex;justify-content:space-between;gap:10px;margin:10px 0 12px}
+.filters-summary .button{min-height:44px}
+.filters-collapsed{display:none}
+.task-more{display:flex;align-items:center;gap:8px;background:#f1f4ef;border:1px solid #d3ded0;color:#314639;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:750;margin:14px 0;min-height:44px;width:100%}
+.task-more svg{width:18px;height:18px}
+#task-advanced[hidden]{display:none!important}
+.shopping-switch{display:flex;gap:6px;background:#e9eee8;border-radius:14px;padding:5px;margin:8px 0 18px}
+.shopping-switch button{flex:1;border:0;background:transparent;border-radius:10px;min-height:44px;font-size:13px;color:#536357}
+.shopping-switch button.active{background:#fff;color:#223429;font-weight:750;box-shadow:0 1px 5px #15221a15}
+.shopping-category{padding:12px 15px}
+.shopping-category h3{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:#62736a;margin:8px 0 10px}
+.shopping-category .shopping-line:last-child{border-bottom:0}
+.routine-overview{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#ecf1eb;padding:17px 20px;border:1px solid #dce5d9;border-radius:15px;margin:17px 0}
+.routine-overview strong{font-size:15px}
+.routine-overview span{color:#586a5d;font-size:13px}
+.completion-followup{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);width:min(520px,calc(100vw - 28px));z-index:999;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between;border:1px solid #405044;background:#1b2b22;color:#fff;padding:13px 15px;border-radius:18px;box-shadow:0 12px 42px #0003;font-size:13px}
+.completion-followup .button{background:#f5f6ef;color:#1b2b22;border:0}
+.completion-followup .icon-btn{border:0;color:#fff}
+@media(max-width:650px){
+ .action-hub-header{align-items:flex-start;flex-direction:column}
+ .action-hub-header .button{width:100%}
+ .action-hub{padding:19px 17px;border-radius:20px}
+ .action-hub-detail strong{font-size:13px}
+ .action-duration{font-size:11px}
+ .completion-followup{bottom:calc(105px + env(safe-area-inset-bottom))}
+ .shopping-category{padding-inline:5px}
+}
+/* As regras globais de componentes precedem esta variante. O foco permanece visível e consistente. */
