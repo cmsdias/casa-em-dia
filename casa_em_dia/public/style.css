@@ -314,3 +314,71 @@ input,select,textarea{outline:auto;outline-color:transparent}
  .mobile-more-panel{display:none!important}
  .floating-add{bottom:calc(91px + env(safe-area-inset-bottom))}
 }
+
+
+/* Casa em Dia UX 1.3.3 — swipe navigation & polished forms */
+:root{--input-stroke:#ccd4ca;--input-focus:#7b915f}
+@media(max-width:650px){
+ .mobile-nav.swipe-nav{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:flex-start;gap:5px;height:75px;min-height:75px;padding:7px 10px;width:auto;max-width:none;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x;background:#141a16;border:1px solid #354037;border-radius:23px;z-index:30}
+ .mobile-nav.swipe-nav::-webkit-scrollbar{display:none}
+ .mobile-nav.swipe-nav .swipe-nav-item{display:flex;flex:0 0 76px;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:76px;min-height:57px;height:57px;margin:0;padding:7px 3px;scroll-snap-align:center;border:0;border-radius:15px;background:transparent;color:#b9c4ba}
+ .mobile-nav.swipe-nav .swipe-nav-item.active{background:#f6f8f2;color:#131b16}
+ .mobile-nav.swipe-nav .swipe-nav-item svg{width:20px;height:20px;flex-shrink:0}
+ .mobile-nav.swipe-nav .swipe-nav-item span{font-size:10px;white-space:nowrap}
+ .mobile-primary-actions,.mobile-extra-actions,.mobile-more-panel{display:none!important}
+ .floating-add{bottom:calc(100px + env(safe-area-inset-bottom))}
+}
+.weekly-list>.weekly-list-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+.weekly-list-heading strong{display:block;font-size:15px;line-height:1.4}
+.weekly-list-heading span{display:block;font-size:12px;line-height:1.5;color:var(--muted)}
+.rooms-explore{display:inline-flex;align-items:center;gap:7px;border:0;background:transparent;color:#455c49;font-size:12px;font-weight:700;text-align:right;cursor:pointer;padding:8px 0;min-height:44px}
+.rooms-explore:hover{text-decoration:underline}
+.filters{display:grid;grid-template-columns:minmax(0,2fr) repeat(3,minmax(130px,1fr));gap:11px;align-items:center}
+.filters>*{min-width:0;max-width:100%;width:100%;margin:0}
+.filters .search{min-height:50px;display:flex;align-items:center}
+.filters .select-control{min-height:50px;font-size:13px}
+.settings-manager{display:grid;gap:24px}
+.manager-section{display:grid;gap:12px;min-width:0}
+.manager-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.manager-heading h4{font-size:15px;line-height:1.4;margin:0}
+.manager-heading span{font-size:12px;color:var(--muted)}
+.manager-list{display:grid;gap:9px}
+.manager-item{display:flex;align-items:center;gap:9px;min-width:0}
+.manager-item>input{min-width:0;flex:1;height:46px;padding:10px 13px;border-radius:12px;background:#fafbf8;border:1px solid var(--input-stroke);font:inherit;color:var(--ink)}
+.manager-remove{flex:0 0 44px;height:44px;border:1px solid #dde3d9;border-radius:12px;background:#fff;color:#8f4f46;font-size:24px;line-height:1}
+.manager-add{justify-self:start}
+.manager-actions{display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap;padding-top:15px;border-top:1px solid var(--line)}
+.manager-actions>span{font-size:12px;color:var(--muted)}
+:where(input,textarea,select):focus,:where(input,textarea,select):focus-visible{outline:0!important;border-color:var(--input-focus)!important;box-shadow:0 0 0 3px rgba(123,145,95,.16)!important;-webkit-tap-highlight-color:transparent}
+:where(button,a):focus-visible{outline:2px solid #a48348!important;outline-offset:3px;box-shadow:none!important}
+.field input,.field select,.field textarea,.worklog-form input,.worklog-form select,.worklog-form textarea,.settings-card input,.settings-card select,.settings-card textarea,.select-control{min-width:0;max-width:100%;border:1px solid var(--input-stroke);border-radius:12px}
+.field{min-width:0}
+.form-row>*{min-width:0}
+.worklog-form{display:grid;gap:13px}
+.worklog-form>.form-row{margin:0;gap:14px}
+.worklog-form>.field{margin:0}
+.worklog-form>.button{justify-self:start;margin-top:8px}
+.inline-add{gap:11px}
+.inline-add>button{margin-top:3px}
+.settings-card{min-width:0;overflow:hidden}
+@media(max-width:850px){
+ .filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .filters .search{grid-column:1/-1}
+ .filters .select-control:last-child{grid-column:1/-1}
+ .form-row{grid-template-columns:1fr}
+ .rooms-header{align-items:start;gap:14px}
+ .rooms-header .editorial-title{overflow-wrap:anywhere}
+ .rooms-explore{flex:0 0 auto;align-self:center;max-width:40%}
+}
+@media(max-width:650px){
+ .weekly-list>.weekly-list-heading{display:grid;gap:7px}
+ .filters{gap:9px}
+ .filters .select-control{font-size:13px;min-width:0}
+ .rooms-header{display:flex;align-items:flex-start}
+ .rooms-header .editorial-title{font-size:clamp(21px,5vw,26px)}
+ .rooms-explore{font-size:11px}
+ .worklog-form{padding:18px}
+ .manager-actions>.button{width:100%}
+ .manager-item>input{font-size:16px}
+ .inline-add>button{min-height:46px}
+}
