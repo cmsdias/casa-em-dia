@@ -1,3 +1,14 @@
+# 1.5.0-beta — Experiência integrada (em pré-visualização)
+
+- Dashboard com ações prioritárias, atribuídas e próximas do prazo.
+- Formulário de tarefa simplificado com mais opções recolhíveis.
+- Filtros de tarefas disponíveis a pedido, com limpeza rápida.
+- Compras agrupadas por categoria e opção de visualizar apenas pendentes.
+- Rotinas ordenadas por próxima ocorrência e resumo das vencidas.
+- Ao concluir tarefa pontual, atalho para registar o trabalho realizado.
+- Finanças com seleção do mês para consulta do resumo.
+- Sem migração de dados nem publicação automática no Home Assistant até validação.
+
 # 1.3.4 — Correção de navegação e formulários no iPhone
 
 - Corrige a direção vertical herdada que mostrava apenas um botão na navegação.
