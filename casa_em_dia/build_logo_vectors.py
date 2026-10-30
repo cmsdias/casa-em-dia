@@ -7,8 +7,11 @@ from html import escape
 
 p=Path("casa_em_dia/public")
 font_path="/usr/share/fonts/truetype/lato/Lato-Regular.ttf"
+bold_font_path="/usr/share/fonts/truetype/lato/Lato-Bold.ttf"
 font=TTFont(font_path)
 glyphset=font.getGlyphSet()
+boldfont=TTFont(bold_font_path)
+boldset=boldfont.getGlyphSet()
 cmap=font.getBestCmap()
 hmtx=font["hmtx"]
 upm=font["head"].unitsPerEm
@@ -21,8 +24,9 @@ y=63.0
 parts=[]
 for ch in word:
     name=cmap[ord(ch)]
-    pen=SVGPathPen(glyphset)
-    glyphset[name].draw(pen)
+    current=boldset if len(parts)<4 and ch!=" " else glyphset
+    pen=SVGPathPen(current)
+    current[name].draw(pen)
     d=pen.getCommands()
     if d:
         parts.append(f'<path transform="translate({x:.3f} {y:.3f}) scale({scale:.8f} {-scale:.8f})" d="{escape(d)}"/>')

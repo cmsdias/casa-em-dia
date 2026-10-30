@@ -11,7 +11,10 @@ const PORT=+(process.env.PORT||3000);
 const HOST=process.env.HOST||'0.0.0.0';
 fs.mkdirSync(DATA_DIR,{recursive:true});
 let db;
-if (fs.existsSync(DB_FILE)) {db=JSON.parse(fs.readFileSync(DB_FILE,'utf8'));}
+if (fs.existsSync(DB_FILE)) {
+  try{db=JSON.parse(fs.readFileSync(DB_FILE,'utf8'));}
+  catch(e){console.error(`ERRO: não foi possível ler ${DB_FILE} (${e.message}). Os dados não foram alterados; restaura uma cópia de segurança.`);process.exit(1);}
+}
 else {
   const s=JSON.parse(fs.readFileSync(path.join(ROOT,'seed.json'),'utf8'));
   db={version:1,secret:crypto.randomBytes(32).toString('hex'),people:[],tasks:s.tasks.map(t=>({...t,id:crypto.randomUUID()})),history:[],settings:{rooms:['Cozinha','Lavandaria','Sala','Escritório','WC completo','WC serviço','WC suite','Exterior','Organização geral'],categories:['Manutenção','Arrumação','Limpeza','Compras','Obras','Geral']}};
@@ -19,6 +22,10 @@ else {
 }
 
 // v1.2: migração conservadora e compatível com cópias de segurança anteriores.
+if(typeof db.secret!=='string'||db.secret.length<32){db.secret=crypto.randomBytes(32).toString('hex');save();}
+db.people=Array.isArray(db.people)?db.people:[];
+db.tasks=Array.isArray(db.tasks)?db.tasks:[];
+db.history=Array.isArray(db.history)?db.history:[];
 db.shopping=Array.isArray(db.shopping)?db.shopping:[];
 db.workLogs=Array.isArray(db.workLogs)?db.workLogs:[];
 db.audit=Array.isArray(db.audit)?db.audit:[];
@@ -51,6 +58,12 @@ function id(){return crypto.randomUUID();}
 function cleanStr(val,max=150){return String(val??'').trim().slice(0,max);}
 function passwordHash(pw,salt=crypto.randomBytes(16).toString('hex')){return `${salt}:${crypto.scryptSync(pw,salt,64).toString('hex')}`;}
 function verifyPw(pw,stored){const [salt,expected]=stored.split(':');const hash=passwordHash(pw,salt).split(':')[1]; return crypto.timingSafeEqual(Buffer.from(hash,'hex'),Buffer.from(expected,'hex'));}
+const DUMMY_HASH=passwordHash('palavra-passe-inexistente','00000000000000000000000000000000');
+// Limite de tentativas falhadas por utilizador (em memória): 8 falhas em 10 minutos bloqueiam novas tentativas até expirarem.
+const LOGIN_WINDOW_MS=10*60_000,LOGIN_MAX_FAILURES=8;const loginAttempts=new Map();
+function loginBlocked(username){const e=loginAttempts.get(username);if(!e)return false;if(Date.now()-e.first>LOGIN_WINDOW_MS){loginAttempts.delete(username);return false;}return e.count>=LOGIN_MAX_FAILURES;}
+function loginFailed(username){const now=Date.now();const e=loginAttempts.get(username);if(!e||now-e.first>LOGIN_WINDOW_MS)loginAttempts.set(username,{first:now,count:1});else e.count++;if(loginAttempts.size>1000){for(const [k,v] of loginAttempts)if(now-v.first>LOGIN_WINDOW_MS)loginAttempts.delete(k);}}
+function loginSucceeded(username){loginAttempts.delete(username);}
 function session(user){const payload=Buffer.from(JSON.stringify({id:user.id,v:user.authVersion||1,exp:Date.now()+14*86400_000})).toString('base64url');const mac=crypto.createHmac('sha256',db.secret).update(payload).digest('base64url');return `${payload}.${mac}`;}
 function readUser(req){const token=((req.headers.cookie||'').match(/(?:^|;\s*)casa_session=([^;]+)/)||[])[1];if(!token)return null;
 try{const [payload,mac]=token.split('.');const sig=crypto.createHmac('sha256',db.secret).update(payload).digest('base64url');if(!mac||sig.length!==mac.length||!crypto.timingSafeEqual(Buffer.from(mac),Buffer.from(sig)))return null;const claim=JSON.parse(Buffer.from(payload,'base64url').toString());if(claim.exp<Date.now())return null;return db.people.find(u=>u.id===claim.id&&(u.authVersion||1)===claim.v)||null;}catch{return null;}}
@@ -72,14 +85,14 @@ function patchTask(t,b){
   if('kind'in b){if(!['project','routine'].includes(b.kind))throw Error('Tipo inválido.');t.kind=b.kind;}
   if('status'in b){if(!['todo','doing','waiting','done'].includes(b.status))throw Error('Estado inválido.');t.status=b.status;}
   if('assignedTo'in b){if(b.assignedTo && !db.people.some(p=>p.id===b.assignedTo))throw Error('Responsável não existe.');t.assignedTo=b.assignedTo||null;}
-  if('dueDate'in b){const d=cleanStr(b.dueDate,10);if(d&&!/^\d{4}-\d{2}-\d{2}$/.test(d))throw Error('Data inválida.');t.dueDate=d;}
+  if('dueDate'in b){const d=cleanStr(b.dueDate,10);t.dueDate=d?dateISO(d):'';}
   if('repeat'in b){if(!['none','daily','weekly','biweekly','monthly'].includes(b.repeat))throw Error('Periodicidade inválida.');t.repeat=b.repeat;}
   if('suggested'in b)t.suggested=!!b.suggested;
   t.updatedAt=new Date().toISOString();
 }
 function nextDate(iso,rep){const base=iso?new Date(iso+'T12:00:00Z'):new Date();if(!iso)base.setUTCHours(12,0,0,0);const now=new Date();const step=()=>{if(rep==='daily')base.setUTCDate(base.getUTCDate()+1);if(rep==='weekly')base.setUTCDate(base.getUTCDate()+7);if(rep==='biweekly')base.setUTCDate(base.getUTCDate()+14);if(rep==='monthly')base.setUTCMonth(base.getUTCMonth()+1);};step();let safety=0;while(base<now && safety++<366)step();return base.toISOString().slice(0,10);}
-const TYPES={'/':'text/html; charset=utf-8','.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.svg':'image/svg+xml','.png':'image/png'};
-function staticFile(req,res,pathname){const relative=pathname==='/'?'index.html':decodeURIComponent(pathname).replace(/^\/+/, '');const file=path.resolve(WEB,relative);if(!file.startsWith(WEB+path.sep))return fail(res,403,'Acesso negado.');if(!fs.existsSync(file)||!fs.statSync(file).isFile())return fail(res,404,'Não encontrado.');const ext=path.extname(file);const contents=fs.readFileSync(file);res.writeHead(200,{'Content-Type':TYPES[ext]||'application/octet-stream','Content-Length':contents.length,'Cache-Control':['.html','.js','.css'].includes(ext)||path.basename(file)==='sw.js'?'no-cache, must-revalidate':'public, max-age=3600','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'self'; connect-src 'self'; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"});res.end(contents);}
+const TYPES={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.webmanifest':'application/manifest+json; charset=utf-8','.svg':'image/svg+xml','.png':'image/png'};
+function staticFile(req,res,pathname){let decoded;try{decoded=decodeURIComponent(pathname);}catch{return fail(res,400,'URL inválido.');}if(decoded.includes('\0'))return fail(res,400,'URL inválido.');const relative=pathname==='/'?'index.html':decoded.replace(/^\/+/, '');const file=path.resolve(WEB,relative);if(!file.startsWith(WEB+path.sep))return fail(res,403,'Acesso negado.');if(!fs.existsSync(file)||!fs.statSync(file).isFile())return fail(res,404,'Não encontrado.');const ext=path.extname(file);const contents=fs.readFileSync(file);res.writeHead(200,{'Content-Type':TYPES[ext]||'application/octet-stream','Content-Length':contents.length,'Cache-Control':['.html','.js','.css'].includes(ext)||path.basename(file)==='sw.js'?'no-cache, must-revalidate':'public, max-age=3600','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'self'; connect-src 'self'; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"});res.end(contents);}
 const server=http.createServer(async (req,res)=>{
   let url;try{url=new URL(req.url,'http://localhost');}catch{return fail(res,400,'URL inválido.');}
   const p=url.pathname;
@@ -101,7 +114,13 @@ const server=http.createServer(async (req,res)=>{
       const u={id:id(),name,username,role:'admin',avatar:'●',passwordHash:passwordHash(password),authVersion:1};db.people.push(u);save();return send(res,200,{user:{id:u.id,name:u.name,role:u.role}},{'Set-Cookie':cookie(req,session(u))});
     }
     if(p==='/api/login'&&req.method==='POST'){
-      const u=db.people.find(x=>x.username===cleanStr(b.username,40).toLowerCase());if(!u||!verifyPw(String(b.password||''),u.passwordHash))return fail(res,401,'Credenciais inválidas.');return send(res,200,{user:{id:u.id,name:u.name,role:u.role}},{'Set-Cookie':cookie(req,session(u))});
+      const username=cleanStr(b.username,40).toLowerCase();
+      if(loginBlocked(username))return fail(res,429,'Demasiadas tentativas. Tenta novamente dentro de alguns minutos.');
+      const u=db.people.find(x=>x.username===username);
+      // Verifica sempre uma palavra-passe (mesmo para utilizadores inexistentes) para não revelar contas pelo tempo de resposta.
+      const ok=verifyPw(String(b.password||'').slice(0,200),u?u.passwordHash:DUMMY_HASH)&&!!u;
+      if(!ok){loginFailed(username);return fail(res,401,'Credenciais inválidas.');}
+      loginSucceeded(username);return send(res,200,{user:{id:u.id,name:u.name,role:u.role}},{'Set-Cookie':cookie(req,session(u))});
     }
     if(p==='/api/logout'&&req.method==='POST')return send(res,200,{ok:true},{'Set-Cookie':cookie(req,'')});
     const user=readUser(req);if(!user)return fail(res,401,'Inicia sessão para continuar.');
@@ -217,7 +236,7 @@ const server=http.createServer(async (req,res)=>{
       if(req.method==='DELETE'){if(!elevated(user)&&item.createdBy!==user.id)return fail(res,403,'Sem permissão para eliminar.');db.shopping=db.shopping.filter(x=>x.id!==item.id);logAction(user,'shopping.delete',item.id);save();return send(res,200,{ok:true});}
     }
     if(p==='/api/worklogs'&&req.method==='POST'){
-      const date=cleanStr(b.date,10);if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(new Date(date).getTime()))return fail(res,400,'Data inválida.');
+      let date;try{date=dateISO(cleanStr(b.date,10));}catch{return fail(res,400,'Data inválida.');}
       const minutes=Number(b.minutes);if(!Number.isInteger(minutes)||minutes<1||minutes>1440)return fail(res,400,'Duração inválida.');
       const note=cleanStr(b.note,1000);if(!note)return fail(res,400,'Descreve o trabalho realizado.');
       const task=b.taskId?db.tasks.find(t=>t.id===b.taskId):null;if(b.taskId&&(!task||!canSeeTask(user,task)))return fail(res,404,'Tarefa não encontrada.');
@@ -249,4 +268,10 @@ const server=http.createServer(async (req,res)=>{
     return fail(res,404,'Rota não encontrada.');
   }catch(e){console.error('Request error:',e);return fail(res,400,e.message||'Ocorreu um erro.');}
 });
+server.on('clientError',(err,socket)=>{if(socket.writable)socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');});
+// Um erro inesperado num pedido nunca deve derrubar o serviço (os dados são gravados de forma atómica a cada alteração).
+process.on('unhandledRejection',e=>console.error('Rejeição não tratada:',e));
+process.on('uncaughtException',e=>console.error('Exceção não tratada:',e));
+// O Supervisor do Home Assistant para o add-on com SIGTERM; como PID 1 o Node ignoraria o sinal e a paragem demoraria ~10 s.
+for(const sig of ['SIGTERM','SIGINT'])process.on(sig,()=>{console.log(`${sig} recebido, a terminar.`);server.close(()=>process.exit(0));setTimeout(()=>process.exit(0),3000).unref();});
 server.listen(PORT,HOST,()=>console.log(`Casa em Dia online: http://${HOST}:${PORT} • dados: ${DB_FILE}`));

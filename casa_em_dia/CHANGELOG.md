@@ -1,3 +1,12 @@
+# 1.5.1 — Navegação móvel, criação rápida e logótipo vetorial
+
+- Logótipo horizontal em SVG no cabeçalho móvel e no ecrã de login, em vez de lettering recriado em HTML/CSS.
+- Barra inferior móvel encostada ao fundo do ecrã, com deslizamento horizontal preservado, espaçamentos uniformes e área segura do iPhone.
+- Botão flutuante "+" com menu de criação rápida: tarefa, rotina, produto de compras, trabalho realizado e movimento financeiro (apenas para perfis autorizados).
+- Gradientes suaves e microinterações CSS, com respeito por `prefers-reduced-motion`.
+- Versão e cache do service worker atualizados.
+- Sem migração de dados. Criar cópia de segurança do add-on antes da atualização.
+
 # 1.5.0 — Experiência integrada e nova identidade visual
 
 - Dashboard com ações prioritárias, atribuídas e próximas do prazo.

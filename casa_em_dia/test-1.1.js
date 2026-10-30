@@ -5,6 +5,7 @@ const fs=require('node:fs');
 const os=require('node:os');
 const path=require('node:path');
 const net=require('node:net');
+const VERSION=require('./package.json').version.replace(/\./g,'\\.');
 (async()=>{
  const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'casa-test-'));
  const srv=net.createServer();await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;await new Promise(r=>srv.close(r));
@@ -15,8 +16,8 @@ const net=require('node:net');
   assert(ready,'Servidor não arrancou');
   const page=await fetch('http://127.0.0.1:'+port+'/');
   const html=await page.text();
-  assert.match(html,/app\.js\?v=1\.5\.0/,'HTML deve invalidar a cache do JavaScript');
-  assert.match(html,/style\.css\?v=1\.5\.0/,'HTML deve invalidar a cache do CSS');
+  assert.match(html,new RegExp('app\\.js\\?v='+VERSION),'HTML deve invalidar a cache do JavaScript');
+  assert.match(html,new RegExp('style\\.css\\?v='+VERSION),'HTML deve invalidar a cache do CSS');
   assert.match(page.headers.get('cache-control'),/no-cache/);
   for(const f of ['app.js','style.css','sw.js']){
    const response=await fetch('http://127.0.0.1:'+port+'/'+f);
@@ -43,6 +44,16 @@ const net=require('node:net');
   assert.equal((await req('/api/export')).status,200);
   assert.equal((await req('/api/state')).data.tasks.find(x=>x.id===id).status,'done');
   assert.equal((await req('/api/tasks/'+id,'DELETE',{})).status,200);
+  // Regressões da revisão 1.5.1
+  const base='http://127.0.0.1:'+port;
+  assert.equal((await fetch(base+'/%E0%A4%A')).status,400,'URL malformado deve devolver 400');
+  assert.equal((await fetch(base+'/health')).status,200,'Servidor deve continuar ativo após URL malformado');
+  assert.match((await fetch(base+'/manifest.webmanifest')).headers.get('content-type'),/application\/manifest\+json/);
+  assert.equal((await req('/api/tasks','POST',{title:'Data impossível',dueDate:'2026-02-31'})).status,400,'Data de prazo inexistente deve ser recusada');
+  assert.equal((await req('/api/worklogs','POST',{date:'2026-02-31',minutes:10,note:'x'})).status,400,'Data de trabalho inexistente deve ser recusada');
+  for(let i=0;i<8;i++)assert.equal((await req('/api/login','POST',{username:'inexistente',password:'errada-errada'})).status,401);
+  assert.equal((await req('/api/login','POST',{username:'inexistente',password:'errada-errada'})).status,429,'Tentativas repetidas devem ser limitadas');
+  assert.equal((await req('/api/login','POST',{username:'teste',password:'senha-de-teste-123'})).status,200,'O limite é por utilizador');
   console.log('OK: instalação, autenticação, tarefas, validação, subtarefas, planeamento, definições, histórico, exportação e eliminação');
  }finally{proc.kill('SIGTERM');fs.rmSync(tmp,{recursive:true,force:true});}
 })().catch(e=>{console.error(e);process.exitCode=1;});
