@@ -1,3 +1,11 @@
+# 1.3.3 — Navegação e formulários redesenhados
+
+- Barra inferior deslizável para aceder a todas as funções sem menu Mais.
+- Gestão individual de divisões e categorias, com edição, adição e remoção em lista.
+- Corrigidos espaçamentos no painel, filtros, contornos de foco, formulários e alinhamentos.
+- «Explorar espaços» é agora uma ação que abre a lista de tarefas.
+- Dados existentes preservados; sem alteração da base de dados.
+
 # 1.3.2 — Revisão visual e navegação móvel
 
 - Nova navegação expansível na barra inferior preta, sem painel separado.
