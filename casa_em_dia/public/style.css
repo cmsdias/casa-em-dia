@@ -296,3 +296,21 @@ input,select,textarea{outline:auto;outline-color:transparent}
  .layout>.main,.main{padding-left:15px;padding-right:15px}
  .mobile-header .brand-copy strong{font-size:15px}
 }
+
+
+/* Navegação iPhone — expansão integrada na mesma barra preta, sem painel destacado */
+.mobile-extra-actions[hidden]{display:none!important}
+@media(max-width:650px){
+ .mobile-nav{display:flex;flex-direction:column;gap:0;align-items:stretch;justify-content:flex-end;height:auto;min-height:70px;overflow:hidden;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));padding:5px 6px;border-radius:24px;background:#141a16;border:1px solid #313d34;box-shadow:0 9px 30px #111b1744}
+ .mobile-primary-actions{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;min-width:0}
+ .mobile-extra-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:5px 3px 9px;border-bottom:1px solid #3d4740;margin-bottom:4px}
+ .mobile-primary-actions button,.mobile-extra-actions button{display:flex;align-items:center;justify-content:center;flex-direction:column;min-height:54px;min-width:0;width:100%;padding:7px 2px;border:0;border-radius:15px;background:transparent;color:#acb6ad;gap:4px;line-height:1}
+ .mobile-primary-actions button svg,.mobile-extra-actions button svg{height:19px;width:19px;flex:0 0 auto}
+ .mobile-primary-actions button span,.mobile-extra-actions button span{display:block;font-size:10px;font-weight:650;white-space:nowrap}
+ .mobile-primary-actions button.active,.mobile-extra-actions button.active{background:#f6f8f2;color:#152018}
+ .mobile-primary-actions button.active-more{color:#f5d89c}
+ .mobile-primary-actions button:focus-visible,.mobile-extra-actions button:focus-visible{outline-offset:-3px}
+ .mobile-nav.expanded{border-radius:22px}
+ .mobile-more-panel{display:none!important}
+ .floating-add{bottom:calc(91px + env(safe-area-inset-bottom))}
+}
