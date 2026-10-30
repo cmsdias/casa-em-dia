@@ -1,15 +1,26 @@
 name: Publicar demonstração Casa em Dia
-# Pré-visualização 1.5.1 com barra inferior fixa, logo vetorial e menu rápido
-# Atualização final de marca vetorial e ecrã de carregamento na beta 1.5
-# Atualização da pré-visualização UX 1.3.3
+# Demonstração pública com dados fictícios (localStorage). Nunca contém dados reais.
+#   /       → versão estável (branch main)
+#   /next/  → próxima versão: branch de um PR com testes aprovados, ou a branch indicada manualmente
+#
+# O GitHub Pages só aceita publicações a partir da branch principal. Por isso este workflow corre
+# sempre a partir de main e vai buscar o código da pré-visualização ao commit indicado.
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - 'docs/**'
       - 'casa_em_dia/public/**'
       - '.github/workflows/pages.yml'
+  workflow_run:
+    workflows: ['Verificar Casa em Dia']
+    types: [completed]
   workflow_dispatch:
+    inputs:
+      next_ref:
+        description: 'Branch, tag ou commit a publicar em /next/'
+        required: false
+        default: 'main'
 permissions:
   contents: read
   pages: write
@@ -19,66 +30,43 @@ concurrency:
   cancel-in-progress: true
 jobs:
   deploy:
+    # Só publica pré-visualizações de PR com testes aprovados e vindos deste repositório (nunca de forks).
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Obter codigo
-        uses: actions/checkout@v4
-      - name: Obter versão de desenvolvimento
-        uses: actions/checkout@v4
-        with:
-          ref: develop
-          path: dev-source
-      - name: Obter versão estável
+      - name: Obter versão estável (main)
         uses: actions/checkout@v4
         with:
           ref: main
-          path: stable-source
-      - name: Obter beta 1.2
+          path: stable
+      - name: Obter próxima versão
         uses: actions/checkout@v4
         with:
-          ref: feature/1.2-household
-          path: beta-source
-# Pré-visualização UX em /ux, com navegação expansível em 2026-10-30.
-      - name: Obter variante UX
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          path: ux-source
-      - name: Obter próxima versão 1.5 (ícones atualizados)
-        uses: actions/checkout@v4
-        with:
-          ref: feature/1.5.1-mobile-quick-create
-          path: next-source
-      - name: Montar demonstracao sem dados privados
+          ref: ${{ github.event.workflow_run.head_sha || inputs.next_ref || 'main' }}
+          path: next
+      - name: Montar demonstração sem dados privados
         run: |
-          mkdir -p _site
-          cp stable-source/docs/index.html _site/index.html
-          cp stable-source/casa_em_dia/public/style.css stable-source/casa_em_dia/public/app.js _site/
-          cp -R stable-source/casa_em_dia/public/assets _site/assets
-          mkdir -p _site/dev
-          cp dev-source/docs/index.html _site/dev/index.html
-          cp dev-source/casa_em_dia/public/style.css dev-source/casa_em_dia/public/app.js _site/dev/
-          cp -R dev-source/casa_em_dia/public/assets _site/dev/assets
-          mkdir -p _site/beta
-          cp beta-source/docs/index.html _site/beta/index.html
-          cp beta-source/casa_em_dia/public/style.css beta-source/casa_em_dia/public/app.js _site/beta/
-          cp -R beta-source/casa_em_dia/public/assets _site/beta/assets
-          mkdir -p _site/ux
-          cp ux-source/docs/index.html _site/ux/index.html
-          cp ux-source/casa_em_dia/public/style.css ux-source/casa_em_dia/public/app.js _site/ux/
-          cp -R ux-source/casa_em_dia/public/assets _site/ux/assets
-          mkdir -p _site/next
-          cp next-source/docs/index.html _site/next/index.html
-          cp next-source/casa_em_dia/public/style.css next-source/casa_em_dia/public/app.js _site/next/
-          cp -R next-source/casa_em_dia/public/assets _site/next/assets
-          cp next-source/casa_em_dia/public/logo-*.svg next-source/casa_em_dia/public/icon*.svg next-source/casa_em_dia/public/icon-*.png next-source/casa_em_dia/public/apple-touch-icon.png next-source/casa_em_dia/public/manifest.webmanifest _site/next/
+          build() {
+            src="$1"; dest="$2"
+            mkdir -p "$dest"
+            # Recursos públicos da interface, sem service worker (a demonstração não é instalável).
+            cp -R "$src/casa_em_dia/public/." "$dest/"
+            rm -f "$dest/sw.js"
+            cp "$src/docs/index.html" "$dest/index.html"
+          }
+          build stable _site
+          build next _site/next
           touch _site/.nojekyll
+          echo "Publicado: / = main, /next/ = ${{ github.event.workflow_run.head_branch || inputs.next_ref || 'main' }}"
       - name: Configurar Pages
         uses: actions/configure-pages@v5
-      - name: Carregar site estatico
+      - name: Carregar site estático
         uses: actions/upload-pages-artifact@v3
         with:
           path: _site
