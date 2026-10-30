@@ -15,8 +15,8 @@ const net=require('node:net');
   assert(ready,'Servidor não arrancou');
   const page=await fetch('http://127.0.0.1:'+port+'/');
   const html=await page.text();
-  assert.match(html,/app\.js\?v=1\.2\.0/,'HTML deve invalidar a cache do JavaScript');
-  assert.match(html,/style\.css\?v=1\.2\.0/,'HTML deve invalidar a cache do CSS');
+  assert.match(html,/app\.js\?v=1\.3\.0/,'HTML deve invalidar a cache do JavaScript');
+  assert.match(html,/style\.css\?v=1\.3\.0/,'HTML deve invalidar a cache do CSS');
   assert.match(page.headers.get('cache-control'),/no-cache/);
   for(const f of ['app.js','style.css','sw.js']){
    const response=await fetch('http://127.0.0.1:'+port+'/'+f);

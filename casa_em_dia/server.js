@@ -35,6 +35,15 @@ function allowedTaskPatch(u,t,b){if(canEditTask(u,t))return true;
 function logAction(u,action,entityId){db.audit.push({id:id(),actor:u.id,action,entityId,at:new Date().toISOString()});if(db.audit.length>3000)db.audit=db.audit.slice(-3000);}
 function visibleState(u){const allowed=db.tasks.filter(t=>canSeeTask(u,t));const ids=new Set(allowed.map(t=>t.id));const users=roleOf(u)==='collaborator'?db.people.filter(p=>p.id===u.id||allowed.some(t=>t.assignedTo===p.id||t.createdBy===p.id)):db.people;const people=users.map(({id,name,username,role,avatar})=>({id,name,username:roleOf(u)==='collaborator'?'':username,role:roleOf({role}),avatar:avatar||'●'}));return {...state(),people,tasks:allowed,history:db.history.filter(h=>h.taskId?ids.has(h.taskId):h.by===u.id).slice(-200),shopping:db.shopping,workLogs:db.workLogs.filter(l=>elevated(u)?(!l.taskId||ids.has(l.taskId)):l.userId===u.id||l.actor===u.id),audit:roleOf(u)==='admin'?db.audit.slice(-300):elevated(u)?db.audit.filter(a=>!a.action.startsWith('task.')||ids.has(a.entityId)).slice(-300):[],permissions:{manageUsers:roleOf(u)==='admin',manageSettings:elevated(u),manageAllShared:elevated(u)}};}
 
+
+db.finance=db.finance&&typeof db.finance==='object'?db.finance:{accounts:[],transactions:[],budgets:[],goals:[]};
+for(const key of ['accounts','transactions','budgets','goals'])if(!Array.isArray(db.finance[key]))db.finance[key]=[];
+function financeAllowed(u){return roleOf(u)!=='collaborator';}
+function accessAccount(u,a){if(!financeAllowed(u))return false;return roleOf(u)==='admin'||a.ownerId===u.id||(a.scope==='shared'&&Array.isArray(a.allowedUserIds)&&a.allowedUserIds.includes(u.id));}
+function financeState(u){if(!financeAllowed(u))return null;const accounts=db.finance.accounts.filter(a=>accessAccount(u,a));const ids=new Set(accounts.map(a=>a.id));return {accounts,transactions:db.finance.transactions.filter(t=>ids.has(t.accountId)),budgets:db.finance.budgets.filter(b=>ids.has(b.accountId)),goals:db.finance.goals.filter(g=>ids.has(g.accountId))};}
+function cents(v){if(!Number.isSafeInteger(v)||v<=0||v>1_000_000_000_00)throw Error('Valor inválido em cêntimos.');return v;}
+function dateISO(v){if(typeof v!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(v)||new Date(v+'T12:00:00Z').toISOString().slice(0,10)!==v)throw Error('Data inválida.');return v;}
+
 function save(){const tmp=DB_FILE+'.tmp'; fs.writeFileSync(tmp,JSON.stringify(db,null,2),{mode:0o600});fs.renameSync(tmp,DB_FILE);}
 function send(res,status,data,extra={}){const body=JSON.stringify(data);res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...extra});res.end(body);}
 function fail(res,status,msg){send(res,status,{error:msg});}
@@ -96,6 +105,56 @@ const server=http.createServer(async (req,res)=>{
     }
     if(p==='/api/logout'&&req.method==='POST')return send(res,200,{ok:true},{'Set-Cookie':cookie(req,'')});
     const user=readUser(req);if(!user)return fail(res,401,'Inicia sessão para continuar.');
+    if(p==='/api/finance'&&req.method==='GET'){if(!financeAllowed(user))return fail(res,403,'Sem acesso às finanças.');return send(res,200,{finance:financeState(user)});}
+    if(p==='/api/finance/accounts'&&req.method==='POST'){
+      if(!financeAllowed(user))return fail(res,403,'Sem acesso às finanças.');
+      const name=cleanStr(b.name,100);if(!name)return fail(res,400,'Indica o nome da conta.');
+      if(!['cash','bank','other'].includes(b.kind||'bank'))return fail(res,400,'Tipo de conta inválido.');
+      const scope=b.scope||'private';if(!['private','shared'].includes(scope))return fail(res,400,'Visibilidade inválida.');
+      if(b.allowedUserIds!==undefined&&(!Array.isArray(b.allowedUserIds)||b.allowedUserIds.some(x=>typeof x!=='string'||!db.people.some(p=>p.id===x&&roleOf(p)!=='collaborator'&&p.id!==user.id))))return fail(res,400,'Utilizadores da partilha inválidos.');
+      const allowedUserIds=Array.isArray(b.allowedUserIds)?b.allowedUserIds:[];
+      if(!elevated(user)&&allowedUserIds.length)return fail(res,403,'Só gestores podem partilhar contas com terceiros.');
+      const a={id:id(),name,kind:b.kind||'bank',currency:'EUR',scope,ownerId:user.id,allowedUserIds:scope==='shared'?[...new Set(allowedUserIds)]:[],archived:false,createdAt:new Date().toISOString()};
+      db.finance.accounts.push(a);save();return send(res,201,{account:a});
+    }
+    const accountMatch=p.match(/^\/api\/finance\/accounts\/([^/]+)$/);
+    if(accountMatch&&req.method==='PATCH'){
+      const a=db.finance.accounts.find(x=>x.id===accountMatch[1]);if(!a||!accessAccount(user,a))return fail(res,404,'Conta não encontrada.');
+      if(a.ownerId!==user.id&&roleOf(user)!=='admin')return fail(res,403,'Só o titular pode alterar a conta.');
+      if('archived'in b&&typeof b.archived!=='boolean')return fail(res,400,'Estado inválido.');
+      if('name'in b&&!cleanStr(b.name,100))return fail(res,400,'Nome inválido.');
+      if('scope'in b||'allowedUserIds'in b){if(!['private','shared'].includes(b.scope||a.scope))return fail(res,400,'Visibilidade inválida.');const ids='allowedUserIds'in b?b.allowedUserIds:a.allowedUserIds;if(!Array.isArray(ids)||ids.some(x=>typeof x!=='string'||!db.people.some(p=>p.id===x&&roleOf(p)!=='collaborator'&&p.id!==a.ownerId)))return fail(res,400,'Utilizadores inválidos.');if(!elevated(user)&&ids.length)return fail(res,403,'Sem permissão para partilhar a conta.');a.scope=b.scope||a.scope;a.allowedUserIds=a.scope==='private'?[]:[...new Set(ids)];}
+      if('name'in b)a.name=cleanStr(b.name,100);if('archived'in b)a.archived=b.archived;
+      save();return send(res,200,{account:a});
+    }
+    if(p==='/api/finance/transactions'&&req.method==='POST'){
+      if(!financeAllowed(user))return fail(res,403,'Sem acesso às finanças.');
+      const account=db.finance.accounts.find(x=>x.id===b.accountId);if(!account||!accessAccount(user,account))return fail(res,404,'Conta não encontrada.');
+      if(account.archived)return fail(res,409,'Conta arquivada.');
+      if(!['income','expense'].includes(b.kind))return fail(res,400,'Tipo inválido.');
+      const amountCents=cents(b.amountCents),transactionDate=dateISO(b.transactionDate);
+      const transaction={id:id(),accountId:account.id,kind:b.kind,amountCents,transactionDate,category:cleanStr(b.category,80)||'Geral',description:cleanStr(b.description,250),createdBy:user.id,createdAt:new Date().toISOString()};
+      db.finance.transactions.push(transaction);save();return send(res,201,{transaction});
+    }
+    if(p==='/api/finance/budgets'&&req.method==='POST'){
+      if(!financeAllowed(user))return fail(res,403,'Sem acesso às finanças.');
+      const account=db.finance.accounts.find(x=>x.id===b.accountId);if(!account||!accessAccount(user,account))return fail(res,404,'Conta não encontrada.');
+      if(typeof b.month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(b.month))return fail(res,400,'Mês inválido.');
+      if(account.archived)return fail(res,409,'Conta arquivada.');
+      const amountCents=cents(b.amountCents);
+      if(db.finance.budgets.some(x=>x.accountId===account.id&&x.month===b.month&&x.category===(cleanStr(b.category,80)||'Geral')))return fail(res,409,'Já existe orçamento desta categoria para este mês.');
+      const budget={id:id(),accountId:account.id,month:b.month,category:cleanStr(b.category,80)||'Geral',amountCents,createdBy:user.id};
+      db.finance.budgets.push(budget);save();return send(res,201,{budget});
+    }
+    if(p==='/api/finance/goals'&&req.method==='POST'){
+      if(!financeAllowed(user))return fail(res,403,'Sem acesso às finanças.');
+      const account=db.finance.accounts.find(x=>x.id===b.accountId);if(!account||!accessAccount(user,account))return fail(res,404,'Conta não encontrada.');
+      if(account.archived)return fail(res,409,'Conta arquivada.');
+      const title=cleanStr(b.title,140);if(!title)return fail(res,400,'Indica o objetivo.');
+      const targetCents=cents(b.targetCents),savedCents=b.savedCents===undefined?0:b.savedCents;if(!Number.isSafeInteger(savedCents)||savedCents<0||savedCents>targetCents)return fail(res,400,'Poupança inválida.');
+      const goal={id:id(),accountId:account.id,title,targetCents,savedCents,createdBy:user.id};
+      db.finance.goals.push(goal);save();return send(res,201,{goal});
+    }
     if(p==='/api/state'&&req.method==='GET')return send(res,200,{...visibleState(user),user:{id:user.id,name:user.name,role:roleOf(user)}});
     if(p==='/api/export'&&req.method==='GET'){if(user.role!=='admin')return fail(res,403,'Apenas administradores.');return send(res,200,{exportedAt:new Date().toISOString(),...state()},{'Content-Disposition':'attachment; filename="casa-em-dia-backup.json"'});}
     if(p==='/api/import'&&req.method==='POST'){
