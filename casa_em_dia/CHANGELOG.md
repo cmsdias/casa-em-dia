@@ -1,6 +1,6 @@
 # 1.6.0 — Revisão de usabilidade e interface
 
-- Ícones distintos na navegação: Rotinas (repetição), Compras (carrinho) e Trabalhos (ferramenta) já não repetem os de Tarefas e Calendário.
+- Ícones revistos: Painel (casa), Tarefas (lista com pontos), Rotinas (repetição), Compras (carrinho), Trabalhos (caixa de ferramentas); ações Adicionar, Concluir, Editar, Pesquisar, Exportar, Abrir e Prioritárias com novos desenhos. O menu «+» usa os mesmos ícones da navegação.
 - Tarefas atrasadas destacadas a vermelho na lista e no painel.
 - Datas legíveis em português (ex.: «28 out») nos trabalhos, movimentos e orçamentos; meses por extenso.
 - Painel mais curto: removida a secção «Por onde começar?», que repetia as tarefas do topo.
