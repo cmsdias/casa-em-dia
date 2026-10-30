@@ -201,3 +201,27 @@ input,select,textarea{outline:auto;outline-color:transparent}
 }
 @media(max-width:400px){.main{padding-left:14px;padding-right:14px}.mobile-nav button{min-width:68px}.task-row{padding-inline:5px}.page-title{font-size:28px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+
+/* UX Refresh — navegação compacta, menu secundário e painéis */
+.mobile-more-panel{display:none}
+@media(max-width:650px){
+ .mobile-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));overflow:visible;gap:1px;left:12px;right:12px;max-width:calc(100% - 24px);bottom:calc(12px + env(safe-area-inset-bottom));height:70px;padding:6px}
+ .mobile-nav button{min-width:0;width:100%;min-height:54px;padding:6px 1px;border-radius:16px}
+ .mobile-nav button span{font-size:10px;white-space:nowrap}
+ .mobile-more-panel{position:fixed;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;left:12px;right:12px;bottom:calc(93px + env(safe-area-inset-bottom));padding:12px;border:1px solid #d7dfd3;border-radius:21px;box-shadow:0 14px 45px #13201930;background:#fff;z-index:32}
+ .mobile-more-panel button{border:0;border-radius:12px;background:#f2f5f0;padding:13px 11px;display:flex;align-items:center;gap:10px;color:#24392d;text-align:left;font-weight:650;min-height:48px}
+ .mobile-more-panel button svg{width:18px;height:18px}
+ .mobile-more-panel button:active{background:#e1eadf}
+ .floating-add{bottom:calc(98px + env(safe-area-inset-bottom))}
+ .stat-card{padding:15px}
+ .task-detail{flex:1;min-width:0}
+ .shopping-line>span{min-width:0;overflow-wrap:anywhere}
+ .inline-add>select,.inline-add>input{min-height:44px}
+ .worklog-form>.form-row{grid-template-columns:1fr}
+ .worklog-form input,.worklog-form select,.worklog-form textarea{width:100%}
+ .field input,.field textarea,.field select{font-size:16px}
+ .settings-card{padding:18px}
+}
+@media(min-width:651px) and (max-width:900px){.sidebar{width:76px}.main{margin-left:76px;width:calc(100% - 76px)}}
+@media(max-width:650px) and (prefers-reduced-motion:reduce){.mobile-more-panel{animation:none}}
