@@ -1,7 +1,7 @@
 name: "Casa em Dia"
 slug: "casa_em_dia"
 description: "Tarefas e rotinas domésticas partilhadas"
-version: "1.3.0"
+version: "1.3.1"
 arch:
   - aarch64
   - amd64
@@ -10,7 +10,7 @@ startup: application
 boot: auto
 ingress: true
 ingress_port: 3000
-panel_icon: "mdi:home-check"
+panel_icon: "mdi:home-outline"
 panel_title: "Casa em Dia"
 panel_admin: false
 backup: cold

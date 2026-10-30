@@ -1,3 +1,9 @@
+# 1.3.1 — Ícone e logótipo no Home Assistant
+
+- Usar `mdi:home-outline` na barra lateral do Home Assistant, em substituição de `mdi:home-check`, que não está disponível na coleção de ícones utilizada.
+- Adicionar o logótipo da aplicação à página de detalhes no Home Assistant, com o símbolo visual já existente.
+- Sem alterações à base de dados ou às funcionalidades da aplicação.
+
 # 1.3.0 — Finanças domésticas
 
 - Primeiro módulo de contas e movimentos em cêntimos, resumo mensal, orçamento e objetivos via API.
