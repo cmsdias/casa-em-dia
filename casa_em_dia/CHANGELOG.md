@@ -5,6 +5,12 @@
 - Botão flutuante "+" com menu de criação rápida: tarefa, rotina, produto de compras, trabalho realizado e movimento financeiro (apenas para perfis autorizados).
 - Gradientes suaves e microinterações CSS, com respeito por `prefers-reduced-motion`.
 - Versão e cache do service worker atualizados.
+- Corrigido: um endereço com codificação inválida (ex.: `/%E0%A4%A`) terminava o servidor.
+- Datas de prazo e de trabalhos validadas como datas reais; manifesto PWA servido com o tipo correto.
+- Login: limite de 8 tentativas falhadas por utilizador em 10 minutos e verificação em tempo constante.
+- Paragem limpa do add-on (SIGTERM) e mensagem clara se `casa.json` estiver danificado, sem o sobrescrever.
+- CSS da navegação móvel consolidado num único bloco; removidas regras de componentes já inexistentes (78 KB → 61 KB), sem alterações visuais.
+- Repositório limpo: documentação atualizada em `documentacao/`, ficheiros e workflows obsoletos removidos, `.gitignore` para dados privados.
 - Sem migração de dados. Criar cópia de segurança do add-on antes da atualização.
 
 # 1.5.0 — Experiência integrada e nova identidade visual

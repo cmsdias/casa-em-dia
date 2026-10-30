@@ -5,11 +5,12 @@
   "description": "Gestão partilhada das tarefas e rotinas da casa, instalável como PWA.",
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check public/app.js && node --check test-1.1.js && node --check test-roles.js && node --check test-finance.js",
-    "test": "node test-1.1.js && node test-roles.js && node test-finance.js"
+    "check": "node --check server.js && node --check public/app.js && node --check public/sw.js && node --check test-1.1.js && node --check test-roles.js && node --check test-finance.js && node --check test-ui.js",
+    "test": "node test-1.1.js && node test-roles.js && node test-finance.js",
+    "test:ui": "node test-ui.js"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "license": "UNLICENSED"
 }

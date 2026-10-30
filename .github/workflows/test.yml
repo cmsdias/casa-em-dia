@@ -3,14 +3,17 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [develop]
+    branches: [main]
     paths:
       - 'casa_em_dia/**'
+      - 'docs/**'
       - '.github/workflows/test.yml'
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
   verify:
+    name: Servidor e persistência
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,11 +23,12 @@ jobs:
       - name: Validar sintaxe
         run: npm run check
         working-directory: casa_em_dia
-      - name: Testes de integração (servidor e persistência)
+      - name: Testes de integração (servidor, perfis, finanças)
         run: npm test
         working-directory: casa_em_dia
 
   browser:
+    name: Interface (desktop e iPhone)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -36,13 +40,13 @@ jobs:
         run: |
           npm install --no-save playwright
           npx playwright install --with-deps chromium
-      - name: Verificar layout e navegação em desktop e iPhone
+      - name: Verificar layout e navegação
         working-directory: casa_em_dia
-        run: node test-ui.js
+        run: npm run test:ui
       - name: Guardar capturas dos testes
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: casa-em-dia-1-5-ui
+          name: capturas-interface
           path: casa_em_dia/ui-screens/
           if-no-files-found: ignore

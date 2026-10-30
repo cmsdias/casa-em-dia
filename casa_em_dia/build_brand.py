@@ -1,3 +1,7 @@
+"""Gera os ícones PNG (PWA, favicon e ficha do add-on) a partir de public/icon.svg e public/icon-maskable.svg.
+
+Uso (a partir da raiz do repositório): pip install cairosvg pillow && python casa_em_dia/build_brand.py
+"""
 from pathlib import Path
 import cairosvg
 from PIL import Image

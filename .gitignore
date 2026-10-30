@@ -1,0 +1,21 @@
+# Dependências e artefactos de teste
+node_modules/
+casa_em_dia/ui-screens/
+playwright-report/
+test-results/
+
+# Dados locais de desenvolvimento (nunca publicar dados reais)
+casa_em_dia/data/
+data/
+casa.json
+*.tmp
+
+# Listas privadas de tarefas e exportações
+*PRIVADO*.json
+*privado*.json
+*NAO_PARTILHAR*.json
+casa-em-dia-backup*.json
+
+# Sistema
+.DS_Store
+Thumbs.db

@@ -18,6 +18,6 @@ Estado: **planeada, ainda não aplicada**. O repositório `cmsdias/casa-em-dia` 
 
 A autorização do conector GitHub **não** equivale à autorização do Supervisor Home Assistant; são autenticações independentes.
 
-## Limitação da execução nesta sessão
+## Notas
 
-A ligação GitHub aqui disponível permite commits, branches e pull requests, mas não fornece `create_repository` nem `update_repository_visibility`. Por isso a mudança de visibilidade e a criação do repositório de distribuição não podem ser realizadas por essa ligação sem configurar outro acesso. Nunca mudar primeiro para privado, para evitar interromper atualizações.
+A autorização do Claude no GitHub permite commits, branches e pull requests, mas não criar repositórios nem mudar a sua visibilidade. Esses dois passos são feitos pelo proprietário na interface do GitHub. Nunca tornar o repositório privado antes de a distribuição alternativa estar testada, para não interromper as atualizações do add-on.

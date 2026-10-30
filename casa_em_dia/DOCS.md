@@ -1,29 +1,47 @@
-# Casa em Dia — Versão 1.0.0
+# Casa em Dia
 
-Aplicação de gestão de tarefas e rotinas para a casa. Instalação no Home Assistant Green (Home Assistant OS).
+Aplicação para organizar a casa em conjunto: tarefas pontuais, rotinas recorrentes, lista de compras, registo de trabalhos realizados e finanças domésticas.
 
 ## Primeiro acesso
 
-1. Instala e inicia a aplicação.
-2. Seleciona **Abrir interface Web**. A aplicação solicita a criação da conta de administrador.
-3. Em **Definições > Importar tarefas da casa**, seleciona o JSON privado fornecido separadamente. **Nunca publiques este ficheiro no GitHub.**
-4. Em **Pessoas**, cria as contas dos restantes moradores.
+1. Inicie a aplicação e abra **Abrir interface Web** (ou o item **Casa em Dia** na barra lateral).
+2. Crie a conta de administrador. Use uma palavra-passe longa (mínimo 10 caracteres) e diferente da do Home Assistant.
+3. Em **Pessoas**, crie as contas das restantes pessoas da casa e atribua o perfil adequado.
+4. Opcional: em **Definições**, ajuste as divisões e categorias e importe uma lista de tarefas em JSON.
+
+## Perfis
+
+| Perfil | O que pode fazer |
+| --- | --- |
+| Administrador | Tudo: contas, perfis, definições, importação/exportação, todas as tarefas e todas as contas financeiras. |
+| Gestor | Gerir tarefas partilhadas, atribuir tarefas, alterar divisões e categorias. Finanças próprias ou partilhadas consigo. |
+| Morador | Ver tarefas partilhadas, gerir as suas e concluir as que lhe foram atribuídas. Finanças próprias ou partilhadas consigo. |
+| Colaborador | Apenas tarefas que criou ou que lhe foram atribuídas. Sem acesso às finanças. |
+
+As permissões são verificadas no servidor em cada pedido, não apenas escondidas na interface. Ao mudar o perfil ou a palavra-passe de alguém, as sessões dessa pessoa terminam.
 
 ## Acesso
 
-- Dentro do Home Assistant, pela barra lateral, a aplicação utiliza o Ingress.
-- Na rede doméstica, também pode ser aberta em `http://IP_DO_GREEN:3037/`.
-- A porta 3037 não deve ser publicada na Internet; acesso remoto apenas através de uma solução HTTPS segura ou pelo acesso remoto do Home Assistant usando o painel.
-- A PWA independente exige HTTPS para instalação completa no telemóvel. O painel via Ingress não é equivalente a uma PWA independente.
+- A aplicação é aberta através do **Ingress** do Home Assistant (barra lateral ou app Companion). Não expõe nenhuma porta na rede.
+- Fora de casa, funciona através do acesso remoto que já usa para o Home Assistant.
+- A conta do Casa em Dia é independente da conta do Home Assistant.
 
-## Dados e backups
+## Dados e cópias de segurança
 
-A base de dados (`/data/casa.json`) é criada no primeiro arranque e mantém-se durante atualizações. O Home Assistant inclui os dados persistentes da aplicação em cópias de segurança compatíveis. Em **Definições**, o administrador pode exportar as tarefas para um ficheiro JSON (sem as palavras-passe).
+- Todos os dados ficam em `/data/casa.json`, criado no primeiro arranque e mantido entre atualizações.
+- As cópias de segurança do Home Assistant incluem estes dados. A aplicação é parada durante a cópia (`backup: cold`) para garantir que o ficheiro fica consistente.
+- Em **Definições**, o administrador pode exportar tarefas, compras, trabalhos e histórico para JSON (sem palavras-passe). **As finanças não são incluídas nesta exportação**; dependem da cópia de segurança do Home Assistant.
+- A importação aceita até 500 tarefas por ficheiro e ignora duplicados (mesmo título, divisão e tipo).
 
 ## Atualizar
 
-Após publicar uma nova versão no GitHub com o `version` de `config.yaml` alterado, atualiza a lista de aplicações e seleciona **Atualizar** na ficha do Casa em Dia. Cria uma cópia de segurança antes de atualizar.
+1. Crie uma cópia de segurança do Home Assistant.
+2. Em **Definições → Aplicações**, verifique se há atualizações e selecione **Atualizar** no Casa em Dia.
+3. Abra a aplicação, confirme a versão em **Definições** e verifique que os dados continuam presentes.
 
-## Limitações v1.0.0
+## Limitações
 
-Os utilizadores autenticados podem ver as mesmas tarefas. Não há tarefas privadas, notificações, fotos, planeamento semanal ou subtarefas nesta primeira versão. Cada pessoa utiliza uma conta própria. Se não houver acesso à rede, não é possível guardar alterações. Esta aplicação é independente da autenticação do Home Assistant e não deve ficar exposta publicamente através da porta 3037.
+- Sem notificações nem anexos/fotografias.
+- Sem modo offline: é preciso ligação ao Home Assistant para guardar alterações.
+- A letra Instrument Sans é carregada do Google Fonts; sem Internet, o browser usa uma letra alternativa.
+- Pensada para uma casa (poucas pessoas em simultâneo). Os dados são gravados num único ficheiro JSON.

@@ -1,4 +1,6 @@
-# Casa em Dia 1.3 — Finanças e poupanças (especificação inicial)
+# Finanças e poupanças: especificação
+
+> Especificação original da versão 1.3. A implementação atual simplifica alguns pontos: as categorias são texto livre (não há entidade `categories`), os orçamentos e objetivos estão associados a uma conta e não existe `financeAudit` separado. Ver [ARQUITETURA.md](ARQUITETURA.md).
 
 ## Objetivo
 Introduzir um módulo opcional de gestão financeira doméstica, continuando a executar exclusivamente dentro do Home Assistant Green.

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Create standalone Casa em Dia logo SVGs with text converted to vector outlines."""
+"""Gera os logótipos SVG do Casa em Dia com o texto convertido em contornos vetoriais.
+
+Uso (a partir da raiz do repositório): pip install fonttools && python casa_em_dia/build_logo_vectors.py
+Requer a fonte Lato instalada em /usr/share/fonts/truetype/lato/.
+"""
 from pathlib import Path
 from fontTools.ttLib import TTFont
 from fontTools.pens.svgPathPen import SVGPathPen
@@ -43,5 +47,3 @@ def build(name,fg):
     print(name,"width",width,"outlined glyphs",len(parts))
 build("logo-primary-dark.svg","#17261E")
 build("logo-primary-light.svg","#F8F7F2")
-# Keep legacy horizontal reference redirected to the primary dark variant.
-(p/"logo-horizontal.svg").write_bytes((p/"logo-primary-dark.svg").read_bytes())
