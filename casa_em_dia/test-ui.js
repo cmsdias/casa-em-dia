@@ -51,7 +51,7 @@ const {chromium}=require('playwright');
      await page.locator('[data-action="filter-toggle"]').click();
      assert.equal(await page.locator('.filters-collapsed').count(),0);
      if(vp.width<500)await page.screenshot({path:path.join(root,'ui-screens','02-tarefas-iphone.png'),fullPage:true});
-     await page.locator('.floating-add').click();
+     await page.locator(vp.width<500?'.floating-add':'.header-row [data-action="add"]').click();
      await page.locator('#task-form').waitFor();
      assert.equal(await page.locator('#task-advanced').isHidden(),true);
      await page.locator('[data-action="advanced-task"]').click();
