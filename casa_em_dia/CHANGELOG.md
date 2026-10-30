@@ -1,4 +1,4 @@
-# 1.3.0-beta — Desenvolvimento privado
+# 1.3.0 — Finanças domésticas
 
 - Primeiro módulo de contas e movimentos em cêntimos, resumo mensal, orçamento e objetivos via API.
 - Acesso financeiro negado a colaboradores e contas filtradas no servidor.
