@@ -48,6 +48,8 @@ const {chromium}=require('playwright');
        assert.equal(fixed.width,vp.width,'Bottom bar must be full width');
        assert.equal(await page.locator('.mobile-header img[src="logo-primary-dark.svg"]').count(),1,'Mobile header must use primary SVG logo');
        assert(metrics.firstWidth>60&&metrics.firstWidth<115,'Buttons must have compact width');
+       const gap=await page.locator('.swipe-nav').evaluate(el=>Number.parseFloat(getComputedStyle(el).gap));
+       assert(gap>=4&&gap<=8,'Navigation spacing must stay balanced');
      }
      if(vp.width<500)fs.mkdirSync(path.join(root,'ui-screens'),{recursive:true});
      if(vp.width<500)await page.screenshot({path:path.join(root,'ui-screens','01-dashboard-iphone.png'),fullPage:true});
