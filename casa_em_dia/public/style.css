@@ -513,3 +513,11 @@ select{
 .finance-toolbar input{min-height:44px;min-width:150px;padding:8px 12px;border:1px solid #cbd7ca;border-radius:12px}
 .finance-toolbar span{font-size:12px;color:#647365}
 @media(max-width:650px){.finance-toolbar{display:grid;grid-template-columns:auto 1fr}.finance-toolbar input{width:100%}.finance-toolbar span{grid-column:1/-1}}
+
+/* Gestão de equipa e relatório de trabalhos — versão 1.5 */
+.person-tasks{min-height:42px;white-space:nowrap;border-color:#d6dfd2;color:#31513c}
+.worklog-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 18px}
+.worklog-summary>div{background:#eff2eb;border:1px solid #dde4db;border-radius:16px;padding:17px;display:flex;flex-direction:column;gap:6px}
+.worklog-summary strong{font-size:clamp(22px,3vw,29px);font-variant-numeric:tabular-nums;letter-spacing:-.045em}
+.worklog-summary span{font-size:12px;color:#657364}
+@media(max-width:650px){.person-card{flex-wrap:wrap;gap:10px}.person-tasks{flex-basis:100%;order:5}.worklog-summary>div{padding:14px}}
