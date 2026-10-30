@@ -1,3 +1,10 @@
+# 1.3.2 — Revisão visual e navegação móvel
+
+- Nova navegação expansível na barra inferior preta, sem painel separado.
+- A expansão mantém-se entre páginas para evitar cliques repetidos.
+- Melhorias de legibilidade, foco, formulários e largura móvel.
+- Sem alterações às tarefas e dados guardados.
+
 # 1.3.1 — Ícone e logótipo no Home Assistant
 
 - Usar `mdi:home-outline` na barra lateral do Home Assistant, em substituição de `mdi:home-check`, que não está disponível na coleção de ícones utilizada.
