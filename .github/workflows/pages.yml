@@ -45,7 +45,7 @@ jobs:
         with:
           ref: main
           path: ux-source
-      - name: Obter próxima versão 1.5
+      - name: Obter próxima versão 1.5 (revisão UX testável)
         uses: actions/checkout@v4
         with:
           ref: feature/1.5-product-experience
