@@ -136,3 +136,68 @@ button,input,select,textarea {font-family:inherit;}
 /* Preview Casa em Dia 1.1.0 */
 
 .inline-add,.worklog-form{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:20px 0}.inline-add input,.worklog-form input,.worklog-form textarea{border:1px solid #deded8;border-radius:12px;padding:12px;font:inherit;max-width:100%}.inline-add input:first-child{flex:1;min-width:180px}.worklog-form{display:block;padding:20px;background:var(--surface,#f6f6f2);border-radius:16px}.worklog-form .field{flex:1}.shopping-line,.worklog-line{display:flex;gap:16px;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid #ecece9}.shopping-line label{flex:1;display:flex;gap:12px;align-items:center}.shopping-line .done{text-decoration:line-through;opacity:.6}.worklog-line{display:block;line-height:1.8}
+
+
+/* Casa em Dia — UX Refresh 2026 (não destrutivo) */
+:root{--ink:#202c25;--muted:#606d64;--line:#e0e6dd;--bg:#f7f8f5;--gold:#d6af61;--deep:#24352a;--focus:#86601f;--radius:16px;--space:8px}
+body{font-size:15px;line-height:1.55;-webkit-text-size-adjust:100%}
+.page-subtitle,.task-meta,.section-sub,.stat-bottom,.routine-sub,.settings-card p{color:var(--muted)}
+button,input,textarea,select{font-size:inherit}
+button,a,input,select,textarea{touch-action:manipulation}
+input,select,textarea{outline:auto;outline-color:transparent}
+:where(button,a,input,select,textarea,[tabindex]):focus-visible{outline:3px solid var(--focus)!important;outline-offset:3px;box-shadow:0 0 0 5px #e8d6aa99}
+.button,.icon-btn,.nav-link,.week-pin,.time-buttons button,.time-filter button,.discovery-chip,.close,.hero-cta{min-height:44px}
+.icon-btn,.close{min-width:44px}
+.button{font-size:13px;letter-spacing:0}
+.nav-link{font-size:14px;color:#425248}
+.nav-link.active{background:#e8efe5;font-weight:750}
+.nav-link:hover,.nav-link:focus-visible{background:#edf2e9}
+.sidebar{width:246px;padding:24px 15px}
+.main{margin-left:246px;width:calc(100% - 246px);padding:30px clamp(22px,3.5vw,56px) 110px}
+.page-title{font-size:clamp(29px,3vw,39px);letter-spacing:-.04em;line-height:1.15}
+.section-title{font-size:17px}
+.panel,.stat-card,.settings-card{border-color:var(--line);border-radius:var(--radius)}
+.task-row{min-height:78px;gap:12px}
+.task-detail{min-width:0;text-align:left}
+.task-title{font-size:14px;line-height:1.5}
+.task-meta{font-size:12px}
+.task-check{min-width:26px;min-height:26px}
+.stat-value{font-variant-numeric:tabular-nums}
+.stat-top{font-size:12px;color:#59695f}
+.stat-bottom{font-size:12px}
+.shopping-line{min-height:62px;flex-wrap:wrap}
+.shopping-line label{min-width:180px}
+.shopping-line input[type=checkbox]{width:20px;height:20px;accent-color:#314d3b}
+.inline-add input,.inline-add select,.worklog-form input,.worklog-form select,.worklog-form textarea,.settings-card input,.settings-card select,.settings-card textarea{min-height:44px;background:#fff;border:1px solid #adbab0;border-radius:12px}
+.worklog-form{background:#eef2eb;padding:clamp(16px,2.5vw,24px)}
+.field label{font-size:13px;color:#344337;font-weight:650}
+.modal{max-height:min(90dvh,950px);overflow-y:auto}
+.modal-body{overflow:visible}
+.settings-card{overflow-wrap:anywhere}
+.finance-ui-summary{font-variant-numeric:tabular-nums}
+@media(max-width:1100px){.main{padding-left:24px;padding-right:24px}.stats-grid{gap:10px}}
+@media(max-width:800px){
+ body{font-size:15px}
+ .main{padding-left:18px;padding-right:18px;padding-bottom:calc(128px + env(safe-area-inset-bottom))}
+ .mobile-nav{max-width:100%;padding-bottom:env(safe-area-inset-bottom);overflow-x:auto;scrollbar-width:none;justify-content:flex-start;gap:4px;-webkit-overflow-scrolling:touch}
+ .mobile-nav::-webkit-scrollbar{display:none}
+ .mobile-nav button{min-width:72px;min-height:54px;flex:0 0 auto;padding:8px 7px}
+ .mobile-nav button span{font-size:11px}
+ .mobile-nav::after{content:'';flex:0 0 12px}
+ .mobile-header .icon-btn{min-width:44px}
+ .task-row{gap:9px}
+ .task-meta{font-size:12px}
+ .week-pin{min-width:42px;min-height:42px}
+ .stat-value{font-size:27px}
+ .inline-add{align-items:stretch}
+ .inline-add > input:first-child{flex-basis:100%}
+ .inline-add > button{flex:1}
+ .shopping-line{gap:10px}
+ .shopping-line label{flex:1}
+ .header-row{align-items:flex-start}
+ .page-title{font-size:30px}
+ .modal{max-height:calc(100dvh - 25px);border-radius:19px 19px 0 0}
+ .modal-body{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+}
+@media(max-width:400px){.main{padding-left:14px;padding-right:14px}.mobile-nav button{min-width:68px}.task-row{padding-inline:5px}.page-title{font-size:28px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
