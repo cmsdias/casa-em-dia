@@ -507,3 +507,9 @@ select{
  .shopping-category{padding-inline:5px}
 }
 /* As regras globais de componentes precedem esta variante. O foco permanece visível e consistente. */
+
+.finance-toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 18px}
+.finance-toolbar label{font-size:13px;font-weight:750}
+.finance-toolbar input{min-height:44px;min-width:150px;padding:8px 12px;border:1px solid #cbd7ca;border-radius:12px}
+.finance-toolbar span{font-size:12px;color:#647365}
+@media(max-width:650px){.finance-toolbar{display:grid;grid-template-columns:auto 1fr}.finance-toolbar input{width:100%}.finance-toolbar span{grid-column:1/-1}}
