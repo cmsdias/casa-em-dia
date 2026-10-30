@@ -50,7 +50,7 @@ jobs:
       - name: Obter próxima versão 1.5 (ícones atualizados)
         uses: actions/checkout@v4
         with:
-          ref: feature/1.5-product-experience
+          ref: feature/1.5.1-mobile-quick-create
           path: next-source
       - name: Montar demonstracao sem dados privados
         run: |
