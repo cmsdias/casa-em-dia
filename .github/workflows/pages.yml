@@ -45,7 +45,7 @@ jobs:
         with:
           ref: main
           path: ux-source
-      - name: Obter próxima versão 1.5 (revisão UX testável)
+      - name: Obter próxima versão 1.5 (ícones atualizados)
         uses: actions/checkout@v4
         with:
           ref: feature/1.5-product-experience
