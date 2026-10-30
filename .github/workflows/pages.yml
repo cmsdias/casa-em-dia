@@ -38,7 +38,7 @@ jobs:
         with:
           ref: feature/1.2-household
           path: beta-source
-# Pré-visualização UX publicada em /ux, com dados fictícios.
+# Pré-visualização UX em /ux, com dados fictícios; revisão atualizada 2026-10-30.
       - name: Obter variante UX
         uses: actions/checkout@v4
         with:
