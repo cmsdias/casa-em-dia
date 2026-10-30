@@ -535,3 +535,7 @@ select{
 
 .boot .logo-mark{width:56px;height:56px;background:transparent;box-shadow:none;border-radius:0}
 .boot .logo-mark img{height:56px;width:56px;object-fit:contain;display:block}
+
+/* Logótipo horizontal completo — arte vetorial única na sidebar. */
+.sidebar .brand.brand-primary{padding:2px 6px 30px;display:flex;align-items:center;min-width:0}
+.sidebar .brand-primary-logo{display:block;width:100%;max-width:222px;height:auto;max-height:76px;object-fit:contain;object-position:left center}
