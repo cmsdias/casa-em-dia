@@ -1,3 +1,9 @@
+# 1.3.0-beta — Desenvolvimento privado
+
+- Primeiro módulo de contas e movimentos em cêntimos, resumo mensal, orçamento e objetivos via API.
+- Acesso financeiro negado a colaboradores e contas filtradas no servidor.
+- Experimental: não instalar em produção.
+
 # 1.2.0 — Trabalho em desenvolvimento
 
 - Perfis de administrador, gestor, morador e colaborador com controlo de acesso no servidor.
