@@ -12,6 +12,7 @@ const {chromium}=require('playwright');
    const url=new URL(req.url,'http://localhost');
    let name=paths[url.pathname];
    if(!name&&url.pathname.startsWith('/assets/'))name='public'+url.pathname;
+   if(!name&&/^\/(?:logo-[\w-]+\.svg|icon(?:-[\w-]+)?\.svg)$/.test(url.pathname))name='public'+url.pathname;
    if(!name){res.writeHead(404);return res.end('Not found');}
    const full=path.resolve(root,name);
    if(!full.startsWith(path.resolve(root,'..')+path.sep)){res.writeHead(403);return res.end('Forbidden');}
@@ -41,6 +42,11 @@ const {chromium}=require('playwright');
        assert.equal(metrics.navDirection,'row','Bottom nav must be horizontal');
        assert(metrics.navCount>=7,'Expected all navigation destinations');
        assert(metrics.navScroll>metrics.navWidth,'Bottom nav must be swipeable');
+       const fixed=await page.locator('.swipe-nav').evaluate(el=>{const r=el.getBoundingClientRect();return {bottom:Math.round(innerHeight-r.bottom),left:Math.round(r.left),width:Math.round(r.width)};});
+       assert.equal(fixed.bottom,0,'Bottom bar must touch bottom of viewport');
+       assert.equal(fixed.left,0,'Bottom bar must touch left edge');
+       assert.equal(fixed.width,vp.width,'Bottom bar must be full width');
+       assert.equal(await page.locator('.mobile-header img[src="logo-primary-dark.svg"]').count(),1,'Mobile header must use primary SVG logo');
        assert(metrics.firstWidth>60&&metrics.firstWidth<115,'Buttons must have compact width');
      }
      if(vp.width<500)fs.mkdirSync(path.join(root,'ui-screens'),{recursive:true});
@@ -52,6 +58,7 @@ const {chromium}=require('playwright');
      assert.equal(await page.locator('.filters-collapsed').count(),0);
      if(vp.width<500)await page.screenshot({path:path.join(root,'ui-screens','02-tarefas-iphone.png'),fullPage:true});
      await page.locator(vp.width<500?'.floating-add':'.header-row [data-action="add"]').click();
+     if(vp.width<500){await page.locator('.quick-create-menu').waitFor();await page.locator('[data-action="quick-new"][data-kind="task"]').click();}
      await page.locator('#task-form').waitFor();
      assert.equal(await page.locator('#task-advanced').isHidden(),true);
      await page.locator('[data-action="advanced-task"]').click();
