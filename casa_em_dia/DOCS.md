@@ -42,6 +42,6 @@ As permissões são verificadas no servidor em cada pedido, não apenas escondid
 ## Limitações
 
 - Sem notificações nem anexos/fotografias.
-- Sem modo offline: é preciso ligação ao Home Assistant para guardar alterações.
-- A letra Instrument Sans é carregada do Google Fonts; sem Internet, o browser usa uma letra alternativa.
+- Sem escrita offline: a interface abre a partir da cache, mas guardar alterações exige ligação ao Home Assistant.
+- A aplicação não faz pedidos a serviços externos (a letra está incluída).
 - Pensada para uma casa (poucas pessoas em simultâneo). Os dados são gravados num único ficheiro JSON.

@@ -49,6 +49,8 @@ const VERSION=require('./package.json').version.replace(/\./g,'\\.');
   assert.equal((await fetch(base+'/%E0%A4%A')).status,400,'URL malformado deve devolver 400');
   assert.equal((await fetch(base+'/health')).status,200,'Servidor deve continuar ativo após URL malformado');
   assert.match((await fetch(base+'/manifest.webmanifest')).headers.get('content-type'),/application\/manifest\+json/);
+  assert.match((await fetch(base+'/fonts/instrument-sans-latin-wght-normal.woff2')).headers.get('content-type'),/font\/woff2/,'A letra deve ser servida localmente');
+  assert.doesNotMatch(await (await fetch(base+'/')).text(),/fonts\.googleapis/,'Sem pedidos ao Google Fonts');
   assert.equal((await req('/api/tasks','POST',{title:'Data impossível',dueDate:'2026-02-31'})).status,400,'Data de prazo inexistente deve ser recusada');
   assert.equal((await req('/api/worklogs','POST',{date:'2026-02-31',minutes:10,note:'x'})).status,400,'Data de trabalho inexistente deve ser recusada');
   for(let i=0;i<8;i++)assert.equal((await req('/api/login','POST',{username:'inexistente',password:'errada-errada'})).status,401);

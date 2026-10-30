@@ -1,3 +1,19 @@
+# 1.6.0 — Revisão de usabilidade e interface
+
+- Ícones distintos na navegação: Rotinas (repetição), Compras (carrinho) e Trabalhos (ferramenta) já não repetem os de Tarefas e Calendário.
+- Tarefas atrasadas destacadas a vermelho na lista e no painel.
+- Datas legíveis em português (ex.: «28 out») nos trabalhos, movimentos e orçamentos; meses por extenso.
+- Painel mais curto: removida a secção «Por onde começar?», que repetia as tarefas do topo.
+- Rotinas com filtros recolhidos (como em Tarefas) e cartões mais compactos.
+- Pessoas: nome, perfil e ações sem texto cortado em desktop e telemóvel.
+- Compras: formulário compacto no telemóvel e quantidade destacada em cada produto.
+- Botão «+» de criação rápida também disponível no desktop.
+- Logótipo no ecrã de entrada do telemóvel.
+- Os formulários rápidos já não abrem o seletor de data automaticamente.
+- Letra Instrument Sans incluída na aplicação: sem pedidos ao Google e com aspeto correto mesmo sem Internet.
+- Acessibilidade: rótulos nos campos de compras, foco visível no botão «+» e na navegação.
+- Sem migração de dados. Criar cópia de segurança do add-on antes da atualização.
+
 # 1.5.1 — Navegação móvel, criação rápida e logótipo vetorial
 
 - Logótipo horizontal em SVG no cabeçalho móvel e no ecrã de login, em vez de lettering recriado em HTML/CSS.

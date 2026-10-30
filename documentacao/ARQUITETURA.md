@@ -21,7 +21,7 @@ A demonstração no GitHub Pages usa a mesma interface com `window.__CASA_DEMO__
 
 | Camada | Implementação |
 | --- | --- |
-| Interface | HTML, CSS e JavaScript sem frameworks; renderização por template strings em `app.js`. Letra Instrument Sans (Google Fonts). |
+| Interface | HTML, CSS e JavaScript sem frameworks; renderização por template strings em `app.js`. Letra Instrument Sans alojada em `public/fonts/` (sem pedidos externos). |
 | Servidor | Node.js 22, apenas módulos nativos (`http`, `fs`, `crypto`). Sem dependências npm em produção. |
 | Persistência | Um ficheiro JSON (`DATA_DIR/casa.json`). Valores monetários em cêntimos (inteiros). |
 | Autenticação | Contas próprias, palavras-passe com scrypt e sal, sessão assinada com HMAC num cookie `HttpOnly; SameSite=Strict` (e `Secure` em HTTPS), válida 14 dias. |
@@ -72,5 +72,5 @@ Todos os pedidos de escrita exigem o cabeçalho `X-Casa-Request: 1`. Isto obriga
 
 - `app.js` contém o estado, a renderização das páginas, os formulários e o cliente da API.
 - `style.css` é organizado por camadas históricas. A navegação móvel, o botão **+** e o menu de criação rápida estão num **bloco único no fim do ficheiro**; é aí que devem ser feitas as alterações.
-- `sw.js` e `manifest.webmanifest` existem, mas o service worker **não está registado**: a aplicação não funciona offline.
+- `sw.js` (service worker) é registado apenas na versão com servidor. Guarda a interface em cache para abrir mais depressa e mostrar o ecrã mesmo com rede instável; o JavaScript e o CSS vêm sempre primeiro da rede. **Não há escrita offline**: guardar alterações exige ligação ao Home Assistant. Ao mudar de versão, a constante `VERSION` em `sw.js` tem de mudar para limpar a cache antiga.
 - Ícones PNG gerados com `build_brand.py`; logótipos SVG gerados com `build_logo_vectors.py`.
