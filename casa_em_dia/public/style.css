@@ -539,3 +539,35 @@ select{
 /* Logótipo horizontal completo — arte vetorial única na sidebar. */
 .sidebar .brand.brand-primary{padding:2px 6px 30px;display:flex;align-items:center;min-width:0}
 .sidebar .brand-primary-logo{display:block;width:100%;max-width:222px;height:auto;max-height:76px;object-fit:contain;object-position:left center}
+
+/* Casa em Dia 1.5.1 — marca vetorial única e navegação mobile fixa */
+.mobile-header .brand.mobile-primary{flex:1;min-width:0;padding:0;display:flex;align-items:center}
+.mobile-header .brand.mobile-primary .brand-primary-logo{width:min(75vw,250px);max-width:100%;height:auto;max-height:64px;object-fit:contain;object-position:left center}
+.auth-aside .brand.brand-primary .brand-primary-logo{width:min(100%,300px);height:auto;max-height:86px}
+.quick-create-dismiss{position:fixed;inset:0;background:rgba(11,20,15,.18);border:0;z-index:37;cursor:default}
+.quick-create-menu{position:fixed;right:clamp(18px,3vw,52px);bottom:103px;width:min(320px,calc(100vw - 32px));padding:12px;background:#fdfdfa;border:1px solid #d9dfd5;border-radius:20px;box-shadow:0 20px 58px #0e1b1435;z-index:39;animation:quickMenuIn .18s ease-out both}
+.quick-create-heading{display:block;padding:9px 11px 12px;color:#728073;font-size:10px;font-weight:750;letter-spacing:.14em}
+.quick-create-menu button[role=menuitem]{width:100%;display:flex;align-items:center;gap:13px;text-align:left;padding:12px;border:0;border-radius:12px;background:transparent;color:#1b2b21;font:600 14px 'Instrument Sans',sans-serif;cursor:pointer;min-height:48px}
+.quick-create-menu button[role=menuitem]:is(:hover,:focus-visible){background:#eef3eb}
+.quick-create-menu button[role=menuitem] svg{width:19px;height:19px;flex:0 0 auto}
+.quick-create-menu button[role=menuitem] span{flex:1}
+.quick-create-menu button[role=menuitem] svg:last-child{width:15px;height:15px;color:#7d897f}
+.quick-modal{max-width:485px}
+.floating-add{z-index:40;transition:transform .18s ease,box-shadow .18s ease}
+.floating-add.is-open svg{transform:rotate(45deg);transition:transform .18s ease}
+@keyframes quickMenuIn{from{opacity:0;transform:translateY(9px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:650px){
+  .mobile-nav.swipe-nav{left:0!important;right:0!important;bottom:0!important;width:100%!important;max-width:100%!important;height:calc(72px + env(safe-area-inset-bottom))!important;min-height:calc(72px + env(safe-area-inset-bottom))!important;padding:7px 13px calc(7px + env(safe-area-inset-bottom))!important;margin:0!important;border-radius:0!important;border:0!important;border-top:1px solid #354037!important;box-shadow:0 -8px 28px #17261e16!important;background:#141a16!important;box-sizing:border-box!important}
+  .mobile-nav.swipe-nav>.swipe-nav-item{flex:0 0 76px!important;width:76px!important;min-width:76px!important}
+  .floating-add{bottom:calc(85px + env(safe-area-inset-bottom))!important;right:18px!important}
+  .quick-create-menu{bottom:calc(166px + env(safe-area-inset-bottom));right:14px;width:min(315px,calc(100vw - 28px))}
+  .layout>.main,.main{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
+  .mobile-header .brand.mobile-primary .brand-primary-logo{width:min(72vw,240px)}
+  :is(.action-hub,.settings-card,.panel,.routine-card){transition:box-shadow .18s ease,transform .18s ease}
+  .quick-modal{width:min(100%,480px)}
+}
+@media(min-width:651px){.floating-add{bottom:34px!important;right:30px!important}.quick-create-menu{bottom:112px}}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){.action-hub-task:hover,.routine-card:hover,.settings-card:hover{transform:translateY(-2px);box-shadow:0 10px 28px #162c1c12}}
+.action-hub{background:linear-gradient(145deg,#edf3ed 0%,#e8eee7 68%,#e4ebe2 100%)}
+.quick-create-menu{background:linear-gradient(160deg,#fff 0%,#f8faf6 100%)}
+@media(prefers-reduced-motion:reduce){.quick-create-menu{animation:none!important}.floating-add,.floating-add svg,:is(.action-hub,.settings-card,.panel,.routine-card){transition:none!important}}
