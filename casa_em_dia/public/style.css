@@ -254,3 +254,45 @@ input,select,textarea{outline:auto;outline-color:transparent}
  .shopping-line>strong,.shopping-line>b{margin-left:auto}
  .rooms-hint{font-size:11px}
 }
+
+
+/* MOBILE FIX 2026-10-30 — última regra do CSS: anula a margem de desktop que deslocava o conteúdo */
+@media screen and (max-width:650px){
+ html,body,#app,.layout{width:100%;max-width:100%;min-width:0}
+ .layout{display:block}
+ .layout>.sidebar,.topline{display:none}
+ .layout>.main,.main{
+   margin:0;
+   margin-left:0;
+   width:100%;
+   max-width:100%;
+   min-width:0;
+   padding:0 17px calc(128px + env(safe-area-inset-bottom));
+ }
+ #content,.mobile-header,.demo-banner,.welcome,.daily-planner,.weekly-list,.panel,.header-row,.dashboard-grid,.stats-grid,.rooms-section{max-width:100%;min-width:0}
+ .mobile-header{
+   display:flex;
+   width:100%;
+   align-items:center;
+   justify-content:space-between;
+   gap:11px;
+   padding:17px 0 19px;
+ }
+ .mobile-header .brand{display:flex;align-items:center;flex:1;min-width:0;gap:10px;padding:0}
+ .mobile-header .brand-symbol{flex:0 0 38px}
+ .mobile-header .brand-copy{flex:1;min-width:0}
+ .mobile-header .brand-copy strong{font-size:16px;line-height:1.2;white-space:nowrap}
+ .mobile-header .brand-copy span{font-size:9px;letter-spacing:.7px;line-height:1.45}
+ .mobile-header>.icon-btn{flex:0 0 44px}
+ .demo-banner{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+ .demo-banner>span{flex:1;min-width:0;overflow-wrap:break-word}
+ .demo-banner>button{flex:0 0 auto;min-height:36px}
+ .welcome .page-title{overflow-wrap:anywhere}
+ .daily-planner{grid-template-columns:minmax(0,1fr)}
+ .daily-planner>div{min-width:0}
+ .stat-grid>.settings-card strong{white-space:normal;overflow-wrap:anywhere}
+}
+@media screen and (max-width:390px){
+ .layout>.main,.main{padding-left:15px;padding-right:15px}
+ .mobile-header .brand-copy strong{font-size:15px}
+}
