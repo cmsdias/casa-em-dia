@@ -1,3 +1,10 @@
+# 1.3.4 — Correção de navegação e formulários no iPhone
+
+- Corrige a direção vertical herdada que mostrava apenas um botão na navegação.
+- Define largura fixa dos destinos e deslocamento horizontal dentro da barra.
+- Substitui a aparência de foco azul por um foco dourado discreto, mantendo acessibilidade.
+- Corrige estilo dos campos de pesquisa e dos formulários sem alterar dados.
+
 # 1.3.3 — Navegação e formulários redesenhados
 
 - Barra inferior deslizável para aceder a todas as funções sem menu Mais.
