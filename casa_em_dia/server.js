@@ -111,7 +111,8 @@ const server=http.createServer(async (req,res)=>{
       const name=cleanStr(b.name,100);if(!name)return fail(res,400,'Indica o nome da conta.');
       if(!['cash','bank','other'].includes(b.kind||'bank'))return fail(res,400,'Tipo de conta inválido.');
       const scope=b.scope||'private';if(!['private','shared'].includes(scope))return fail(res,400,'Visibilidade inválida.');
-      const allowedUserIds=Array.isArray(b.allowedUserIds)?b.allowedUserIds.filter(x=>db.people.some(p=>p.id===x&&roleOf(p)!=='collaborator'&&p.id!==user.id)):[];
+      if(b.allowedUserIds!==undefined&&(!Array.isArray(b.allowedUserIds)||b.allowedUserIds.some(x=>typeof x!=='string'||!db.people.some(p=>p.id===x&&roleOf(p)!=='collaborator'&&p.id!==user.id))))return fail(res,400,'Utilizadores da partilha inválidos.');
+      const allowedUserIds=Array.isArray(b.allowedUserIds)?b.allowedUserIds:[];
       if(!elevated(user)&&allowedUserIds.length)return fail(res,403,'Só gestores podem partilhar contas com terceiros.');
       const a={id:id(),name,kind:b.kind||'bank',currency:'EUR',scope,ownerId:user.id,allowedUserIds:scope==='shared'?[...new Set(allowedUserIds)]:[],archived:false,createdAt:new Date().toISOString()};
       db.finance.accounts.push(a);save();return send(res,201,{account:a});
@@ -122,6 +123,7 @@ const server=http.createServer(async (req,res)=>{
       if(a.ownerId!==user.id&&roleOf(user)!=='admin')return fail(res,403,'Só o titular pode alterar a conta.');
       if('archived'in b&&typeof b.archived!=='boolean')return fail(res,400,'Estado inválido.');
       if('name'in b&&!cleanStr(b.name,100))return fail(res,400,'Nome inválido.');
+      if('scope'in b||'allowedUserIds'in b){if(!['private','shared'].includes(b.scope||a.scope))return fail(res,400,'Visibilidade inválida.');const ids='allowedUserIds'in b?b.allowedUserIds:a.allowedUserIds;if(!Array.isArray(ids)||ids.some(x=>typeof x!=='string'||!db.people.some(p=>p.id===x&&roleOf(p)!=='collaborator'&&p.id!==a.ownerId)))return fail(res,400,'Utilizadores inválidos.');if(!elevated(user)&&ids.length)return fail(res,403,'Sem permissão para partilhar a conta.');a.scope=b.scope||a.scope;a.allowedUserIds=a.scope==='private'?[]:[...new Set(ids)];}
       if('name'in b)a.name=cleanStr(b.name,100);if('archived'in b)a.archived=b.archived;
       save();return send(res,200,{account:a});
     }
@@ -138,13 +140,16 @@ const server=http.createServer(async (req,res)=>{
       if(!financeAllowed(user))return fail(res,403,'Sem acesso às finanças.');
       const account=db.finance.accounts.find(x=>x.id===b.accountId);if(!account||!accessAccount(user,account))return fail(res,404,'Conta não encontrada.');
       if(typeof b.month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(b.month))return fail(res,400,'Mês inválido.');
+      if(account.archived)return fail(res,409,'Conta arquivada.');
       const amountCents=cents(b.amountCents);
+      if(db.finance.budgets.some(x=>x.accountId===account.id&&x.month===b.month&&x.category===(cleanStr(b.category,80)||'Geral')))return fail(res,409,'Já existe orçamento desta categoria para este mês.');
       const budget={id:id(),accountId:account.id,month:b.month,category:cleanStr(b.category,80)||'Geral',amountCents,createdBy:user.id};
       db.finance.budgets.push(budget);save();return send(res,201,{budget});
     }
     if(p==='/api/finance/goals'&&req.method==='POST'){
       if(!financeAllowed(user))return fail(res,403,'Sem acesso às finanças.');
       const account=db.finance.accounts.find(x=>x.id===b.accountId);if(!account||!accessAccount(user,account))return fail(res,404,'Conta não encontrada.');
+      if(account.archived)return fail(res,409,'Conta arquivada.');
       const title=cleanStr(b.title,140);if(!title)return fail(res,400,'Indica o objetivo.');
       const targetCents=cents(b.targetCents),savedCents=b.savedCents===undefined?0:b.savedCents;if(!Number.isSafeInteger(savedCents)||savedCents<0||savedCents>targetCents)return fail(res,400,'Poupança inválida.');
       const goal={id:id(),accountId:account.id,title,targetCents,savedCents,createdBy:user.id};
