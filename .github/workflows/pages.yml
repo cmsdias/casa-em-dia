@@ -72,6 +72,7 @@ jobs:
           cp next-source/docs/index.html _site/next/index.html
           cp next-source/casa_em_dia/public/style.css next-source/casa_em_dia/public/app.js _site/next/
           cp -R next-source/casa_em_dia/public/assets _site/next/assets
+          cp next-source/casa_em_dia/public/logo-*.svg next-source/casa_em_dia/public/icon*.svg next-source/casa_em_dia/public/icon-*.png next-source/casa_em_dia/public/apple-touch-icon.png next-source/casa_em_dia/public/manifest.webmanifest _site/next/
           touch _site/.nojekyll
       - name: Configurar Pages
         uses: actions/configure-pages@v5
