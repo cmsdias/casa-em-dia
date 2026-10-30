@@ -136,3 +136,92 @@ button,input,select,textarea {font-family:inherit;}
 /* Preview Casa em Dia 1.1.0 */
 
 .inline-add,.worklog-form{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:20px 0}.inline-add input,.worklog-form input,.worklog-form textarea{border:1px solid #deded8;border-radius:12px;padding:12px;font:inherit;max-width:100%}.inline-add input:first-child{flex:1;min-width:180px}.worklog-form{display:block;padding:20px;background:var(--surface,#f6f6f2);border-radius:16px}.worklog-form .field{flex:1}.shopping-line,.worklog-line{display:flex;gap:16px;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid #ecece9}.shopping-line label{flex:1;display:flex;gap:12px;align-items:center}.shopping-line .done{text-decoration:line-through;opacity:.6}.worklog-line{display:block;line-height:1.8}
+
+
+/* Casa em Dia — UX Refresh 2026 (não destrutivo) */
+:root{--ink:#202c25;--muted:#606d64;--line:#e0e6dd;--bg:#f7f8f5;--gold:#d6af61;--deep:#24352a;--focus:#86601f;--radius:16px;--space:8px}
+body{font-size:15px;line-height:1.55;-webkit-text-size-adjust:100%}
+.page-subtitle,.task-meta,.section-sub,.stat-bottom,.routine-sub,.settings-card p{color:var(--muted)}
+button,input,textarea,select{font-size:inherit}
+button,a,input,select,textarea{touch-action:manipulation}
+input,select,textarea{outline:auto;outline-color:transparent}
+:where(button,a,input,select,textarea,[tabindex]):focus-visible{outline:3px solid var(--focus)!important;outline-offset:3px;box-shadow:0 0 0 5px #e8d6aa99}
+.button,.icon-btn,.nav-link,.week-pin,.time-buttons button,.time-filter button,.discovery-chip,.close,.hero-cta{min-height:44px}
+.icon-btn,.close{min-width:44px}
+.button{font-size:13px;letter-spacing:0}
+.nav-link{font-size:14px;color:#425248}
+.nav-link.active{background:#e8efe5;font-weight:750}
+.nav-link:hover,.nav-link:focus-visible{background:#edf2e9}
+.sidebar{width:246px;padding:24px 15px}
+.main{margin-left:246px;width:calc(100% - 246px);padding:30px clamp(22px,3.5vw,56px) 110px}
+.page-title{font-size:clamp(29px,3vw,39px);letter-spacing:-.04em;line-height:1.15}
+.section-title{font-size:17px}
+.panel,.stat-card,.settings-card{border-color:var(--line);border-radius:var(--radius)}
+.task-row{min-height:78px;gap:12px}
+.task-detail{min-width:0;text-align:left}
+.task-title{font-size:14px;line-height:1.5}
+.task-meta{font-size:12px}
+.task-check{min-width:26px;min-height:26px}
+.stat-value{font-variant-numeric:tabular-nums}
+.stat-top{font-size:12px;color:#59695f}
+.stat-bottom{font-size:12px}
+.shopping-line{min-height:62px;flex-wrap:wrap}
+.shopping-line label{min-width:180px}
+.shopping-line input[type=checkbox]{width:20px;height:20px;accent-color:#314d3b}
+.inline-add input,.inline-add select,.worklog-form input,.worklog-form select,.worklog-form textarea,.settings-card input,.settings-card select,.settings-card textarea{min-height:44px;background:#fff;border:1px solid #adbab0;border-radius:12px}
+.worklog-form{background:#eef2eb;padding:clamp(16px,2.5vw,24px)}
+.field label{font-size:13px;color:#344337;font-weight:650}
+.modal{max-height:min(90dvh,950px);overflow-y:auto}
+.modal-body{overflow:visible}
+.settings-card{overflow-wrap:anywhere}
+.finance-ui-summary{font-variant-numeric:tabular-nums}
+@media(max-width:1100px){.main{padding-left:24px;padding-right:24px}.stats-grid{gap:10px}}
+@media(max-width:800px){
+ body{font-size:15px}
+ .main{padding-left:18px;padding-right:18px;padding-bottom:calc(128px + env(safe-area-inset-bottom))}
+ .mobile-nav{max-width:100%;padding-bottom:env(safe-area-inset-bottom);overflow-x:auto;scrollbar-width:none;justify-content:flex-start;gap:4px;-webkit-overflow-scrolling:touch}
+ .mobile-nav::-webkit-scrollbar{display:none}
+ .mobile-nav button{min-width:72px;min-height:54px;flex:0 0 auto;padding:8px 7px}
+ .mobile-nav button span{font-size:11px}
+ .mobile-nav::after{content:'';flex:0 0 12px}
+ .mobile-header .icon-btn{min-width:44px}
+ .task-row{gap:9px}
+ .task-meta{font-size:12px}
+ .week-pin{min-width:42px;min-height:42px}
+ .stat-value{font-size:27px}
+ .inline-add{align-items:stretch}
+ .inline-add > input:first-child{flex-basis:100%}
+ .inline-add > button{flex:1}
+ .shopping-line{gap:10px}
+ .shopping-line label{flex:1}
+ .header-row{align-items:flex-start}
+ .page-title{font-size:30px}
+ .modal{max-height:calc(100dvh - 25px);border-radius:19px 19px 0 0}
+ .modal-body{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+}
+@media(max-width:400px){.main{padding-left:14px;padding-right:14px}.mobile-nav button{min-width:68px}.task-row{padding-inline:5px}.page-title{font-size:28px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+
+/* UX Refresh — navegação compacta, menu secundário e painéis */
+.mobile-more-panel{display:none}
+@media(max-width:650px){
+ .mobile-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));overflow:visible;gap:1px;left:12px;right:12px;max-width:calc(100% - 24px);bottom:calc(12px + env(safe-area-inset-bottom));height:70px;padding:6px}
+ .mobile-nav button{min-width:0;width:100%;min-height:54px;padding:6px 1px;border-radius:16px}
+ .mobile-nav button span{font-size:10px;white-space:nowrap}
+ .mobile-more-panel{position:fixed;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;left:12px;right:12px;bottom:calc(93px + env(safe-area-inset-bottom));padding:12px;border:1px solid #d7dfd3;border-radius:21px;box-shadow:0 14px 45px #13201930;background:#fff;z-index:32}
+ .mobile-more-panel button{border:0;border-radius:12px;background:#f2f5f0;padding:13px 11px;display:flex;align-items:center;gap:10px;color:#24392d;text-align:left;font-weight:650;min-height:48px}
+ .mobile-more-panel button svg{width:18px;height:18px}
+ .mobile-more-panel button:active{background:#e1eadf}
+ .floating-add{bottom:calc(98px + env(safe-area-inset-bottom))}
+ .stat-card{padding:15px}
+ .task-detail{flex:1;min-width:0}
+ .shopping-line>span{min-width:0;overflow-wrap:anywhere}
+ .inline-add>select,.inline-add>input{min-height:44px}
+ .worklog-form>.form-row{grid-template-columns:1fr}
+ .worklog-form input,.worklog-form select,.worklog-form textarea{width:100%}
+ .field input,.field textarea,.field select{font-size:16px}
+ .settings-card{padding:18px}
+}
+@media(min-width:651px) and (max-width:900px){.sidebar{width:76px}.main{margin-left:76px;width:calc(100% - 76px)}}
+@media(max-width:650px) and (prefers-reduced-motion:reduce){.mobile-more-panel{animation:none}}
