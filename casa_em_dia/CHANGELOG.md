@@ -1,3 +1,15 @@
+# 1.5.0 — Experiência integrada e nova identidade visual
+
+- Dashboard com ações prioritárias, atribuídas e próximas do prazo.
+- Formulário de tarefa simplificado com mais opções recolhíveis.
+- Filtros de tarefas disponíveis a pedido, com limpeza rápida.
+- Compras agrupadas por categoria e opção de visualizar apenas pendentes.
+- Rotinas ordenadas por próxima ocorrência e resumo das vencidas.
+- Ao concluir tarefa pontual, atalho para registar o trabalho realizado.
+- Finanças com seleção do mês para consulta do resumo.
+- Nova identidade minimalista integrada: logótipo vetorial horizontal, versões clara/escura e ícones PWA/HA.
+- Sem migração de dados. Criar cópia de segurança do add-on antes da atualização.
+
 # 1.3.4 — Correção de navegação e formulários no iPhone
 
 - Corrige a direção vertical herdada que mostrava apenas um botão na navegação.

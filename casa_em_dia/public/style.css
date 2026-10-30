@@ -462,3 +462,80 @@ select{
  .form-row{grid-template-columns:minmax(0,1fr)}
  .form-row>*{min-width:0}
 }
+
+/* Casa em Dia 1.5 — produto orientado à ação */
+:root{--ced-ink:#213027;--ced-muted:#607065;--ced-cream:#f7f8f5;--ced-accent:#c5a66c;--ced-border:#dce3da}
+.action-hub{background:#e9eee7;border:1px solid #d9e3d5;border-radius:24px;padding:clamp(18px,3vw,32px);margin:0 0 28px}
+.action-hub-header{display:flex;align-items:center;justify-content:space-between;gap:18px}
+.action-hub h2{font-size:clamp(23px,2.7vw,33px);line-height:1.17;letter-spacing:-.045em;margin:10px 0}
+.action-hub-header p{color:var(--ced-muted);font-size:13px}
+.action-hub-list{display:grid;gap:7px;margin:21px 0}
+.action-hub-task{background:#fff;border:1px solid var(--ced-border);display:flex;align-items:center;gap:13px;padding:12px;border-radius:15px;min-width:0}
+.action-check{display:grid;place-items:center;border:1px solid #cbd4ca;border-radius:50%;background:#f8faf7;flex:0 0 38px;height:38px;color:#304839}
+.action-check svg{width:19px}
+.action-hub-detail{flex:1;min-width:0;text-align:left;background:none;border:0;display:grid;gap:5px}
+.action-hub-detail strong{font-weight:750;color:var(--ced-ink);font-size:14px;white-space:normal}
+.action-hub-detail small{color:var(--ced-muted)}
+.action-duration{font-size:12px;color:var(--ced-muted);white-space:nowrap}
+.action-hub-shortcuts{display:flex;gap:9px;flex-wrap:wrap}
+.action-hub-shortcuts button{border:1px solid #d0dacf;background:#fff;border-radius:50px;padding:9px 14px;color:#37503d;font-weight:700;font-size:12px;min-height:40px}
+.filters-summary{display:flex;justify-content:space-between;gap:10px;margin:10px 0 12px}
+.filters-summary .button{min-height:44px}
+.filters-collapsed{display:none}
+.task-more{display:flex;align-items:center;gap:8px;background:#f1f4ef;border:1px solid #d3ded0;color:#314639;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:750;margin:14px 0;min-height:44px;width:100%}
+.task-more svg{width:18px;height:18px}
+#task-advanced[hidden]{display:none!important}
+.shopping-switch{display:flex;gap:6px;background:#e9eee8;border-radius:14px;padding:5px;margin:8px 0 18px}
+.shopping-switch button{flex:1;border:0;background:transparent;border-radius:10px;min-height:44px;font-size:13px;color:#536357}
+.shopping-switch button.active{background:#fff;color:#223429;font-weight:750;box-shadow:0 1px 5px #15221a15}
+.shopping-category{padding:12px 15px}
+.shopping-category h3{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:#62736a;margin:8px 0 10px}
+.shopping-category .shopping-line:last-child{border-bottom:0}
+.routine-overview{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#ecf1eb;padding:17px 20px;border:1px solid #dce5d9;border-radius:15px;margin:17px 0}
+.routine-overview strong{font-size:15px}
+.routine-overview span{color:#586a5d;font-size:13px}
+.completion-followup{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);width:min(520px,calc(100vw - 28px));z-index:999;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between;border:1px solid #405044;background:#1b2b22;color:#fff;padding:13px 15px;border-radius:18px;box-shadow:0 12px 42px #0003;font-size:13px}
+.completion-followup .button{background:#f5f6ef;color:#1b2b22;border:0}
+.completion-followup .icon-btn{border:0;color:#fff}
+@media(max-width:650px){
+ .action-hub-header{align-items:flex-start;flex-direction:column}
+ .action-hub-header .button{width:100%}
+ .action-hub{padding:19px 17px;border-radius:20px}
+ .action-hub-detail strong{font-size:13px}
+ .action-duration{font-size:11px}
+ .completion-followup{bottom:calc(105px + env(safe-area-inset-bottom))}
+ .shopping-category{padding-inline:5px}
+}
+/* As regras globais de componentes precedem esta variante. O foco permanece visível e consistente. */
+
+.finance-toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 18px}
+.finance-toolbar label{font-size:13px;font-weight:750}
+.finance-toolbar input{min-height:44px;min-width:150px;padding:8px 12px;border:1px solid #cbd7ca;border-radius:12px}
+.finance-toolbar span{font-size:12px;color:#647365}
+@media(max-width:650px){.finance-toolbar{display:grid;grid-template-columns:auto 1fr}.finance-toolbar input{width:100%}.finance-toolbar span{grid-column:1/-1}}
+
+/* Gestão de equipa e relatório de trabalhos — versão 1.5 */
+.person-tasks{min-height:42px;white-space:nowrap;border-color:#d6dfd2;color:#31513c}
+.worklog-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 18px}
+.worklog-summary>div{background:#eff2eb;border:1px solid #dde4db;border-radius:16px;padding:17px;display:flex;flex-direction:column;gap:6px}
+.worklog-summary strong{font-size:clamp(22px,3vw,29px);font-variant-numeric:tabular-nums;letter-spacing:-.045em}
+.worklog-summary span{font-size:12px;color:#657364}
+@media(max-width:650px){.person-card{flex-wrap:wrap;gap:10px}.person-tasks{flex-basis:100%;order:5}.worklog-summary>div{padding:14px}}
+
+/* Identidade Casa em Dia — símbolo de traço contínuo, sem tagline */
+.brand .brand-symbol.brand-new{width:46px;height:46px;min-width:46px;background:transparent!important;border-radius:0;display:grid;place-items:center;padding:0;box-shadow:none}
+.brand .brand-symbol.brand-new img{display:block;width:44px;height:44px;max-width:none;object-fit:contain}
+.brand .brand-copy strong{font-family:'Instrument Sans',Arial,sans-serif;font-size:16px;font-weight:650;letter-spacing:.12em;line-height:1.15}
+.auth-aside .brand-symbol.brand-new{background:transparent!important}
+.auth-aside .brand-copy strong{color:#f8f7f2}
+.mobile-header .brand-symbol.brand-new{width:43px;height:43px;flex:0 0 43px}
+.mobile-header .brand-symbol.brand-new img{width:42px;height:42px}
+.mobile-header .brand-copy strong{font-size:clamp(12px,3.6vw,16px);letter-spacing:.085em;white-space:nowrap}
+@media(max-width:360px){.mobile-header .brand-copy strong{font-size:12px;letter-spacing:.05em}}
+
+.boot .logo-mark{width:56px;height:56px;background:transparent;box-shadow:none;border-radius:0}
+.boot .logo-mark img{height:56px;width:56px;object-fit:contain;display:block}
+
+/* Logótipo horizontal completo — arte vetorial única na sidebar. */
+.sidebar .brand.brand-primary{padding:2px 6px 30px;display:flex;align-items:center;min-width:0}
+.sidebar .brand-primary-logo{display:block;width:100%;max-width:222px;height:auto;max-height:76px;object-fit:contain;object-position:left center}
