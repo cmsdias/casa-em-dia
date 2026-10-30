@@ -1,5 +1,5 @@
-const VERSION='casa-em-dia-v1-3-2';
-const SHELL=['./','./index.html','./style.css?v=1.3.2','./app.js?v=1.3.2','./manifest.webmanifest','./icon-192.png','./icon-512.png','./assets/casa-editorial.svg','./assets/casa-detail.svg','./assets/botanical-editorial.svg','./assets/electric-editorial.svg','./assets/plumbing-editorial.svg','./assets/storage-editorial.svg','./assets/coffee-editorial.svg','./assets/laundry-editorial.svg','./assets/office-editorial.svg','./assets/outdoor-editorial.svg','./assets/cleaning-editorial.svg','./assets/bath-editorial.svg','./assets/general-editorial.svg'];
+const VERSION='casa-em-dia-v1-3-3';
+const SHELL=['./','./index.html','./style.css?v=1.3.3','./app.js?v=1.3.3','./manifest.webmanifest','./icon-192.png','./icon-512.png','./assets/casa-editorial.svg','./assets/casa-detail.svg','./assets/botanical-editorial.svg','./assets/electric-editorial.svg','./assets/plumbing-editorial.svg','./assets/storage-editorial.svg','./assets/coffee-editorial.svg','./assets/laundry-editorial.svg','./assets/office-editorial.svg','./assets/outdoor-editorial.svg','./assets/cleaning-editorial.svg','./assets/bath-editorial.svg','./assets/general-editorial.svg'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(SHELL)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==VERSION).map(k=>caches.delete(k)))));self.clients.claim();});
 self.addEventListener('fetch',e=>{
