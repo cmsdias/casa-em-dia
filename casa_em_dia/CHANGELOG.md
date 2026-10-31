@@ -9,6 +9,8 @@
 - Compras: formulário compacto no telemóvel e quantidade destacada em cada produto.
 - Botão «+» de criação rápida também disponível no desktop.
 - Logótipo no ecrã de entrada do telemóvel.
+- Logótipo clicável: regressa ao Painel (telemóvel e computador).
+- Puxar para atualizar no telemóvel («Puxar para atualizar» → «Largar para atualizar» → «A atualizar…»), em vez do botão no canto superior direito.
 - Os formulários rápidos já não abrem o seletor de data automaticamente.
 - Letra Instrument Sans incluída na aplicação: sem pedidos ao Google e com aspeto correto mesmo sem Internet.
 - Acessibilidade: rótulos nos campos de compras, foco visível no botão «+» e na navegação.

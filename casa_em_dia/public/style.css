@@ -531,3 +531,16 @@ select{
 .floating-add{background:var(--brand-green)}
 .button.primary{background:var(--brand-green);border-color:var(--brand-green)}
 .button.primary:hover{background:#1f3428}
+/* Logótipo como botão para regressar ao Painel */
+.brand-home{background:none;border:0;padding:0;margin:0;cursor:pointer;text-align:left;font:inherit;color:inherit;border-radius:10px}
+.brand-home:focus-visible{outline:2px solid var(--brand-gold);outline-offset:4px}
+.mobile-header{min-height:44px}
+/* Puxar para atualizar */
+html,body{overscroll-behavior-y:contain}
+.ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:60;transform:translate(-50%,-56px);opacity:0;display:flex;align-items:center;gap:9px;padding:9px 16px 9px 12px;border-radius:999px;background:var(--brand-green);color:var(--brand-paper);font-size:13px;font-weight:600;box-shadow:0 8px 24px #0f1a1433;pointer-events:none;white-space:nowrap}
+.ptr .ptr-icon{width:18px;height:18px;flex:0 0 auto}
+.ptr.ptr-ready .ptr-icon{color:var(--brand-gold)}
+.ptr.ptr-settle{transition:transform .25s ease,opacity .25s ease}
+.ptr.ptr-loading .ptr-icon{animation:ptrSpin .8s linear infinite;color:var(--brand-gold)}
+@keyframes ptrSpin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.ptr.ptr-loading .ptr-icon{animation:none}.ptr.ptr-settle{transition:none}}
