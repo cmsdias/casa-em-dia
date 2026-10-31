@@ -88,8 +88,8 @@ def png(svg: str, width: int, height: int | None = None, alpha: bool = False) ->
 
 def main() -> None:
     files = {
-        PUBLIC / "logo-mark.svg": svg_mark("normal", GREEN),
-        PUBLIC / "logo-mark-light.svg": svg_mark("normal", PAPER),
+        PUBLIC / "logo-mark.svg": svg_mark("bold", GREEN),         # ecrã de arranque (56 px)
+        PUBLIC / "logo-mark-light.svg": svg_mark("bold", PAPER),
         PUBLIC / "icon.svg": svg_tile("tiny"),            # favicon vetorial (separador do browser)
         PUBLIC / "icon-maskable.svg": svg_tile("normal"),
         PUBLIC / "logo-primary-dark.svg": wordmark(GREEN),
