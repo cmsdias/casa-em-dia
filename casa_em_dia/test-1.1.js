@@ -56,6 +56,17 @@ const VERSION=require('./package.json').version.replace(/\./g,'\\.');
   for(let i=0;i<8;i++)assert.equal((await req('/api/login','POST',{username:'inexistente',password:'errada-errada'})).status,401);
   assert.equal((await req('/api/login','POST',{username:'inexistente',password:'errada-errada'})).status,429,'Tentativas repetidas devem ser limitadas');
   assert.equal((await req('/api/login','POST',{username:'teste',password:'senha-de-teste-123'})).status,200,'O limite é por utilizador');
+  // Perfil próprio
+  const px='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+  let me=await req('/api/me','PATCH',{name:'Pessoa Renomeada',photo:px});assert.equal(me.status,200);
+  assert.equal(me.data.people.find(x=>x.username==='teste').photo,px,'Fotografia guardada');
+  assert.equal((await req('/api/state')).data.people.find(x=>x.username==='teste').name,'Pessoa Renomeada');
+  assert.equal((await req('/api/me','PATCH',{photo:'data:text/html;base64,AAAA'})).status,400,'Só imagens');
+  assert.equal((await req('/api/me','PATCH',{photo:null})).data.people.find(x=>x.username==='teste').photo,'','Fotografia removida');
+  const uid=(await req('/api/state')).data.user.id;
+  assert.equal((await req('/api/people/'+uid+'/password','POST',{password:'nova-senha-12345'})).status,403,'Alterar a própria palavra-passe exige a atual');
+  assert.equal((await req('/api/people/'+uid+'/password','POST',{password:'nova-senha-12345',currentPassword:'senha-de-teste-123'})).status,200);
+  assert.equal((await req('/api/login','POST',{username:'teste',password:'nova-senha-12345'})).status,200,'Nova palavra-passe funciona');
   console.log('OK: instalação, autenticação, tarefas, validação, subtarefas, planeamento, definições, histórico, exportação e eliminação');
  }finally{proc.kill('SIGTERM');fs.rmSync(tmp,{recursive:true,force:true});}
 })().catch(e=>{console.error(e);process.exitCode=1;});

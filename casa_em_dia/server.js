@@ -40,7 +40,7 @@ function canCompleteTask(u,t){return canEditTask(u,t)||t.assignedTo===u.id;}
 function allowedTaskPatch(u,t,b){if(canEditTask(u,t))return true;
  return canCompleteTask(u,t)&&Object.keys(b).every(k=>['status','subtasks'].includes(k));}
 function logAction(u,action,entityId){db.audit.push({id:id(),actor:u.id,action,entityId,at:new Date().toISOString()});if(db.audit.length>3000)db.audit=db.audit.slice(-3000);}
-function visibleState(u){const allowed=db.tasks.filter(t=>canSeeTask(u,t));const ids=new Set(allowed.map(t=>t.id));const users=roleOf(u)==='collaborator'?db.people.filter(p=>p.id===u.id||allowed.some(t=>t.assignedTo===p.id||t.createdBy===p.id)):db.people;const people=users.map(({id,name,username,role,avatar})=>({id,name,username:roleOf(u)==='collaborator'?'':username,role:roleOf({role}),avatar:avatar||'●'}));return {...state(),people,tasks:allowed,history:db.history.filter(h=>h.taskId?ids.has(h.taskId):h.by===u.id).slice(-200),shopping:db.shopping,workLogs:db.workLogs.filter(l=>elevated(u)?(!l.taskId||ids.has(l.taskId)):l.userId===u.id||l.actor===u.id),audit:roleOf(u)==='admin'?db.audit.slice(-300):elevated(u)?db.audit.filter(a=>!a.action.startsWith('task.')||ids.has(a.entityId)).slice(-300):[],permissions:{manageUsers:roleOf(u)==='admin',manageSettings:elevated(u),manageAllShared:elevated(u)}};}
+function visibleState(u){const allowed=db.tasks.filter(t=>canSeeTask(u,t));const ids=new Set(allowed.map(t=>t.id));const users=roleOf(u)==='collaborator'?db.people.filter(p=>p.id===u.id||allowed.some(t=>t.assignedTo===p.id||t.createdBy===p.id)):db.people;const people=users.map(({id,name,username,role,avatar,photo})=>({id,name,username:roleOf(u)==='collaborator'?'':username,role:roleOf({role}),avatar:avatar||'●',photo:photo||''}));return {...state(),people,tasks:allowed,history:db.history.filter(h=>h.taskId?ids.has(h.taskId):h.by===u.id).slice(-200),shopping:db.shopping,workLogs:db.workLogs.filter(l=>elevated(u)?(!l.taskId||ids.has(l.taskId)):l.userId===u.id||l.actor===u.id),audit:roleOf(u)==='admin'?db.audit.slice(-300):elevated(u)?db.audit.filter(a=>!a.action.startsWith('task.')||ids.has(a.entityId)).slice(-300):[],permissions:{manageUsers:roleOf(u)==='admin',manageSettings:elevated(u),manageAllShared:elevated(u)}};}
 
 
 db.finance=db.finance&&typeof db.finance==='object'?db.finance:{accounts:[],transactions:[],budgets:[],goals:[]};
@@ -69,7 +69,10 @@ function readUser(req){const token=((req.headers.cookie||'').match(/(?:^|;\s*)ca
 try{const [payload,mac]=token.split('.');const sig=crypto.createHmac('sha256',db.secret).update(payload).digest('base64url');if(!mac||sig.length!==mac.length||!crypto.timingSafeEqual(Buffer.from(mac),Buffer.from(sig)))return null;const claim=JSON.parse(Buffer.from(payload,'base64url').toString());if(claim.exp<Date.now())return null;return db.people.find(u=>u.id===claim.id&&(u.authVersion||1)===claim.v)||null;}catch{return null;}}
 function cookie(req,token){const secure=(req.headers['x-forwarded-proto']==='https'||req.socket.encrypted)?'; Secure':'';return `casa_session=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${token?14*86400:0}${secure}`;}
 async function parseBody(req){let size=0;let chunks=[];for await(const c of req){size+=c.length;if(size>256_000)throw new Error('Pedido demasiado grande.');chunks.push(c);}try{return JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}catch{throw new Error('JSON inválido.');}}
-function publicPeople(){return db.people.map(({id,name,username,role,avatar})=>({id,name,username,role:role==='member'?'resident':role,avatar:avatar||'●'}));}
+function publicPeople(){return db.people.map(({id,name,username,role,avatar,photo})=>({id,name,username,role:role==='member'?'resident':role,avatar:avatar||'●',photo:photo||''}));}
+// Fotografia de perfil: imagem pequena (redimensionada no browser) guardada como data URL.
+const PHOTO_MAX=200_000;
+function cleanPhoto(v){if(v===null||v==='')return '';if(typeof v!=='string'||v.length>PHOTO_MAX||!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(v))throw Error('Fotografia inválida ou demasiado grande.');return v;}
 function publicTasks(){return db.tasks;}
 function state(){return {people:publicPeople(),tasks:publicTasks(),history:db.history.slice(-200),shopping:db.shopping,workLogs:db.workLogs,audit:db.audit.slice(-300),settings:db.settings||{rooms:[],categories:[]},serverTime:new Date().toISOString()};}
 function patchTask(t,b){
@@ -259,10 +262,17 @@ const server=http.createServer(async (req,res)=>{
       if(db.people.some(p=>p.username===username))return fail(res,409,'Esse nome de utilizador já existe.');
       const person={id:id(),name,username,passwordHash:passwordHash(pw),role:['manager','resident','collaborator'].includes(b.role)?b.role:'resident',authVersion:1,avatar:'●'};db.people.push(person);logAction(user,'person.create',person.id);save();return send(res,201,{people:publicPeople()});
     }
+    if(p==='/api/me'&&req.method==='PATCH'){
+      const target=db.people.find(x=>x.id===user.id);
+      if('name'in b){const name=cleanStr(b.name,80);if(name.length<2)return fail(res,400,'O nome deve ter pelo menos 2 caracteres.');target.name=name;}
+      if('photo'in b)target.photo=cleanPhoto(b.photo);
+      logAction(user,'person.profile',user.id);save();return send(res,200,{user:{id:target.id,name:target.name,role:roleOf(target)},people:publicPeople()});
+    }
     const personMatch=p.match(/^\/api\/people\/([^/]+)\/password$/);
     if(personMatch&&req.method==='POST'){
       if(user.role!=='admin'&&user.id!==personMatch[1])return fail(res,403,'Sem permissão.');const target=db.people.find(u=>u.id===personMatch[1]);if(!target)return fail(res,404,'Pessoa não encontrada.');
       if(String(b.password||'').length<10)return fail(res,400,'A nova palavra-passe deve ter pelo menos 10 caracteres.');
+      if(target.id===user.id&&!verifyPw(String(b.currentPassword||'').slice(0,200),target.passwordHash))return fail(res,403,'A palavra-passe atual não está correta.');
       target.passwordHash=passwordHash(b.password);target.authVersion=(target.authVersion||1)+1;logAction(user,'person.password',target.id);save();return send(res,200,{ok:true});
     }
     return fail(res,404,'Rota não encontrada.');

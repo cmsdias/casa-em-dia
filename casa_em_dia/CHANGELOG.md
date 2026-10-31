@@ -10,6 +10,9 @@
 - Botão «+» de criação rápida também disponível no desktop.
 - Logótipo no ecrã de entrada do telemóvel.
 - Logótipo clicável: regressa ao Painel (telemóvel e computador).
+- Nova navegação no telemóvel: Painel, Tarefas, «+» central, Compras e «Mais» (Rotinas, Pessoas, Trabalhos, Finanças, Definições e Perfil). O «+» deixa de flutuar por cima das listas.
+- Página de perfil (botão no canto superior direito, cartão da barra lateral no computador): fotografia, nome, palavra-passe e terminar sessão.
+- Segurança: alterar a própria palavra-passe passa a exigir a palavra-passe atual.
 - Puxar para atualizar no telemóvel («Puxar para atualizar» → «Largar para atualizar» → «A atualizar…»), em vez do botão no canto superior direito.
 - Os formulários rápidos já não abrem o seletor de data automaticamente.
 - Letra Instrument Sans incluída na aplicação: sem pedidos ao Google e com aspeto correto mesmo sem Internet.

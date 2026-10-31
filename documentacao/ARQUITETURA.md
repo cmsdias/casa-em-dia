@@ -55,7 +55,8 @@ Todos os pedidos de escrita exigem o cabeçalho `X-Casa-Request: 1`. Isto obriga
 | Tarefas | `POST /api/tasks`, `PATCH`/`DELETE /api/tasks/:id`, `POST /api/tasks/:id/complete` |
 | Compras | `POST /api/shopping`, `PATCH`/`DELETE /api/shopping/:id` |
 | Trabalhos | `POST /api/worklogs` |
-| Pessoas | `POST /api/people`, `PATCH /api/people/:id/role`, `POST /api/people/:id/password` |
+| Pessoas | `POST /api/people`, `PATCH /api/people/:id/role`, `POST /api/people/:id/password` (a própria exige `currentPassword`) |
+| Perfil | `PATCH /api/me` (`name`, `photo` como data URL JPEG/PNG/WebP até 200 KB; `null` remove) |
 | Finanças | `GET /api/finance`, `POST /api/finance/accounts`, `PATCH /api/finance/accounts/:id`, `POST /api/finance/transactions`, `/budgets`, `/goals` |
 | Diagnóstico | `GET /health` |
 

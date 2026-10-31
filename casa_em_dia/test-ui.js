@@ -25,12 +25,12 @@ const {chromium}=require('playwright');
    browser=await chromium.launch({headless:true,args:['--no-sandbox']});
    for(const vp of [{width:390,height:844},{width:1440,height:900}]){
      const context=await browser.newContext({viewport:vp,deviceScaleFactor:1,hasTouch:vp.width<500,isMobile:vp.width<500});
-     const page=await context.newPage();const navSelector=vp.width<500?'.swipe-nav':'.sidebar';const errors=[];page.on('pageerror',e=>errors.push(e.message));
+     const page=await context.newPage();const navSelector=vp.width<500?'.tab-nav':'.sidebar';const errors=[];page.on('pageerror',e=>errors.push(e.message));
      await page.goto(base,{waitUntil:'networkidle'});
      await page.locator('.action-hub').waitFor();
      assert.equal(await page.locator('.action-hub-task').count(),3);
      const metrics=await page.evaluate(()=>{
-      const nav=document.querySelector('.swipe-nav');
+      const nav=document.querySelector('.tab-nav');
       return {overflow:document.documentElement.scrollWidth-window.innerWidth,
        navDirection:nav?getComputedStyle(nav).flexDirection:null,
        navWidth:nav?.clientWidth||0,navScroll:nav?.scrollWidth||0,
@@ -40,16 +40,24 @@ const {chromium}=require('playwright');
      assert(metrics.overflow<=2,'Horizontal page overflow: '+JSON.stringify(metrics));
      if(vp.width<500){
        assert.equal(metrics.navDirection,'row','Bottom nav must be horizontal');
-       assert(metrics.navCount>=7,'Expected all navigation destinations');
-       assert(metrics.navScroll>metrics.navWidth,'Bottom nav must be swipeable');
-       const fixed=await page.locator('.swipe-nav').evaluate(el=>{const r=el.getBoundingClientRect();return {bottom:Math.round(innerHeight-r.bottom),left:Math.round(r.left),width:Math.round(r.width)};});
+       assert.equal(metrics.navCount,5,'Barra com Painel, Tarefas, +, Compras e Mais');
+       const fixed=await page.locator('.tab-nav').evaluate(el=>{const r=el.getBoundingClientRect();return {bottom:Math.round(innerHeight-r.bottom),left:Math.round(r.left),width:Math.round(r.width)};});
        assert.equal(fixed.bottom,0,'Bottom bar must touch bottom of viewport');
        assert.equal(fixed.left,0,'Bottom bar must touch left edge');
        assert.equal(fixed.width,vp.width,'Bottom bar must be full width');
        assert.equal(await page.locator('.mobile-header img[src="logo-primary-dark.svg"]').count(),1,'Mobile header must use primary SVG logo');
-       assert(metrics.firstWidth>60&&metrics.firstWidth<115,'Buttons must have compact width');
-       const gap=await page.locator('.swipe-nav').evaluate(el=>Number.parseFloat(getComputedStyle(el).gap));
-       assert(gap>=4&&gap<=8,'Navigation spacing must stay balanced');
+       assert.equal(await page.locator('.mobile-header .profile-btn').count(),1,'Botão de perfil no cabeçalho');
+       assert.equal(await page.locator('.floating-add').isVisible(),false,'O + flutuante dá lugar ao + da barra');
+       await page.locator('[data-action="more-toggle"]').click();
+       await page.locator('.more-sheet').waitFor();
+       assert(await page.locator('.more-grid button').count()>=5,'Mais mostra as restantes secções');
+       await page.locator('.more-grid [data-page="routines"]').click();
+       assert.equal(await page.locator('.more-sheet').count(),0,'Mais fecha ao navegar');
+       assert.equal(await page.locator('.tab-nav [data-action="more-toggle"].active').count(),1,'Mais fica ativo numa secção secundária');
+       await page.locator('.mobile-header .profile-btn').click();
+       await page.locator('#profile-name-form').waitFor();
+       await page.locator('.mobile-header .brand-home').click();
+       await page.locator('.action-hub').waitFor();
      }
      if(vp.width<500)fs.mkdirSync(path.join(root,'ui-screens'),{recursive:true});
      if(vp.width<500)await page.screenshot({path:path.join(root,'ui-screens','01-dashboard-iphone.png'),fullPage:true});
@@ -59,7 +67,7 @@ const {chromium}=require('playwright');
      await page.locator('[data-action="filter-toggle"]').click();
      assert.equal(await page.locator('.filters-collapsed').count(),0);
      if(vp.width<500)await page.screenshot({path:path.join(root,'ui-screens','02-tarefas-iphone.png'),fullPage:true});
-     await page.locator(vp.width<500?'.floating-add':'.header-row [data-action="add"]').click();
+     await page.locator(vp.width<500?'.tab-add':'.header-row [data-action="add"]').click();
      if(vp.width<500){await page.locator('.quick-create-menu').waitFor();await page.locator('[data-action="quick-new"][data-kind="task"]').click();}
      await page.locator('#task-form').waitFor();
      assert.equal(await page.locator('#task-advanced').isHidden(),true);
@@ -72,10 +80,12 @@ const {chromium}=require('playwright');
      assert(await page.locator('.shopping-category').count()>=1,'Grouped shopping categories visible');
      assert(await page.locator('#shopping-form select[name="category"]').count()===1);
      if(vp.width<500)await page.screenshot({path:path.join(root,'ui-screens','04-compras-iphone.png'),fullPage:true});
-     await page.locator(navSelector+' [data-page="finance"]').click();
+     if(vp.width<500)await page.locator('[data-action="more-toggle"]').click();
+     await page.locator((vp.width<500?'.more-grid':navSelector)+' [data-page="finance"]').click();
      await page.locator('#finance-period').waitFor();
      if(vp.width<500)await page.screenshot({path:path.join(root,'ui-screens','05-financas-iphone.png'),fullPage:true});
-     await page.locator(navSelector+' [data-page="settings"]').click();
+     if(vp.width<500)await page.locator('[data-action="more-toggle"]').click();
+     await page.locator((vp.width<500?'.more-grid':navSelector)+' [data-page="settings"]').click();
      await page.locator('.settings-manager').waitFor();
      assert(await page.locator('.manager-item').count()>2);
      if(vp.width<500)await page.screenshot({path:path.join(root,'ui-screens','06-definicoes-iphone.png'),fullPage:true});
