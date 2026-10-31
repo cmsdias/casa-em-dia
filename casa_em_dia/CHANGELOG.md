@@ -12,6 +12,9 @@
 - Os formulários rápidos já não abrem o seletor de data automaticamente.
 - Letra Instrument Sans incluída na aplicação: sem pedidos ao Google e com aspeto correto mesmo sem Internet.
 - Acessibilidade: rótulos nos campos de compras, foco visível no botão «+» e na navegação.
+- Marca afinada: cores unificadas (verde #17261E, branco #F8F7F2, dourado #C9A568) nos logótipos, ícones e superfícies escuras da interface; espaço entre «CASA» e «EM DIA»; símbolo reforçado e simplificado para tamanhos pequenos.
+- Ícone da app em quadrado cheio: deixa de aparecer um rebordo escuro nos cantos no ecrã inicial do iPhone.
+- Imagens da ficha do add-on no Home Assistant atualizadas (ícone e logótipo com nome).
 - Sem migração de dados. Criar cópia de segurança do add-on antes da atualização.
 
 # 1.5.1 — Navegação móvel, criação rápida e logótipo vetorial

@@ -73,4 +73,13 @@ Todos os pedidos de escrita exigem o cabeçalho `X-Casa-Request: 1`. Isto obriga
 - `app.js` contém o estado, a renderização das páginas, os formulários e o cliente da API.
 - `style.css` é organizado por camadas históricas. A navegação móvel, o botão **+** e o menu de criação rápida estão num **bloco único no fim do ficheiro**; é aí que devem ser feitas as alterações.
 - `sw.js` (service worker) é registado apenas na versão com servidor. Guarda a interface em cache para abrir mais depressa e mostrar o ecrã mesmo com rede instável; o JavaScript e o CSS vêm sempre primeiro da rede. **Não há escrita offline**: guardar alterações exige ligação ao Home Assistant. Ao mudar de versão, a constante `VERSION` em `sw.js` tem de mudar para limpar a cache antiga.
-- Ícones PNG gerados com `build_brand.py`; logótipos SVG gerados com `build_logo_vectors.py`.
+- Todos os recursos da marca (logótipos SVG, ícones da app, favicons e imagens do add-on) são gerados por `casa_em_dia/build_brand.py` a partir de uma única definição. Não editar esses ficheiros à mão.
+
+## Marca
+
+| Elemento | Definição |
+| --- | --- |
+| Cores | Verde `#17261E`, branco quente `#F8F7F2`, dourado `#C9A568` (tokens `--brand-*` no fim do `style.css`). O dourado não serve para texto sobre fundo claro (contraste ≈ 2:1). |
+| Símbolo | Casa num só traço com a porta aberta e o ponto dourado. Variante normal (≥ 64 px), reforçada (33–63 px, traço 20% mais grosso) e simplificada (≤ 32 px, sem a porta). |
+| Logótipo com nome | Lato, «CASA» em negrito e «EM DIA» normal, texto convertido em contornos, espaço entre palavras alargado. |
+| Ícones da app | Quadrado cheio em verde, sem cantos (o sistema aplica a máscara). Símbolo a 84% para caber na zona segura do Android. |

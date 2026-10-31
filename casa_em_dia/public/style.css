@@ -481,7 +481,7 @@ select{
 
 /* ===== Navegação móvel, botão "+" e menu de criação rápida — bloco único (consolidado na 1.5.1) ===== */
 @media(max-width:650px){
- .mobile-nav.swipe-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;box-sizing:border-box;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:flex-start;gap:6px;width:100%;max-width:100%;height:calc(76px + env(safe-area-inset-bottom));min-height:calc(76px + env(safe-area-inset-bottom));margin:0;padding:7px 12px calc(7px + env(safe-area-inset-bottom));background:#141a16;border:0;border-top:1px solid #354037;border-radius:0;box-shadow:0 -8px 28px #17261e16;overflow-x:auto;overflow-y:hidden;scroll-behavior:smooth;scroll-snap-type:x proximity;scroll-padding-inline:12px;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x;scrollbar-width:none}
+ .mobile-nav.swipe-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;box-sizing:border-box;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:flex-start;gap:6px;width:100%;max-width:100%;height:calc(76px + env(safe-area-inset-bottom));min-height:calc(76px + env(safe-area-inset-bottom));margin:0;padding:7px 12px calc(7px + env(safe-area-inset-bottom));background:var(--brand-green);border:0;border-top:1px solid #2c3d33;border-radius:0;box-shadow:0 -8px 28px #17261e16;overflow-x:auto;overflow-y:hidden;scroll-behavior:smooth;scroll-snap-type:x proximity;scroll-padding-inline:12px;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x;scrollbar-width:none}
  .mobile-nav.swipe-nav::-webkit-scrollbar{display:none}
  .mobile-nav.swipe-nav::after{content:'';display:block;flex:0 0 6px}
  .mobile-nav.swipe-nav>.swipe-nav-item{box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;flex:0 0 calc((100vw - 48px) / 5);width:calc((100vw - 48px) / 5);min-width:calc((100vw - 48px) / 5);max-width:calc((100vw - 48px) / 5);height:58px;min-height:58px;margin:0;padding:6px 1px;border:0;border-radius:14px;background:transparent;color:#b9c4ba;font-size:9px;scroll-snap-align:start}
@@ -525,3 +525,9 @@ select{
 .shopping-line{display:flex;align-items:center;gap:10px}
 .shopping-line label{flex:1;min-width:0}
 .shopping-qty{min-width:28px;text-align:center;padding:3px 8px;border-radius:999px;background:#f1f3ef;color:#5d675f;font-weight:650}
+/* ===== Cores da marca unificadas (31/10/2026): verde #17261E, branco quente #F8F7F2, dourado #C9A568 ===== */
+:root{--brand-green:#17261E;--brand-paper:#F8F7F2;--brand-gold:#C9A568}
+.sidebar,.auth-aside{background:var(--brand-green)}
+.floating-add{background:var(--brand-green)}
+.button.primary{background:var(--brand-green);border-color:var(--brand-green)}
+.button.primary:hover{background:#1f3428}
