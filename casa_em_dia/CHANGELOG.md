@@ -1,3 +1,11 @@
+# 1.7.1 — Animações de carregamento
+
+- Abertura da app: o símbolo da casa desenha-se num só traço e o ponto dourado acende-se. Só aparece se o arranque demorar mais de 0,3 s.
+- Páginas a carregar (Finanças, cópias de segurança, Home Assistant, fotografias a enviar): esqueletos com brilho em vez de «A carregar…». Abrir as Finanças já não espera pelos dados para mudar de página.
+- Botões a guardar: três pontos dourados e botão bloqueado até terminar (evita toques duplos).
+- Linha dourada no topo enquanto a app vai buscar dados em segundo plano.
+- Com «reduzir movimento» ativo no telemóvel, as animações ficam paradas.
+
 # 1.7.0 — Fiabilidade, calendário da casa, Finanças simplificadas e Home Assistant
 
 **Fiabilidade**

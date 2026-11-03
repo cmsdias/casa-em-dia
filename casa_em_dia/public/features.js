@@ -1,4 +1,36 @@
 'use strict';
+/* ───────────── Esperas: abertura, barra de carregamento e botões ocupados ───────────── */
+// Abertura: o símbolo desenha-se num só traço. Só fica visível se o arranque passar 0,3 s;
+// uma vez visível, fica até o traço terminar, para não ser cortado a meio.
+(function splashControl(){
+ const el=document.getElementById('splash');if(!el)return;
+ if(window.__CASA_DEMO__){try{if(!sessionStorage.getItem('casa-splash')){sessionStorage.setItem('casa-splash','1');el.classList.add('instant');}else{el.remove();return;}}catch{el.remove();return;}}
+ const shownAt=el.classList.contains('instant')?0:300,minEnd=el.classList.contains('instant')?2000:1500;
+ const hide=()=>{if(!el.isConnected||el.classList.contains('out'))return;const t=performance.now();if(t<shownAt){el.remove();return;}setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),320);},Math.max(0,minEnd-t));};
+ const app=document.getElementById('app');new MutationObserver((m,obs)=>{if(app.childElementCount){obs.disconnect();hide();}}).observe(app,{childList:true});
+ setTimeout(hide,8000);
+})();
+// Barra dourada no topo enquanto a app vai buscar dados (só se demorar mais de 0,2 s).
+const topLoad=document.createElement('div');topLoad.className='topbar-load';topLoad.setAttribute('aria-hidden','true');document.body.appendChild(topLoad);
+let loadCount=0,loadTimer=null;
+function loadStart(){if(++loadCount===1){clearTimeout(loadTimer);loadTimer=setTimeout(()=>topLoad.classList.add('on'),200);}}
+function loadEnd(){loadCount=Math.max(0,loadCount-1);if(!loadCount){clearTimeout(loadTimer);topLoad.classList.remove('on');}}
+// Botões a guardar: o botão tocado mostra três pontos dourados e fica bloqueado até a gravação terminar.
+let lastTrigger=null,lastTriggerAt=0;
+const markTrigger=b=>{if(b&&b.matches?.('button')){lastTrigger=b;lastTriggerAt=performance.now();}};
+document.addEventListener('click',e=>markTrigger(e.target.closest?.('button')),true);
+document.addEventListener('submit',e=>markTrigger(e.submitter||e.target.querySelector('[type=submit]')),true);
+function busyStart(){const b=lastTrigger;if(!b||!b.isConnected||performance.now()-lastTriggerAt>2000||b.offsetWidth<64)return null;
+ b._busy=(b._busy||0)+1;if(b._busy>1)return b;
+ b._busyTimer=setTimeout(()=>{if(!b.isConnected||!b._busy)return;b._busyState={html:b.innerHTML,w:b.style.width,dis:b.disabled};b.style.width=b.offsetWidth+'px';b.classList.add('is-busy');b.setAttribute('aria-busy','true');b.disabled=true;b.innerHTML='<span class="busy-dots" role="status" aria-label="A guardar"><i></i><i></i><i></i></span>';},150);
+ return b;}
+function busyEnd(b){if(!b)return;b._busy=Math.max(0,(b._busy||1)-1);if(b._busy)return;clearTimeout(b._busyTimer);const st=b._busyState;if(!st)return;b._busyState=null;b.classList.remove('is-busy');b.removeAttribute('aria-busy');b.disabled=st.dis;b.innerHTML=st.html;b.style.width=st.w;}
+const apiCore=api;
+// eslint-disable-next-line no-global-assign
+api=async function(endpoint,method='GET',data){const write=method!=='GET';const b=write?busyStart():null;if(!write)loadStart();
+ try{if(demo&&write)await new Promise(r=>setTimeout(r,450));return await apiCore(endpoint,method,data);}finally{if(write)busyEnd(b);else loadEnd();}};
+const skeletonLines=(n=3)=>`<div class="sk-group" aria-hidden="true">${Array.from({length:n},(_,i)=>`<div class="sk sk-line" style="width:${[92,74,83,66][i%4]}%"></div>`).join('')}</div>`;
+
 // Casa em Dia 1.7 — funcionalidades acrescentadas ao núcleo (app.js):
 // atualização automática, cópias de segurança, calendário sazonal, compras rápidas,
 // rotação de rotinas, fotografias nas tarefas e Home Assistant.
@@ -34,7 +66,7 @@ const BACKUP_REASONS={auto:'Automática',manual:'Manual','pre-restore':'Antes de
 let backupsData=null;
 function backupsCard(){
  if(!isAdmin())return '';
- if(!backupsData){queueMicrotask(loadBackups);return `<div class="settings-card" id="backups-card"><h3>Cópias de segurança</h3><p class="muted">A carregar…</p></div>`;}
+ if(!backupsData){queueMicrotask(loadBackups);return `<div class="settings-card" id="backups-card" aria-busy="true"><h3>Cópias de segurança</h3>${skeletonLines(4)}</div>`;}
  const list=backupsData.backups||[];const auto=list.find(b=>b.reason==='auto');
  return `<div class="settings-card" id="backups-card"><h3>Cópias de segurança</h3><p>É feita uma cópia automática por dia (ficam as últimas 14). Antes de restaurar uma cópia, o estado atual é sempre guardado.${demo?' <b>Na demonstração, as cópias são apenas ilustrativas.</b>':''}</p>
  <div class="backup-status">${ico('check-square')}<span>${auto?`Última cópia automática: <b>${esc(fmtDateTime(auto.createdAt))}</b>`:'Ainda não há cópias automáticas.'}</span></div>
@@ -48,7 +80,7 @@ async function loadBackups(){try{backupsData=await api('/api/backups');}catch(e)
 let haData=null;
 function haCard(){
  if(!isAdmin())return '';
- if(!haData){queueMicrotask(loadHa);return `<div class="settings-card" id="ha-card"><h3>Home Assistant</h3><p class="muted">A verificar a ligação…</p></div>`;}
+ if(!haData){queueMicrotask(loadHa);return `<div class="settings-card" id="ha-card" aria-busy="true"><h3>Home Assistant</h3>${skeletonLines(3)}</div>`;}
  const h=haData;
  if(!h.available)return `<div class="settings-card" id="ha-card"><h3>Home Assistant</h3><p>As notificações e os sensores funcionam apenas na app instalada no Home Assistant. Nesta instalação, a ligação não está disponível.</p></div>`;
  const act=people().filter(p=>p.active!==false);
@@ -162,7 +194,7 @@ function taskPhotosHtml(t){if(!t?.id)return '';
 function resizePhoto(file,max=demo?800:1600,q=demo?0.7:0.82){return new Promise((resolve,reject)=>{const url=URL.createObjectURL(file);const img=new Image();img.onload=()=>{const s=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*s);c.height=Math.round(img.naturalHeight*s);const ctx=c.getContext('2d');ctx.imageSmoothingQuality='high';ctx.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);resolve(c.toDataURL('image/jpeg',q));};img.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Não foi possível ler esta imagem.'));};img.src=url;});}
 let photoTarget=null;
 document.addEventListener('change',async e=>{if(e.target.id!=='task-photo-input'||!e.target.files?.[0]||!photoTarget)return;const file=e.target.files[0];e.target.value='';const taskId=photoTarget;
- const grid=document.querySelector('#task-photos .photo-grid');grid?.insertAdjacentHTML('beforeend','<span class="photo-thumb is-loading" aria-label="A enviar">…</span>');
+ const grid=document.querySelector('#task-photos .photo-grid');grid?.insertAdjacentHTML('beforeend','<span class="photo-thumb is-loading sk" role="status" aria-label="A enviar a fotografia"></span>');
  try{const data=await resizePhoto(file);const caption=(tasks().find(t=>t.id===taskId)?.photos||[]).length?'':'Antes';const r=await api(`/api/tasks/${taskId}/photos`,'POST',{data,caption});const t=tasks().find(x=>x.id===taskId);if(t&&r.task)t.photos=r.task.photos;const box=document.getElementById('task-photos');if(box&&t)box.outerHTML=taskPhotosHtml(t);toast('Fotografia acrescentada.');}catch(err){document.querySelector('#task-photos .is-loading')?.remove();toast(err.message);}});
 function viewPhoto(taskId,photoId){const t=tasks().find(x=>x.id===taskId);const ph=t?.photos?.find(x=>x.id===photoId);if(!ph)return;const canDel=ph.by===store.user?.id||canEditVisible(t);
  const v=document.createElement('div');v.id='photo-viewer';v.innerHTML=`<div class="confirm-overlay photo-overlay" data-photo-close><figure class="photo-figure" role="dialog" aria-modal="true" aria-label="Fotografia da tarefa"><img src="${esc(photoSrc(ph))}" alt="${esc(ph.caption||'Fotografia da tarefa')}"/><figcaption><span><b>${esc(ph.caption||t.title)}</b><small>${esc(owner(ph.by))} · ${esc(fmtDateTime(ph.at))}</small></span><span class="photo-figure-actions">${canDel?`<button type="button" class="button small danger" data-photo-delete>${ico('trash')} Remover</button>`:''}<button type="button" class="button small" data-photo-close>Fechar</button></span></figcaption></figure></div>`;
