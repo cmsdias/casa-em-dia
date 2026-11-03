@@ -1,10 +1,15 @@
-# 1.7.1 — Animações de carregamento
+# 1.7.2 — Animações de carregamento
 
 - Abertura da app: o símbolo da casa desenha-se num só traço e o ponto dourado acende-se. Só aparece se o arranque demorar mais de 0,3 s.
 - Páginas a carregar (Finanças, cópias de segurança, Home Assistant, fotografias a enviar): esqueletos com brilho em vez de «A carregar…». Abrir as Finanças já não espera pelos dados para mudar de página.
 - Botões a guardar: três pontos dourados e botão bloqueado até terminar (evita toques duplos).
 - Linha dourada no topo enquanto a app vai buscar dados em segundo plano.
 - Com «reduzir movimento» ativo no telemóvel, as animações ficam paradas.
+
+# 1.7.1 — Correções
+
+- Fotografia do perfil e fotografias das tarefas: a janela de recorte/redimensionamento não abria na app instalada (a política de segurança bloqueava a pré-visualização da imagem escolhida). Corrigido.
+- Tarefas → Concluídas: novo botão «Limpar concluídas» (administrador), com confirmação. Apaga só as tarefas pontuais concluídas; as rotinas e o histórico de conclusões mantêm-se.
 
 # 1.7.0 — Fiabilidade, calendário da casa, Finanças simplificadas e Home Assistant
 
