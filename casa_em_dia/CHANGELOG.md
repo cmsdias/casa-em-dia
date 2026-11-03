@@ -1,3 +1,8 @@
+# 1.7.1 — Correções
+
+- Fotografia do perfil e fotografias das tarefas: a janela de recorte/redimensionamento não abria na app instalada (a política de segurança bloqueava a pré-visualização da imagem escolhida). Corrigido.
+- Tarefas → Concluídas: novo botão «Limpar concluídas» (administrador), com confirmação. Apaga só as tarefas pontuais concluídas; as rotinas e o histórico de conclusões mantêm-se.
+
 # 1.7.0 — Fiabilidade, calendário da casa, Finanças simplificadas e Home Assistant
 
 **Fiabilidade**
