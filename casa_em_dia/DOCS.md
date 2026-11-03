@@ -13,9 +13,9 @@ Aplicação para organizar a casa em conjunto: tarefas pontuais, rotinas recorre
 
 | Perfil | O que pode fazer |
 | --- | --- |
-| Administrador | Tudo: contas, perfis, definições, importação/exportação, todas as tarefas e todas as contas financeiras. |
-| Gestor | Gerir tarefas partilhadas, atribuir tarefas, alterar divisões e categorias. Finanças próprias ou partilhadas consigo. |
-| Morador | Ver tarefas partilhadas, gerir as suas e concluir as que lhe foram atribuídas. Finanças próprias ou partilhadas consigo. |
+| Administrador | Tudo: contas, perfis, definições, cópias de segurança, Home Assistant, importação/exportação, todas as tarefas partilhadas e as Finanças. |
+| Gestor | Gerir tarefas partilhadas, atribuir tarefas e rotações, alterar divisões, categorias e o calendário da casa. Finanças. |
+| Morador | Ver tarefas partilhadas, gerir as suas e concluir as que lhe foram atribuídas. Sem acesso às Finanças. |
 | Colaborador | Apenas tarefas que criou ou que lhe foram atribuídas. Sem acesso às finanças. |
 
 As permissões são verificadas no servidor em cada pedido, não apenas escondidas na interface. Ao mudar o perfil ou a palavra-passe de alguém, as sessões dessa pessoa terminam.
@@ -24,6 +24,7 @@ As permissões são verificadas no servidor em cada pedido, não apenas escondid
 - **Contas novas e palavras-passe repostas** pelo administrador são temporárias: na primeira entrada, a pessoa tem de escolher uma palavra-passe nova.
 - **Desativar conta** (em Pessoas): a pessoa deixa de conseguir entrar, as sessões terminam e as tarefas por concluir ficam por atribuir. Ao reativar a conta, essas tarefas voltam a ser atribuídas à pessoa, exceto as que entretanto foram atribuídas a outra. O histórico mantém-se.
 - **Dias de acesso** (só colaboradores): o administrador escolhe os dias da semana em que a pessoa pode entrar. Sem dias marcados, o acesso é diário. Usa o fuso horário `Europe/Lisbon` (ou a variável `TZ` do contentor).
+- **Finanças** (só administrador e gestor): despesas grandes da casa, despesas fixas lançadas automaticamente todos os meses, património (contas, depósitos, investimentos, cofre), orçamento anual e objetivos de poupança. Os itens do património marcados «só eu» são visíveis apenas para quem os criou.
 - A tabela completa está em **Pessoas → O que cada perfil pode fazer**.
 
 ## Acesso
@@ -34,20 +35,30 @@ As permissões são verificadas no servidor em cada pedido, não apenas escondid
 
 ## Dados e cópias de segurança
 
-- Todos os dados ficam em `/data/casa.json`, criado no primeiro arranque e mantido entre atualizações.
+- Todos os dados ficam em `/data/casa.json`, criado no primeiro arranque e mantido entre atualizações. As fotografias das tarefas ficam em `/data/photos`.
+- **Cópias automáticas da aplicação:** uma por dia e outra antes de cada atualização de versão, em `/data/backups` (ficam as últimas 14 diárias). Em **Definições → Cópias de segurança**, o administrador pode criar, descarregar, carregar e restaurar cópias. Antes de restaurar, o estado atual é guardado.
 - As cópias de segurança do Home Assistant incluem estes dados. A aplicação é parada durante a cópia (`backup: cold`) para garantir que o ficheiro fica consistente.
 - Em **Definições**, o administrador pode exportar tarefas, compras, trabalhos e histórico para JSON (sem palavras-passe). **As finanças não são incluídas nesta exportação**; dependem da cópia de segurança do Home Assistant.
 - A importação aceita até 500 tarefas por ficheiro e ignora duplicados (mesmo título, divisão e tipo).
 
 ## Atualizar
 
-1. Crie uma cópia de segurança do Home Assistant.
+1. Crie uma cópia de segurança do Home Assistant (a aplicação também guarda uma cópia própria antes de mudar de versão).
 2. Em **Definições → Aplicações**, verifique se há atualizações e selecione **Atualizar** no Casa em Dia.
 3. Abra a aplicação, confirme a versão em **Definições** e verifique que os dados continuam presentes.
 
+## Home Assistant (opcional)
+
+Em **Definições → Home Assistant** (administrador):
+
+- **Notificações** para a app Home Assistant de cada pessoa: tarefa atribuída e resumo diário à hora escolhida.
+- **Sensores** `sensor.casa_em_dia_*`: tarefas por fazer, atrasadas, para hoje, compras por fazer e última conclusão. As tarefas privadas e as finanças nunca são incluídas.
+- **Automações:** o Home Assistant pode criar tarefas e produtos de compras através de `rest_command`, com um token próprio (a configuração pronta a copiar está nessa secção).
+
+A aplicação pede acesso à API do Home Assistant (`homeassistant_api`) só para isto. Enquanto nada for configurado, não envia nada.
+
 ## Limitações
 
-- Sem notificações nem anexos/fotografias.
 - Sem escrita offline: a interface abre a partir da cache, mas guardar alterações exige ligação ao Home Assistant.
 - A aplicação não faz pedidos a serviços externos (a letra está incluída).
 - Pensada para uma casa (poucas pessoas em simultâneo). Os dados são gravados num único ficheiro JSON.

@@ -1,3 +1,36 @@
+# 1.7.0 — Fiabilidade, calendário da casa, Finanças simplificadas e Home Assistant
+
+**Fiabilidade**
+- Cópias de segurança automáticas: uma por dia (ficam 14) e outra antes de cada atualização de versão, em `/data/backups`. Em Definições, o administrador cria, descarrega, carrega e restaura cópias; antes de restaurar, o estado atual é guardado.
+- Atualização automática entre pessoas: as alterações das outras pessoas aparecem em poucos segundos. Se estiveres a escrever ou com uma janela aberta, a app avisa e espera.
+
+**Novas funcionalidades**
+- Calendário da casa: 23 trabalhos sazonais (jardim, terraço, alpendre, manutenção), editáveis, com «Criar tarefa» para o mês. O Painel mostra os do mês atual.
+- Compras rápidas: escrever «2 leite, 0,5 kg queijo, detergente» acrescenta vários produtos com quantidade, unidade e categoria automática; compras habituais com um toque; «Limpar comprados».
+- Unidades nos produtos (un, kg, g, L, ml, pacote, embalagem, garrafa, lata, caixa, saco, frasco, rolo, dúzia, molho). Tocar na quantidade abre a edição (quantidade com − e +, unidade, nome, categoria, notas); qualquer pessoa pode acertar a quantidade e a unidade.
+- Rotinas com rotação entre pessoas, por ordem definida (setas ou arrastar): a 1.ª fica responsável agora e, ao marcar como feita, passa à seguinte. Novas repetições trimestral e anual.
+- Fotografias nas tarefas (até 8, antes/depois), com a mesma privacidade da tarefa.
+
+**Finanças (reformuladas)**
+- Só para administrador e gestor; moradores e colaboradores deixam de as ver.
+- Resumo, Despesas (só as grandes: obras, mobiliário, equipamentos…), Despesas fixas lançadas automaticamente todos os meses, e Património (contas, depósitos, poupança, investimentos, cofre) com total global e evolução.
+- Itens do património privados («só eu») ou partilhados; orçamento anual da casa; objetivos de poupança ligados ao património.
+- As contas da versão anterior passam automaticamente a itens do património, com o saldo calculado.
+
+**Home Assistant (opcional, desligado por omissão)**
+- Notificações para a app de cada pessoa (tarefa atribuída, resumo diário).
+- Sensores `sensor.casa_em_dia_*` e criação de tarefas/compras a partir de automações, com token próprio.
+
+**Interface**
+- Janelas flutuantes: o conteúdo desliza dentro da janela e o cabeçalho, com o título e o ×, fica fixo, por isso dá sempre para fechar. Tocar fora da janela também fecha (pede confirmação se já houver alterações escritas).
+- Secções que abrem e fecham (detalhes da tarefa, permissões, listas recolhidas) usam o mesmo sinal + / −.
+- A rotação só aparece nas rotinas; as fotografias só depois de a tarefa ser guardada.
+
+**Técnico**
+- Lógica das finanças e calendário partilhada entre servidor e demonstração (`public/finance-core.js`, `public/seasonal-defaults.js`); funcionalidades novas da interface em `public/features.js` e `public/finance-ui.js`.
+- Novos testes `test-1.7.js`; `test-finance.js` reescrito.
+- Ferramenta `scripts/publicar.sh` para o repositório público de distribuição (ver `documentacao/DISTRIBUICAO_PRIVADA.md`).
+
 # 1.6.0 — Revisão de usabilidade e interface
 
 - Ícones revistos: Painel (casa), Tarefas (lista com pontos), Rotinas (repetição), Compras (carrinho), Trabalhos (caixa de ferramentas); ações Adicionar, Concluir, Editar, Pesquisar, Exportar, Abrir e Prioritárias com novos desenhos. O menu «+» usa os mesmos ícones da navegação.

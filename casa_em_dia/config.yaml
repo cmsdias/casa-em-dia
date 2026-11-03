@@ -1,7 +1,7 @@
 name: "Casa em Dia"
 slug: "casa_em_dia"
 description: "Tarefas e rotinas domésticas partilhadas"
-version: "1.6.0"
+version: "1.7.0"
 arch:
   - aarch64
   - amd64
@@ -14,3 +14,6 @@ panel_icon: "mdi:home-outline"
 panel_title: "Casa em Dia"
 panel_admin: false
 backup: cold
+# Notificações e sensores (opcionais, desligados até serem configurados em Definições → Home Assistant).
+homeassistant_api: true
+hassio_api: true
