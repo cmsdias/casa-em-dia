@@ -1,0 +1,43 @@
+name: Publicar demonstração Casa em Dia
+# Demonstração pública com dados fictícios (localStorage). Nunca contém dados reais.
+#   /       → versão estável (branch main)
+#   /next/  → pré-visualização (branch next, quando existe)
+on:
+  push:
+    branches: [main, next]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: stable
+      - name: Obter pré-visualização (se existir)
+        run: |
+          if git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}.git" next >/dev/null; then
+            git clone -q --depth 1 --branch next "https://github.com/${{ github.repository }}.git" next
+          fi
+      - name: Montar demonstração
+        run: |
+          build() { mkdir -p "$2"; cp -R "$1/casa_em_dia/public/." "$2/"; rm -f "$2/sw.js"; cp "$1/docs/index.html" "$2/index.html"; }
+          build stable _site
+          if [ -d next ]; then build next _site/next; fi
+          touch _site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

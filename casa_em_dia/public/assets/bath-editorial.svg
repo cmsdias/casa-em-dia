@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="340" viewBox="0 0 480 340"><defs>
+<linearGradient id="cream" x2="1" y2="1"><stop stop-color="#f5eee3"/><stop offset="1" stop-color="#dcdace"/></linearGradient>
+<linearGradient id="sage" x2="1" y2="1"><stop stop-color="#a8b9a2"/><stop offset="1" stop-color="#6d8577"/></linearGradient>
+<linearGradient id="peach" x2="1" y2="1"><stop stop-color="#dab28d"/><stop offset="1" stop-color="#b98069"/></linearGradient>
+<linearGradient id="ink" x2="1" y2="1"><stop stop-color="#58665a"/><stop offset="1" stop-color="#26352b"/></linearGradient>
+<filter id="shadow"><feGaussianBlur stdDeviation="13"/></filter></defs>
+<ellipse cx="285" cy="296" rx="136" ry="17" fill="#485f4c" opacity=".12" filter="url(#shadow)"/>
+<circle cx="326" cy="153" r="134" fill="#d9dfd1" opacity=".38"/>
+<path d="M120 296H457" stroke="#d4d7c7" stroke-width="2"/><rect x="148" y="167" width="236" height="100" rx="44" fill="url(#cream)" stroke="#c0c4b9" stroke-width="3"/><path d="M164 205h205" stroke="#dce5db" stroke-width="13"/><path d="M178 266v17m182-17v17" stroke="#85968a" stroke-width="9" stroke-linecap="round"/>
+<path d="M314 169V114q0-28 32-28t29 32" fill="none" stroke="#8b9990" stroke-width="14" stroke-linecap="round"/><path d="M356 117h40" stroke="#8b9990" stroke-width="13" stroke-linecap="round"/><path d="M391 130l-1 12m-13-15-2 12m-12-12-2 12" stroke="#8cafae" stroke-width="4" stroke-linecap="round"/>
+<rect x="168" y="84" width="100" height="58" rx="10" fill="#b8c6b6"/><path d="M182 102h73m-73 13h73m-73 13h73" stroke="#e9eee6" stroke-width="5" stroke-linecap="round"/></svg>
