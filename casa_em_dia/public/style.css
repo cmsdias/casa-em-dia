@@ -1694,3 +1694,4 @@ i.planned{background:var(--brand-gold);opacity:.55}
 .appearance-field .field-help{margin-top:6px}
 @media (prefers-reduced-motion:reduce){.theme-toggle::before{transition:none}}
 .crumb-sep{padding:0 7px;opacity:.6}
+.import-summary{margin:0 0 12px;line-height:1.6}

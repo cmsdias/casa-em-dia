@@ -340,6 +340,17 @@ const server=http.createServer(async (req,res)=>{
     if(p==='/api/import'&&req.method==='POST'){
       if(user.role!=='admin')return fail(res,403,'Apenas administradores.');
       if(!Array.isArray(b.tasks)||b.tasks.length>500)return fail(res,400,'Ficheiro inválido ou demasiado grande (máximo 500 tarefas).');
+      // Substituir: guarda uma cópia de segurança e apaga primeiro as tarefas atuais (e, se pedido, compras, registos de horas e histórico).
+      let removed=0,backup=null;
+      if(b.replace===true||b.replace?.tasks===true){
+        backup=backups.create('pre-import').name;removed=db.tasks.length;db.tasks.forEach(removePhotoFiles);db.tasks=[];db.notifications=(db.notifications||[]).filter(n=>!n.link?.taskId);
+        if(b.replace?.other===true){db.shopping=[];db.workLogs=[];db.history=[];}
+        logAction(user,'tasks.replace',String(removed));
+      }
+      // Divisões e pisos do ficheiro (opcional): acrescentam-se às existentes.
+      if(b.settings&&typeof b.settings==='object'){const st=db.settings=db.settings||{rooms:[],categories:[]};const list=(a,max)=>Array.isArray(a)?a.filter(x=>typeof x==='string').map(x=>cleanStr(x,max)).filter(Boolean).slice(0,100):[];
+        st.floors=[...new Set([...(st.floors||[]),...list(b.settings.floors,40)])].slice(0,20);st.rooms=[...new Set([...(st.rooms||[]),...list(b.settings.rooms,70)])];st.categories=[...new Set([...(st.categories||[]),...list(b.settings.categories,70)])];
+        if(b.settings.roomFloors&&typeof b.settings.roomFloors==='object'){st.roomFloors=st.roomFloors||{};for(const [r,f] of Object.entries(b.settings.roomFloors))if(st.rooms.includes(r)&&st.floors.includes(f))st.roomFloors[r]=f;}}
       let imported=0,skipped=0;
       const key=t=>[t.title,t.room,t.kind].map(x=>String(x||'').trim().toLocaleLowerCase('pt-PT')).join('|');
       const existing=new Set(db.tasks.map(key));
@@ -356,7 +367,7 @@ const server=http.createServer(async (req,res)=>{
         if(existing.has(k)){skipped++;continue;}
         existing.add(k);staged.push(t);imported++;
       }
-      db.tasks.push(...staged);logAction(user,'tasks.import',String(imported));save();return send(res,200,{imported,skipped});
+      db.tasks.push(...staged);logAction(user,'tasks.import',String(imported));save();return send(res,200,{imported,skipped,removed,backup});
     }
     if(p==='/api/settings'&&req.method==='PATCH'){
       if(!elevated(user))return fail(res,403,'Sem permissão para alterar definições.');

@@ -85,3 +85,22 @@ actionHandlers.push(async(name,el)=>{
  if(name==='nav'&&el.dataset.page==='settings'){settingsSection=el.dataset.section||'';return false;}
  return false;
 });
+
+// Importar: resumo do ficheiro e opção de substituir o que existe (com cópia de segurança automática antes).
+modalRenderers.import=holder=>{
+ const {payload,file}=modal;const t=payload.tasks||[];const routines=t.filter(x=>x.kind==='routine').length;const rooms=payload.settings?.rooms?.length||0;const now=tasks().length;
+ const body=`<p class="import-summary"><b>${esc(file)}</b><br>${plural(t.length-routines,'tarefa pontual','tarefas pontuais')} · ${plural(routines,'rotina','rotinas')}${rooms?` · ${plural(rooms,'divisão','divisões')}`:''}</p>
+ ${demo?'':`<label class="check-line"><input type="checkbox" id="imp-replace" ${now?'checked':''}/> Apagar primeiro as ${plural(now,'tarefa e rotina atual','tarefas e rotinas atuais')}</label>
+ <label class="check-line"><input type="checkbox" id="imp-other"/> Limpar também a lista de compras, os registos de horas e o histórico de conclusões</label>
+ <p class="field-help">Antes de apagar, a app guarda uma cópia de segurança «Antes de importar» (Definições › Dados e cópias), para poder voltar atrás. Pessoas, finanças, equipamentos e definições não são tocados.</p>`}
+ <div class="modal-actions"><button type="button" class="button" data-action="close">Cancelar</button><span class="spacer"></span><button type="button" class="button primary" data-action="import-run">${ico('download')} Importar</button></div>`;
+ holder.innerHTML=modalShell({title:'Importar tarefas',sub:'As tarefas repetidas (mesmo título, divisão e tipo) são ignoradas.',body,cls:'import-modal'});
+ holder.querySelector('#imp-other')?.addEventListener('change',e=>{if(e.target.checked){const r=holder.querySelector('#imp-replace');if(r)r.checked=true;}});
+};
+actionHandlers.push(async(name)=>{
+ if(name!=='import-run')return false;const {payload,file}=modal;const rep=document.getElementById('imp-replace')?.checked,other=document.getElementById('imp-other')?.checked;
+ if(rep&&!await confirmDialog({title:'Substituir as tarefas atuais?',message:`As ${tasks().length} tarefas e rotinas atuais são apagadas${other?', bem como as compras, os registos de horas e o histórico':''}, e substituídas pelas de «${file}». Fica uma cópia de segurança para voltar atrás.`,confirmLabel:'Substituir',danger:true}))return true;
+ if(demo){let n=0;if(rep)store.tasks=[];const ids=new Set(store.tasks.map(t=>[t.title,t.room,t.kind].join('|')));for(const raw of payload.tasks){const key=[raw.title,raw.room,raw.kind].join('|');if(!raw.title||ids.has(key))continue;ids.add(key);store.tasks.push({status:'todo',priority:'P3',repeat:'none',kind:'project',...raw,id:'import-'+Date.now()+'-'+n++});}persistDemo();modal=null;render();toast(`${n} tarefas importadas para a demonstração.`);return true;}
+ const r=await api('/api/import','POST',{tasks:payload.tasks,settings:payload.settings,replace:rep?{tasks:true,other:!!other}:false});
+ modal=null;await reload();toast(`${r.imported} importadas${r.skipped?`, ${r.skipped} ignoradas`:''}${r.removed?` · ${r.removed} antigas apagadas (cópia guardada)`:''}.`);return true;
+});
