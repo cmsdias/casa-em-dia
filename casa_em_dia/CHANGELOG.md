@@ -1,3 +1,7 @@
+# 2.1.9 — Acesso direto (opcional)
+
+- Nova opção de acesso direto na rede de casa (desligada por omissão), para instalar a Casa em Dia no ecrã principal do iPhone ou do Android sem o cabeçalho do Home Assistant. Liga-se em Definições → Aplicações → Casa em Dia → Configuração → Rede (porta 3000). Ver «Instalar no ecrã principal do telemóvel» na documentação.
+
 # 2.1.8 — Avatar com contorno
 
 - O avatar no cabeçalho e na barra lateral passa a ter uma linha fina à volta, separada por uma pequena folga: verde-escura no modo claro e dourada no modo escuro e na barra lateral. Vê-se tanto com fotografia como só com as iniciais.

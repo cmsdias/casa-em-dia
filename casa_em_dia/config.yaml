@@ -1,7 +1,7 @@
 name: "Casa em Dia"
 slug: "casa_em_dia"
 description: "Tarefas e rotinas domésticas partilhadas"
-version: "2.1.8"
+version: "2.1.9"
 arch:
   - aarch64
   - amd64
@@ -10,6 +10,12 @@ startup: application
 boot: auto
 ingress: true
 ingress_port: 3000
+# Acesso direto (opcional, desligado por omissão): para instalar a app no telemóvel sem o cabeçalho do Home Assistant.
+# Liga-se em Definições → Aplicações → Casa em Dia → Configuração → Rede (ex.: 3000). Só fica acessível na rede de casa.
+ports:
+  3000/tcp: null
+ports_description:
+  3000/tcp: "Acesso direto na rede de casa (para instalar no ecrã principal do telemóvel). Deixe em branco para desligar."
 panel_icon: "mdi:home-variant-outline"
 panel_title: "Casa em Dia"
 panel_admin: false
