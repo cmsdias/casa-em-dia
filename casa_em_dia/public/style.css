@@ -1693,3 +1693,4 @@ i.planned{background:var(--brand-gold);opacity:.55}
 .theme-toggle button:focus-visible{outline:2px solid var(--brand-gold);outline-offset:1px}
 .appearance-field .field-help{margin-top:6px}
 @media (prefers-reduced-motion:reduce){.theme-toggle::before{transition:none}}
+.crumb-sep{padding:0 7px;opacity:.6}

@@ -1,3 +1,7 @@
+# 2.1.4 — Localização no topo
+
+- No computador, a localização no topo deixa de repetir «Casa /» em todas as páginas. Nas páginas principais mostra só o nome (Hoje, Tarefas, Compras, Casa); nas páginas dentro de Casa mostra o caminho com ligações para voltar (ex.: Casa / Definições / Aparência).
+
 # 2.1.3 — Interruptor de aparência
 
 - A aparência (no perfil e em Definições › Aparência) passa a um interruptor compacto com três símbolos: automático (meio círculo), claro (sol) e escuro (lua). O modo escolhido aparece por extenso ao lado.
