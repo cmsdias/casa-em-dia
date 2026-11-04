@@ -1,6 +1,6 @@
 {
   "name": "casa-em-dia",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "description": "Gestão partilhada das tarefas e rotinas da casa, instalável como PWA.",
   "scripts": {
