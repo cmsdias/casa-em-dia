@@ -44,6 +44,17 @@ As permissões são verificadas no servidor em cada pedido, não apenas escondid
 - Fora de casa, funciona através do acesso remoto que já usa para o Home Assistant.
 - A conta do Casa em Dia é independente da conta do Home Assistant.
 
+## Instalar no ecrã principal do telemóvel (sem o cabeçalho do Home Assistant)
+
+Por omissão a app abre dentro do Home Assistant. Para a ter como app própria no iPhone ou no Android, na rede de casa:
+
+1. Em **Definições → Aplicações → Casa em Dia → Configuração**, na secção **Rede**, escreva `3000` no campo do acesso direto e guarde. A aplicação reinicia.
+2. No telemóvel, ligado ao Wi-Fi de casa, abra no Safari (ou no Chrome) `http://homeassistant.local:3000` (ou o endereço IP do Home Assistant, ex.: `http://192.168.1.50:3000`).
+3. Entre com o utilizador e a palavra-passe da Casa em Dia.
+4. iPhone: **Partilhar → Adicionar ao ecrã principal**. Android: **menu → Instalar aplicação**.
+
+A app fica com ícone próprio e em ecrã inteiro. Só funciona na rede de casa; fora de casa continue a usar a app Home Assistant. Para desligar, apague o número no campo do acesso direto.
+
 ## Dados e cópias de segurança
 
 - Todos os dados ficam em `/data/casa.json`, criado no primeiro arranque e mantido entre atualizações. As fotografias das tarefas ficam em `/data/photos` e os documentos dos equipamentos em `/data/docs` (incluídos nas cópias do Home Assistant, não nas cópias JSON da app).
