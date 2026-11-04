@@ -1,3 +1,7 @@
+# 1.7.2 — Correção
+
+- Notificações no telemóvel: tocar abria um endereço temporário do Home Assistant que dava erro. Passam a abrir a app Casa em Dia no painel do Home Assistant.
+
 # 1.7.1 — Correções
 
 - Fotografia do perfil e fotografias das tarefas: a janela de recorte/redimensionamento não abria na app instalada (a política de segurança bloqueava a pré-visualização da imagem escolhida). Corrigido.

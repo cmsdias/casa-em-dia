@@ -21,7 +21,9 @@ function createHa({getDb,todayISO,nowHM,save=()=>{},onError=console.error,fetchI
   async function info(){
     if(!available())return {available:false};
     if(!selfInfo){try{const r=await call('GET','/addons/self/info');selfInfo=r?.data||r||{};}catch(e){onError('HA self info:',e.message);selfInfo={};}}
-    return {available:true,ingressUrl:selfInfo.ingress_url||'',hostname:selfInfo.hostname||''};
+    // O endereço de ingress (/api/hassio_ingress/<token>/) é temporário: abri-lo diretamente dá erro.
+    // Para abrir a app a partir de uma notificação usa-se a página do painel (/hassio/ingress/<slug>).
+    return {available:true,ingressUrl:selfInfo.ingress_url||'',panelUrl:selfInfo.slug?`/hassio/ingress/${selfInfo.slug}`:'',hostname:selfInfo.hostname||''};
   }
   async function notifyServices(){
     const services=await call('GET','/core/api/services');
@@ -31,7 +33,7 @@ function createHa({getDb,todayISO,nowHM,save=()=>{},onError=console.error,fetchI
   async function notify(personId,title,message,extra={}){
     const service=settings().notify?.[personId];if(!service||!available())return false;
     if(!/^[a-z0-9_]+$/.test(service))return false;
-    const i=await info();const url=i.ingressUrl||'';
+    const i=await info();const url=i.panelUrl||'';
     // url (iOS) e clickAction (Android) abrem a app Casa em Dia ao tocar na notificação.
     await call('POST',`/core/api/services/notify/${service}`,{title,message,data:{url,clickAction:url,group:'casa-em-dia',tag:extra.tag||undefined}});
     return true;
