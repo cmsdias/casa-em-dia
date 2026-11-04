@@ -127,7 +127,7 @@ const NAV_MAIN=[['today','Hoje','sun'],['tasks','Tarefas','list'],['shopping','C
 // Páginas dentro de «Casa» (a ordem é a do índice). canSee decide se a pessoa a vê.
 const HOUSE_PAGES=[
  ['calendar','Calendário','calendar','Mês, feriados e aniversários',()=>true],
- ['balance','Equilíbrio da casa','users','Esforço de cada pessoa esta semana',()=>store.user?.role!=='collaborator'],
+ ['balance','Equilíbrio da casa','scale','Esforço de cada pessoa esta semana',()=>store.user?.role!=='collaborator'],
  ['equipment','Equipamentos','tool','Manuais, garantias e revisões',()=>store.user?.role!=='collaborator'],
  ['finance','Finanças','wallet','Despesas, fixas e património',()=>['admin','manager'].includes(store.user?.role)],
  ['people','Pessoas','users','Contas, perfis e permissões',()=>true],

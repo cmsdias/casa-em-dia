@@ -1,3 +1,7 @@
+# 2.1.2 — Ícone do Equilíbrio da casa
+
+- O Equilíbrio da casa passa a ter um ícone próprio (balança), distinto do de Pessoas.
+
 # 2.1.1 — Animação de abertura
 
 - A animação de abertura deixa de ser cortada a meio: quando aparece, corre até ao fim (símbolo, ponto dourado e nome) e só depois desvanece. Se a app abrir em menos de 0,3 s, continua a não aparecer.
