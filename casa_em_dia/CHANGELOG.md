@@ -1,3 +1,7 @@
+# 2.1.3 — Interruptor de aparência
+
+- A aparência (no perfil e em Definições › Aparência) passa a um interruptor compacto com três símbolos: automático (meio círculo), claro (sol) e escuro (lua). O modo escolhido aparece por extenso ao lado.
+
 # 2.1.2 — Ícone do Equilíbrio da casa
 
 - O Equilíbrio da casa passa a ter um ícone próprio (balança), distinto do de Pessoas.
