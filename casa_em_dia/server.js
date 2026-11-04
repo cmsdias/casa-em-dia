@@ -119,6 +119,7 @@ function passwordHash(pw,salt=crypto.randomBytes(16).toString('hex')){return `${
 function verifyPw(pw,stored){const [salt,expected]=stored.split(':');const hash=passwordHash(pw,salt).split(':')[1]; return crypto.timingSafeEqual(Buffer.from(hash,'hex'),Buffer.from(expected,'hex'));}
 const DUMMY_HASH=passwordHash('palavra-passe-inexistente','00000000000000000000000000000000');
 // Limite de tentativas falhadas por utilizador (em memória): 8 falhas em 10 minutos bloqueiam novas tentativas até expirarem.
+const resetCodes=new Map();
 const LOGIN_WINDOW_MS=10*60_000,LOGIN_MAX_FAILURES=8;const loginAttempts=new Map();
 function loginBlocked(username){const e=loginAttempts.get(username);if(!e)return false;if(Date.now()-e.first>LOGIN_WINDOW_MS){loginAttempts.delete(username);return false;}return e.count>=LOGIN_MAX_FAILURES;}
 function loginFailed(username){const now=Date.now();const e=loginAttempts.get(username);if(!e||now-e.first>LOGIN_WINDOW_MS)loginAttempts.set(username,{first:now,count:1});else e.count++;if(loginAttempts.size>1000){for(const [k,v] of loginAttempts)if(now-v.first>LOGIN_WINDOW_MS)loginAttempts.delete(k);}}
@@ -134,17 +135,23 @@ function personView(viewer,p){const self=viewer.id===p.id,admin=roleOf(viewer)==
  return {id:p.id,name:p.name,username:collab&&!self?'':p.username,role:roleOf(p),avatar:p.avatar||'●',photo:p.photo||'',active:p.active!==false,
   ...(admin?{accessDays:Array.isArray(p.accessDays)?p.accessDays:[],mustChangePassword:!!p.mustChangePassword}:{}),
   ...(self||admin||elevated(viewer)?{email:p.email||'',phone:p.phone||''}:{}),
-  ...(self||admin?{birthDate:p.birthDate||''}:(!collab&&p.birthDate?{birthday:p.birthDate.slice(5)}:{}))};}
+  ...(self?{pushOff:!!p.pushOff,pushReady:!!(db.ha?.notify?.[p.id])}:{}),
+ ...(self||admin?{birthDate:p.birthDate||''}:(!collab&&p.birthDate?{birthday:p.birthDate.slice(5)}:{}))};}
 function peopleFor(viewer){if(roleOf(viewer)!=='collaborator')return db.people.map(p=>personView(viewer,p));const allowed=db.tasks.filter(t=>canSeeTask(viewer,t));return db.people.filter(p=>p.id===viewer.id||allowed.some(t=>t.assignedTo===p.id||t.createdBy===p.id)).map(p=>personView(viewer,p));}
 function cleanEmail(v){const e=cleanStr(v,120).toLowerCase();if(e&&!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e))throw Error('Email inválido.');return e;}
 function cleanPhone(v){const t=cleanStr(v,30);if(t&&!/^\+?[\d\s().-]{6,20}$/.test(t))throw Error('Telefone inválido: usa só números, espaços e o indicativo (ex.: +351 912 345 678).');return t;}
 function cleanBirth(v){const d=cleanStr(v,10);if(!d)return '';dateISO(d);if(d<'1900-01-01'||d>new Date().toISOString().slice(0,10))throw Error('Data de nascimento inválida.');return d;}
 function cleanUsername(v,exceptId){const u=cleanStr(v,40).toLowerCase();if(!/^[a-z0-9._-]{3,40}$/.test(u))throw Error('Nome de utilizador inválido: 3 a 40 caracteres, só letras minúsculas, números, ponto, hífen ou sublinhado.');if(db.people.some(p=>p.username===u&&p.id!==exceptId))throw Error('Esse nome de utilizador já existe.');return u;}
 // Campos de perfil que podem ser alterados pelo próprio (PATCH /api/me) ou pelo administrador (PATCH /api/people/:id).
+// Entrar com o email (2.2). O nome de utilizador passa a ser interno: gera-se a partir do email e continua a servir para @menções.
+const findByLogin=v=>{const k=String(v||'').trim().toLowerCase();if(!k)return null;return db.people.find(x=>(x.email||'').toLowerCase()===k)||db.people.find(x=>x.username===k)||null;};
+function uniqueEmail(email,exceptId){if(email&&db.people.some(p=>p.id!==exceptId&&(p.email||'').toLowerCase()===email))throw Object.assign(Error('Esse email já está associado a outra conta.'),{status:409});return email;}
+function usernameFrom(email,name){let base=(String(email||'').split('@')[0]||String(name||'')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9._-]/g,'').slice(0,30);if(base.length<3)base=(base+'casa').slice(0,6);let u=base,i=2;while(db.people.some(p=>p.username===u))u=base+(i++);return u;}
 function applyProfile(target,b){
  if('name'in b){const name=cleanStr(b.name,80);if(name.length<2)throw Error('O nome deve ter pelo menos 2 caracteres.');target.name=name;}
  if('username'in b)target.username=cleanUsername(b.username,target.id);
- if('email'in b)target.email=cleanEmail(b.email);
+ if('email'in b){const e=cleanEmail(b.email);if(!e&&target.email)throw Error('O email é usado para entrar: não pode ficar em branco.');target.email=uniqueEmail(e,target.id);}
+ if('pushOff'in b)target.pushOff=b.pushOff===true;
  if('phone'in b)target.phone=cleanPhone(b.phone);
  if('birthDate'in b)target.birthDate=cleanBirth(b.birthDate);
  if('photo'in b)target.photo=cleanPhoto(b.photo);}
@@ -210,22 +217,44 @@ const server=http.createServer(async (req,res)=>{
     if(p==='/api/bootstrap'&&req.method==='GET')return send(res,200,{setup:db.people.length===0,user:(()=>{const u=readUser(req);return u?{id:u.id,name:u.name,role:u.role,mustChangePassword:!!u.mustChangePassword}:null;})()});
     if(p==='/api/setup'&&req.method==='POST'){
       if(db.people.length)return fail(res,409,'Aplicação já configurada.');
-      const name=cleanStr(b.name,80),username=cleanStr(b.username,40).toLowerCase(),password=String(b.password||'');
-      if(name.length<2||!/^[a-z0-9._-]{3,40}$/.test(username)||password.length<10)return fail(res,400,'Nome, utilizador (mín. 3 caracteres) e palavra-passe (mín. 10 caracteres) são obrigatórios.');
-      const u={id:id(),name,username,role:'admin',avatar:'●',passwordHash:passwordHash(password),authVersion:1};db.people.push(u);save();return send(res,200,{user:{id:u.id,name:u.name,role:u.role}},{'Set-Cookie':cookie(req,session(u))});
+      const name=cleanStr(b.name,80),password=String(b.password||'');let email;try{email=cleanEmail(b.email);}catch(e){return fail(res,400,e.message);}
+      const username=b.username?cleanStr(b.username,40).toLowerCase():usernameFrom(email,name);
+      if(name.length<2||(!email&&!/^[a-z0-9._-]{3,40}$/.test(username))||!/^[a-z0-9._-]{3,40}$/.test(username)||password.length<10)return fail(res,400,'Nome, email e palavra-passe (mín. 10 caracteres) são obrigatórios.');
+      const u={id:id(),name,username,email,role:'admin',avatar:'●',passwordHash:passwordHash(password),authVersion:1};db.people.push(u);save();return send(res,200,{user:{id:u.id,name:u.name,role:u.role}},{'Set-Cookie':cookie(req,session(u))});
     }
     if(p==='/api/login'&&req.method==='POST'){
-      const username=cleanStr(b.username,40).toLowerCase();
+      const username=cleanStr(b.email||b.username,120).toLowerCase();
       if(loginBlocked(username))return fail(res,429,'Demasiadas tentativas. Tenta novamente dentro de alguns minutos.');
-      const u=db.people.find(x=>x.username===username);
+      const u=findByLogin(username);
       // Verifica sempre uma palavra-passe (mesmo para utilizadores inexistentes) para não revelar contas pelo tempo de resposta.
       const ok=verifyPw(String(b.password||'').slice(0,200),u?u.passwordHash:DUMMY_HASH)&&!!u;
-      if(!ok){loginFailed(username);return fail(res,401,'Credenciais inválidas.');}
+      if(!ok){loginFailed(username);return fail(res,401,'Email ou palavra-passe errados.');}
       if(!isActive(u))return fail(res,403,'Esta conta foi desativada. Fala com o administrador da casa.');
       if(!scheduleAllows(u))return fail(res,403,'O teu acesso está disponível apenas em: '+scheduleText(u)+'.');
       loginSucceeded(username);return send(res,200,{user:{id:u.id,name:u.name,role:u.role,mustChangePassword:!!u.mustChangePassword}},{'Set-Cookie':cookie(req,session(u))});
     }
     if(p==='/api/logout'&&req.method==='POST')return send(res,200,{ok:true},{'Set-Cookie':cookie(req,'')});
+    // Recuperar a palavra-passe sem serviço de email: código de 6 dígitos enviado para a app Home Assistant do telemóvel da pessoa
+    // (se estiver configurado) e aviso ao administrador. A resposta é sempre a mesma, para não revelar que emails existem.
+    if(p==='/api/password/forgot'&&req.method==='POST'){
+      const key='reset:'+cleanStr(b.email,120).toLowerCase();if(loginBlocked(key))return fail(res,429,'Demasiados pedidos. Tenta novamente dentro de alguns minutos.');loginFailed(key);
+      const u=findByLogin(b.email);let sent=false;
+      if(u&&isActive(u)&&u.email){const code=String(crypto.randomInt(0,1e6)).padStart(6,'0');resetCodes.set(u.id,{hash:crypto.createHash('sha256').update(u.id+':'+code).digest('hex'),exp:Date.now()+15*60_000,tries:0});
+        try{sent=!!(await ha?.notify(u.id,'Casa em Dia · código de recuperação',`O teu código é ${code}. É válido durante 15 minutos. Se não pediste, ignora esta mensagem.`,{tag:'casa-reset'}));}catch{}
+        for(const a of db.people.filter(x=>roleOf(x)==='admin'&&isActive(x)&&x.id!==u.id))notif.add(a.id,'security',`${u.name.split(' ')[0]} pediu para recuperar a palavra-passe`,sent?'Recebeu um código no telemóvel.':'Se for preciso, repõe-lhe a palavra-passe em Pessoas.',{page:'people'});
+        logAction(u,'password.forgot',u.id);save();}
+      return send(res,200,{ok:true});
+    }
+    if(p==='/api/password/reset'&&req.method==='POST'){
+      const u=findByLogin(b.email);const rc=u&&resetCodes.get(u.id);const key='reset:'+cleanStr(b.email,120).toLowerCase();
+      if(loginBlocked(key))return fail(res,429,'Demasiadas tentativas. Tenta novamente dentro de alguns minutos.');
+      const pw=String(b.password||'');if(pw.length<10)return fail(res,400,'A nova palavra-passe deve ter pelo menos 10 caracteres.');
+      const ok=rc&&rc.exp>Date.now()&&rc.tries<5&&crypto.timingSafeEqual(Buffer.from(rc.hash),Buffer.from(crypto.createHash('sha256').update(u.id+':'+cleanStr(b.code,6)).digest('hex')));
+      if(!ok){if(rc)rc.tries++;loginFailed(key);return fail(res,400,'Código inválido ou expirado. Pede um novo código.');}
+      resetCodes.delete(u.id);u.passwordHash=passwordHash(pw);u.authVersion=(u.authVersion||1)+1;u.mustChangePassword=false;logAction(u,'password.reset',u.id);save();loginSucceeded(key);
+      if(!isActive(u))return fail(res,403,'Esta conta foi desativada. Fala com o administrador da casa.');
+      return send(res,200,{user:{id:u.id,name:u.name,role:roleOf(u)}},{'Set-Cookie':cookie(req,session(u))});
+    }
     // Entrada a partir de automações do Home Assistant (autenticação por token, sem cookies).
     if(p.startsWith('/api/integracao/')){
       if(!authIntegration(req))return fail(res,401,'Token de integração inválido.');
@@ -447,10 +476,11 @@ const server=http.createServer(async (req,res)=>{
     }
     if(p==='/api/people'&&req.method==='POST'){
       if(user.role!=='admin')return fail(res,403,'Apenas administradores.');
-      const name=cleanStr(b.name,80),username=cleanStr(b.username,40).toLowerCase(),pw=String(b.password||'');
-      if(name.length<2||!/^[a-z0-9._-]{3,40}$/.test(username)||pw.length<10)return fail(res,400,'Nome, utilizador (mín. 3 caracteres) e palavra-passe (mín. 10 caracteres) obrigatórios.');
+      const name=cleanStr(b.name,80),pw=String(b.password||'');let email;try{email=uniqueEmail(cleanEmail(b.email),null);}catch(e){return fail(res,e.status||400,e.message);}
+      let username=b.username?cleanStr(b.username,40).toLowerCase():usernameFrom(email,name);
+      if(name.length<2||!/^[a-z0-9._-]{3,40}$/.test(username)||pw.length<10||(!email&&!b.username))return fail(res,400,'Nome, email e palavra-passe temporária (mín. 10 caracteres) são obrigatórios.');
       if(db.people.some(p=>p.username===username))return fail(res,409,'Esse nome de utilizador já existe.');
-      const person={id:id(),name,username,passwordHash:passwordHash(pw),role:['manager','resident','collaborator'].includes(b.role)?b.role:'resident',authVersion:1,avatar:'●',active:true,mustChangePassword:true};db.people.push(person);logAction(user,'person.create',person.id);save();return send(res,201,{people:peopleFor(user)});
+      const person={id:id(),name,username,email,passwordHash:passwordHash(pw),role:['manager','resident','collaborator'].includes(b.role)?b.role:'resident',authVersion:1,avatar:'●',active:true,mustChangePassword:true};db.people.push(person);logAction(user,'person.create',person.id);save();return send(res,201,{people:peopleFor(user)});
     }
     if(p==='/api/me'&&req.method==='PATCH'){
       const target=db.people.find(x=>x.id===user.id);const draft={...target};applyProfile(draft,b);Object.assign(target,draft);

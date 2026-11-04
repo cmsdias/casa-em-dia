@@ -1,3 +1,10 @@
+# 2.2.0 — Login com email, recuperar acesso, preferências no perfil
+
+- **Login com o email.** O nome de utilizador deixa de aparecer: as contas novas criam-se com nome, email e palavra-passe temporária, e cada pessoa entra com o seu email. Quem ainda não tem email no perfil continua a poder entrar com o utilizador antigo; convém acrescentar o email no perfil.
+- **Recuperar a palavra-passe** («Esqueci-me da palavra-passe»): sem serviços externos. É enviado um código de 6 dígitos (válido 15 minutos) para a app Home Assistant do telemóvel da pessoa, se estiver ligado, e o administrador é avisado no sino para repor a palavra-passe se for preciso.
+- **Perfil:** a aparência e um novo interruptor **Notificações no telemóvel** ficam logo a seguir à fotografia. Cada pessoa pode desligar as notificações no telemóvel sem depender do administrador (o sino continua a funcionar).
+- Ecrã de entrada: logótipo maior e alinhado com o texto; botão «Login» com ícone.
+
 # 2.1.9 — Acesso direto (opcional)
 
 - Nova opção de acesso direto na rede de casa (desligada por omissão), para instalar a Casa em Dia no ecrã principal do iPhone ou do Android sem o cabeçalho do Home Assistant. Liga-se em Definições → Aplicações → Casa em Dia → Configuração → Rede (porta 3000). Ver «Instalar no ecrã principal do telemóvel» na documentação.

@@ -13,9 +13,9 @@ Aplicação para organizar a casa em conjunto: tarefas pontuais, rotinas recorre
 ## Primeiro acesso
 
 1. Inicie a aplicação e abra **Abrir interface Web** (ou o item **Casa em Dia** na barra lateral).
-2. Crie a conta de administrador. Use uma palavra-passe longa (mínimo 10 caracteres) e diferente da do Home Assistant.
+2. Crie a conta de administrador com o seu nome e email. Use uma palavra-passe longa (mínimo 10 caracteres) e diferente da do Home Assistant.
 3. O **assistente de início** propõe divisões e rotinas para o tipo de casa (pode voltar a abri-lo em **Definições → A casa**).
-4. Em **Casa → Pessoas**, crie as contas das restantes pessoas da casa e atribua o perfil adequado.
+4. Em **Casa → Pessoas**, crie (com nome, email e palavra-passe temporária) as contas das restantes pessoas da casa e atribua o perfil adequado.
 5. Opcional: em **Definições → A casa**, ajuste as divisões e categorias e importe uma lista de tarefas em JSON.
 
 ## Perfis
@@ -30,6 +30,8 @@ Aplicação para organizar a casa em conjunto: tarefas pontuais, rotinas recorre
 As permissões são verificadas no servidor em cada pedido, não apenas escondidas na interface. Ao mudar o perfil ou a palavra-passe de alguém, as sessões dessa pessoa terminam.
 
 - **Tarefas privadas** só são visíveis para quem as criou, incluindo para o administrador.
+- **Entrar:** cada pessoa entra com o seu email. Contas antigas sem email continuam a entrar com o nome de utilizador até acrescentarem o email no perfil.
+- **Esqueci-me da palavra-passe:** é enviado um código de 6 dígitos para a app Home Assistant do telemóvel da pessoa (se o administrador lhe tiver ligado o telemóvel) e o administrador é avisado no sino; também pode repor a palavra-passe em Pessoas.
 - **Contas novas e palavras-passe repostas** pelo administrador são temporárias: na primeira entrada, a pessoa tem de escolher uma palavra-passe nova.
 - **Desativar conta** (em Pessoas): a pessoa deixa de conseguir entrar, as sessões terminam e as tarefas por concluir ficam por atribuir. Ao reativar a conta, essas tarefas voltam a ser atribuídas à pessoa, exceto as que entretanto foram atribuídas a outra. O histórico mantém-se.
 - **Dias de acesso** (só colaboradores): o administrador escolhe os dias da semana em que a pessoa pode entrar. Sem dias marcados, o acesso é diário. Usa o fuso horário `Europe/Lisbon` (ou a variável `TZ` do contentor).
