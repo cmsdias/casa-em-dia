@@ -290,6 +290,37 @@ html[data-theme="dark"] .notif-ico.t-birthday{background:#453921;color:#d7c49f}
 html[data-theme="dark"] .notif-ico.t-due{background:#452621;color:#d3918b}
 html[data-theme="dark"] .notif-ico.t-done{background:#27322c;color:#abdabd}
 html[data-theme="dark"] .notif-text em{color:#9ba39d}
+html[data-theme="dark"] .cal-chip,html[data-theme="dark"] .cal-type{background:#1c2520;color:#c3cdc5}
+html[data-theme="dark"] .cal-type.on{color:#cbd7cf}
+html[data-theme="dark"] .cal-type.t-task.on i{background:#17261e}
+html[data-theme="dark"] .cal-type.t-routine.on i{background:#5e7fa6}
+html[data-theme="dark"] .cal-type.t-birthday.on i{background:#c0703f}
+html[data-theme="dark"] .cal-type.t-holiday.on i{background:#c9a568}
+html[data-theme="dark"] .cal-grid{background:#1c2520}
+html[data-theme="dark"] .cal-day.is-weekend{background:#222b26}
+html[data-theme="dark"] .cal-day.is-holiday{background:#252f29}
+html[data-theme="dark"] .cal-day.out{background:#222b26}
+html[data-theme="dark"] .cal-day:hover{background:#242e28}
+html[data-theme="dark"] .cal-hol{color:#d7c49f}
+html[data-theme="dark"] .cal-ev{background:#26302a;color:#ceded6;border-left:3px solid #17261e}
+html[data-theme="dark"] .cal-ev.t-task-late{background:#26302a;border-color:#b4483b;color:#daaaa5}
+html[data-theme="dark"] .cal-ev.t-routine{background:#252f29;border-color:#5e7fa6;color:#afc2db}
+html[data-theme="dark"] .cal-ev.t-birthday{background:#26302a;border-color:#c0703f;color:#dfbda7}
+html[data-theme="dark"] .cal-dots i{background:#17261e}
+html[data-theme="dark"] .cal-dots i.t-task-late{background:#b4483b}
+html[data-theme="dark"] .cal-dots i.t-routine{background:#5e7fa6}
+html[data-theme="dark"] .cal-dots i.t-birthday{background:#c0703f}
+html[data-theme="dark"] .cal-dots i.t-task-done{background:#444946}
+@media (max-width:760px){html[data-theme="dark"] .cal-day.is-holiday .cal-num{color:#d7c49f}}
+html[data-theme="dark"] .cal-daylist{background:#1c2520}
+html[data-theme="dark"] .cal-hol-tag{color:#d7c49f;background:#453921}
+html[data-theme="dark"] .cal-item{background:#232d27}
+html[data-theme="dark"] button.cal-item:hover{background:#26302a}
+html[data-theme="dark"] .cal-item i{background:#17261e}
+html[data-theme="dark"] .cal-item.t-task-late i{background:#b4483b}
+html[data-theme="dark"] .cal-item.t-routine i{background:#5e7fa6}
+html[data-theme="dark"] .cal-item.t-birthday i{background:#c0703f}
+html[data-theme="dark"] .cal-item.t-task-done i{background:#444946}
 html[data-theme="dark"]{color-scheme:dark;--dk-page:#131916;--dk-surface:#1c2520;--dk-raised:#26302b;--dk-ink:#E7ECE8;--dk-muted:#A3AFA7;--dk-line:#2C3A32}
 html[data-theme="dark"] body{background:var(--dk-page);color:var(--dk-ink)}
 html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background:var(--dk-raised);color:var(--dk-ink);border-color:#34443a}
@@ -316,4 +347,14 @@ html[data-theme="dark"] .mobile-header .bell-btn{color:var(--dk-ink)}
 html[data-theme="dark"] .bell-badge{box-shadow:0 0 0 2px var(--dk-page)}
 html[data-theme="dark"] .notif-ico{background:#26342d;color:var(--brand-gold)}
 html[data-theme="dark"] .person-contacts a:hover{color:var(--brand-gold)}
+html[data-theme="dark"] .cal-day.is-today .cal-num{background:var(--brand-gold);color:#17261E}
+html[data-theme="dark"] .cal-day.is-sel{box-shadow:inset 0 0 0 2px var(--brand-gold)}
+html[data-theme="dark"] .cal-ev{background:#22302a;color:var(--dk-ink);border-left-color:#8fb39b}
+html[data-theme="dark"] .cal-ev.t-task-late{background:#3a2421;color:#f0c4bd;border-color:#d0675a}
+html[data-theme="dark"] .cal-ev.t-routine{background:#1f2a37;color:#c7d6ea;border-color:#7d9cc4}
+html[data-theme="dark"] .cal-ev.t-birthday{background:#3a2a1f;color:#efcdb4;border-color:#d38a57}
+html[data-theme="dark"] .cal-dots i,html[data-theme="dark"] .cal-item i{background:#8fb39b}
+html[data-theme="dark"] .cal-chip.active{background:var(--brand-gold);border-color:var(--brand-gold);color:#17261E}
+html[data-theme="dark"] .cal-hol,html[data-theme="dark"] .cal-hol-tag{color:#e0c48e}
+html[data-theme="dark"] .cal-type.t-task.on i{background:#8fb39b}
 html[data-theme="dark"] .muted,html[data-theme="dark"] .field-help,html[data-theme="dark"] .page-subtitle,html[data-theme="dark"] .section-sub,html[data-theme="dark"] .modal-sub{color:var(--dk-muted)}

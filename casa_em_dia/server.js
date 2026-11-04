@@ -382,7 +382,7 @@ const server=http.createServer(async (req,res)=>{
     if(personEdit&&req.method==='PATCH'){
       if(roleOf(user)!=='admin')return fail(res,403,'Apenas administradores.');
       const target=db.people.find(x=>x.id===personEdit[1]);if(!target)return fail(res,404,'Pessoa não encontrada.');
-      const allowed={};for(const k of ['name','username','email','phone','birthDate'])if(k in b)allowed[k]=b[k];
+      const allowed={};for(const k of ['name','username','email','phone','birthDate','photo'])if(k in b)allowed[k]=b[k];
       const draft={...target};applyProfile(draft,allowed);Object.assign(target,draft);
       logAction(user,'person.edit',target.id);save();return send(res,200,{people:peopleFor(user)});
     }
