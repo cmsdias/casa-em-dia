@@ -225,7 +225,7 @@ const server=http.createServer(async (req,res)=>{
     if(user.mustChangePassword&&!(p===`/api/people/${user.id}/password`&&req.method==='POST'))return fail(res,428,'Define uma nova palavra-passe para continuar.');
     if(p==='/api/rev'&&req.method==='GET')return send(res,200,{rev:rev()});
     if(p==='/api/notifications/read'&&req.method==='POST'){const ids=b.ids==='all'?'all':Array.isArray(b.ids)?b.ids.filter(x=>typeof x==='string').slice(0,200):null;if(!ids)return fail(res,400,'Pedido inválido.');const n=notif.markRead(user,ids);if(n)save();return send(res,200,{notifications:notif.forUser(user)});}
-    if(p==='/api/notifications/clear'&&req.method==='POST'){if(notif.clear(user))save();return send(res,200,{notifications:[]});}
+    if(p==='/api/notifications/clear'&&req.method==='POST'){if(notif.clear(user))save();return send(res,200,{notifications:notif.forUser(user)});}
     // Fotografias das tarefas: ficheiros em DATA_DIR/photos, servidos só a quem pode ver a tarefa.
     const photoGet=p.match(/^\/api\/photos\/([^/]+)$/);
     if(photoGet&&req.method==='GET'){const pid=photoGet[1];if(!PHOTO_ID.test(pid))return fail(res,404,'Fotografia não encontrada.');const t=db.tasks.find(x=>(x.photos||[]).some(ph=>ph.id===pid));if(!t||!canSeeTask(user,t))return fail(res,404,'Fotografia não encontrada.');let buf;try{buf=fs.readFileSync(path.join(PHOTO_DIR,pid+'.jpg'));}catch{return fail(res,404,'Fotografia não encontrada.');}res.writeHead(200,{'Content-Type':'image/jpeg','Content-Length':buf.length,'Cache-Control':'private, max-age=604800, immutable','X-Content-Type-Options':'nosniff'});return res.end(buf);}

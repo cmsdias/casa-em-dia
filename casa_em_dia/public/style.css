@@ -1053,3 +1053,9 @@ button.cal-item{cursor:pointer}button.cal-item:hover{background:#eef2eb}
 .phone-field .phone-code{min-width:0;font-variant-numeric:tabular-nums}
 .toast{width:max-content;max-width:calc(100vw - 32px);white-space:normal}
 @media(max-width:700px){body:has(.completion-followup) .toast{bottom:calc(228px + env(safe-area-inset-bottom,0px))}}
+.notif-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 16px 12px;border-top:1px solid var(--line)}
+.notif-foot small{color:var(--muted);font-size:12px}
+.notif-page-tools{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 14px}
+.notif-day{margin-bottom:18px;max-width:720px}
+.notif-day h3{margin:0 0 8px 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.notif-list.page{background:#fff;border:1px solid var(--line);border-radius:18px;padding:6px}
