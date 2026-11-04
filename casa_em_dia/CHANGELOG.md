@@ -1,3 +1,7 @@
+# 2.2.1 — App instalada no iPhone
+
+- Com a app instalada no ecrã principal, o cabeçalho passa a começar abaixo da barra de estado (hora, rede, bateria) e, ao deslizar, o conteúdo deixa de passar por baixo dela.
+
 # 2.2.0 — Login com email, recuperar acesso, preferências no perfil
 
 - **Login com o email.** O nome de utilizador deixa de aparecer: as contas novas criam-se com nome, email e palavra-passe temporária, e cada pessoa entra com o seu email. Quem ainda não tem email no perfil continua a poder entrar com o utilizador antigo; convém acrescentar o email no perfil.
