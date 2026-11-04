@@ -5,8 +5,14 @@
 (function splashControl(){
  const el=document.getElementById('splash');if(!el)return;
  if(window.__CASA_DEMO__){try{if(!sessionStorage.getItem('casa-splash')){sessionStorage.setItem('casa-splash','1');el.classList.add('instant');}else{el.remove();return;}}catch{el.remove();return;}}
- const shownAt=el.classList.contains('instant')?0:300,minEnd=el.classList.contains('instant')?2000:1500;
- const hide=()=>{if(!el.isConnected||el.classList.contains('out'))return;const t=performance.now();if(t<shownAt){el.remove();return;}setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),320);},Math.max(0,minEnd-t));};
+ // Se a app abrir em menos de 0,3 s, a animação nem aparece. Se aparecer, corre até ao fim (o nome «Casa em Dia»
+ // termina por volta de 1,9 s) e só depois desvanece: nunca é cortada a meio.
+ const shownAt=el.classList.contains('instant')?0:300;let drawn=matchMedia('(prefers-reduced-motion: reduce)').matches,waiting=false;
+ const word=el.querySelector('.splash-word');
+ const fadeOut=()=>{if(!el.isConnected||el.classList.contains('out'))return;el.classList.add('out');setTimeout(()=>el.remove(),320);};
+ word?.addEventListener('animationend',()=>{drawn=true;if(waiting)setTimeout(fadeOut,250);});
+ setTimeout(()=>{drawn=true;if(waiting)fadeOut();},2600); // segurança, se o evento não chegar
+ const hide=()=>{if(!el.isConnected||el.classList.contains('out')||waiting)return;if(performance.now()<shownAt&&!el.classList.contains('instant')){el.remove();return;}waiting=true;if(drawn)setTimeout(fadeOut,250);};
  const app=document.getElementById('app');new MutationObserver((m,obs)=>{if(app.childElementCount){obs.disconnect();hide();}}).observe(app,{childList:true});
  setTimeout(hide,8000);
 })();
