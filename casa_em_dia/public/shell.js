@@ -6,7 +6,7 @@
 const APP_VER=((document.currentScript&&document.currentScript.src)||'').match(/[?&]v=([\d.]+)/)?.[1]||'';
 Object.assign(paths,{
  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/>',
- scale:'<path d="M12 4v16M7 20h10M5 8h14"/><path d="M5 8l-3 6a3 3 0 0 0 6 0zM19 8l-3 6a3 3 0 0 0 6 0z"/>',
+ scale:'<path d="M12 5v15M8 20.5h8M4.5 7.5h15"/><circle cx="12" cy="4" r="1.2"/><path d="M4.5 7.5 1.8 14a2.7 2.7 0 0 0 5.4 0zM19.5 7.5 16.8 14a2.7 2.7 0 0 0 5.4 0z"/>',
  file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
  store:'<path d="M4 9h16l-1.2-4.2A1 1 0 0 0 17.8 4H6.2a1 1 0 0 0-1 .8z"/><path d="M5 9v11h14V9M9 20v-6h6v6"/>',
  sparkle:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/>',
