@@ -932,3 +932,19 @@ details>summary:focus-visible,.task-more:focus-visible{outline:2px solid var(--b
 .completion-followup .followup-close{background:transparent;border:1px solid #ffffff40;color:var(--brand-paper);width:40px;height:40px;min-width:40px;min-height:40px;border-radius:50%;font-size:20px;line-height:1;display:grid;place-items:center}
 .completion-followup .followup-close:hover{background:#ffffff14}
 .completion-followup.out{opacity:0;transition:opacity .3s}
+/* Perfil: formulário único */
+.profile-form{display:grid;gap:16px}
+.profile-modal .profile-card{padding:0 0 16px}
+.profile-photo-block{display:grid;justify-items:center;gap:10px}
+.profile-pending{margin:0;font-size:12.5px;font-weight:600;color:#8a6a2c}
+.profile-pass{border-top:1px solid var(--line);padding-top:12px;display:grid;gap:4px}
+.profile-pass>summary{font-weight:650;font-size:14px;padding:4px 0}
+.profile-pass[open]>summary{margin-bottom:8px}
+.profile-form .modal-actions{margin-top:4px}
+.profile-session{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+/* Controlo segmentado (Aparência) */
+.field-label{display:block;font-weight:650;font-size:13px;margin-bottom:7px}
+.seg-control{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border-radius:14px;background:#eef1ec;border:1px solid var(--line)}
+.seg-control button{border:0;background:transparent;border-radius:10px;min-height:40px;font:600 13.5px inherit;font-family:inherit;color:#4a554d;cursor:pointer}
+.seg-control button[aria-checked="true"]{background:#fff;color:var(--brand-green);box-shadow:0 1px 3px #0000001f}
+.seg-control button:focus-visible{outline:2px solid var(--brand-gold);outline-offset:2px}

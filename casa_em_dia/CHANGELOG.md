@@ -1,4 +1,7 @@
-# 1.7.2 — Animações de carregamento
+# 1.7.2 — Animações de carregamento, modo escuro e perfil simplificado
+
+- Modo escuro: no perfil, «Aparência» com Automático (segue o telemóvel/computador), Claro ou Escuro. A escolha fica guardada em cada dispositivo. As cores escuras são geradas a partir do `style.css` por `build_dark.py` (voltar a correr depois de mudar estilos).
+- Perfil num só formulário: fotografia, nome e (opcional) nova palavra-passe, com um único «Cancelar / Guardar». A fotografia escolhida só é gravada ao guardar. Mudar a palavra-passe já não obriga a voltar a entrar.
 
 - Abertura da app: o símbolo da casa desenha-se num só traço e o ponto dourado acende-se. Só aparece se o arranque demorar mais de 0,3 s.
 - Páginas a carregar (Finanças, cópias de segurança, Home Assistant, fotografias a enviar): esqueletos com brilho em vez de «A carregar…». Abrir as Finanças já não espera pelos dados para mudar de página.

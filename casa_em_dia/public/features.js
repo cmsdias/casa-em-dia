@@ -207,6 +207,7 @@ async function featureAction(name,el){
  switch(name){
   // Tocar fora da janela fecha-a; se já houver alterações escritas, pergunta antes de as perder.
   case 'overlay':{if(el.dataset.dirty==='1'&&!await confirmDialog({title:'Fechar sem guardar?',message:'As alterações que fizeste nesta janela perdem-se.',confirmLabel:'Fechar',danger:true}))return true;closeModal();return true;}
+  case 'theme-set':{window.casaSetTheme?.(el.dataset.themeValue);el.parentElement.querySelectorAll('[role=radio]').forEach(b=>b.setAttribute('aria-checked',String(b===el)));return true;}
   case 'sync-apply':await syncApply();return true;
   case 'backup-create':{if(demo){toast('Na demonstração não há cópias de segurança.');return true;}const r=await api('/api/backups','POST',{});backupsData={...backupsData,backups:r.backups};loadBackups();toast('Cópia de segurança criada.');return true;}
   case 'backup-download':{if(demo){toast('Indisponível na demonstração.');return true;}const res=await fetch('api/backups/'+encodeURIComponent(el.dataset.name),{credentials:'same-origin'});if(!res.ok)throw Error('Não foi possível descarregar a cópia.');downloadBlob(await res.blob(),el.dataset.name);toast('Transferência iniciada.');return true;}
@@ -261,3 +262,7 @@ function demoFeatureApi(p,method,b){
 // A rotação só faz sentido em rotinas: mostra/esconde ao mudar o tipo da tarefa.
 document.addEventListener('change',e=>{if(e.target.name!=='kind'||!e.target.closest('#task-form'))return;const f=e.target.closest('#task-form').querySelector('[data-rotation-field]');if(f)f.hidden=e.target.value!=='routine';});
 document.addEventListener('input',e=>{const o=e.target.closest?.('.overlay[data-action="overlay"]');if(o)o.dataset.dirty='1';},true);
+
+/* ───────────── Aparência (claro / escuro), por dispositivo ───────────── */
+function appearanceField(){const cur=window.casaThemePref?.()||'auto';const opts=[['auto','Automático'],['light','Claro'],['dark','Escuro']];
+ return `<div class="field"><span class="field-label" id="appearance-label">Aparência</span><div class="seg-control" role="radiogroup" aria-labelledby="appearance-label">${opts.map(([v,l])=>`<button type="button" role="radio" aria-checked="${cur===v}" data-action="theme-set" data-theme-value="${v}">${l}</button>`).join('')}</div><small class="field-help">Aplica-se logo, só neste dispositivo. «Automático» segue o modo do telemóvel ou do computador.</small></div>`;}
