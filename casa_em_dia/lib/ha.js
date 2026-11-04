@@ -5,6 +5,7 @@
 // As tarefas privadas nunca são incluídas nos sensores nem em notificações de outras pessoas.
 const SUPERVISOR=process.env.SUPERVISOR_URL||'http://supervisor';
 const UNITS=require('../public/shopping-units.js');
+const CORE=require('../public/house-core.js');
 
 function createHa({getDb,todayISO,nowHM,save=()=>{},onError=console.error,fetchImpl=globalThis.fetch}){
   const token=()=>process.env.SUPERVISOR_TOKEN||'';
@@ -77,6 +78,9 @@ function createHa({getDb,todayISO,nowHM,save=()=>{},onError=console.error,fetchI
       'sensor.casa_em_dia_tarefas_atrasadas':{state:overdue.length,attributes:{friendly_name:'Casa em Dia · Tarefas atrasadas',unit_of_measurement:'tarefas',icon:'mdi:alert-circle-outline',tarefas:titles(overdue)}},
       'sensor.casa_em_dia_para_hoje':{state:dueToday.length,attributes:{friendly_name:'Casa em Dia · Para hoje',unit_of_measurement:'tarefas',icon:'mdi:calendar-today',tarefas:titles(dueToday)}},
       'sensor.casa_em_dia_compras':{state:shopping.length,attributes:{friendly_name:'Casa em Dia · Compras por fazer',unit_of_measurement:'produtos',icon:'mdi:cart-outline',produtos:shopping.slice(0,40).map(x=>(x.quantity&&x.quantity!=='1')||x.unit?`${x.title} (${UNITS.format(x.quantity,x.unit)})`:x.title)}},
+      // Para o cartão no painel do Home Assistant: o que há para hoje (atrasadas incluídas) e o estado da casa.
+      'sensor.casa_em_dia_hoje':{state:overdue.length+dueToday.length,attributes:{friendly_name:'Casa em Dia · Hoje',unit_of_measurement:'tarefas',icon:'mdi:home-clock-outline',tarefas:[...overdue,...dueToday].slice(0,15).map(t=>({titulo:t.title,divisao:t.room||'',quem:(db().people.find(p=>p.id===t.assignedTo)?.name||'').split(' ')[0],atrasada:t.dueDate<today}))}},
+      'sensor.casa_em_dia_estado_da_casa':(()=>{const st=CORE.roomStatus(shared,today,db().settings?.rooms||[]);const score=CORE.houseScore(st);const rooms=Object.values(st).filter(x=>x.score!=null).sort((a,b)=>a.score-b.score);return {state:score==null?'unknown':score,attributes:{friendly_name:'Casa em Dia · Casa em ordem',unit_of_measurement:'%',icon:'mdi:home-heart',divisoes:rooms.slice(0,12).map(x=>({divisao:x.room,percentagem:x.score,estado:CORE.statusLabel(x)}))}};})(),
       'sensor.casa_em_dia_ultima_conclusao':{state:(db().history||[]).slice(-1)[0]?.at||'unknown',attributes:{friendly_name:'Casa em Dia · Última tarefa concluída',device_class:'timestamp',icon,tarefa:(db().history||[]).slice(-1)[0]?.title||''}},
     };
   }

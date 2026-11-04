@@ -96,7 +96,7 @@ function haCard(){
  <div class="manager-actions"><span>As alterações só são aplicadas quando guardares.</span><button class="button primary" type="submit">Guardar</button></div></form>
  <details class="ha-section ha-auto"><summary><span class="disc-ico" aria-hidden="true"></span>Criar tarefas a partir de automações</summary><p class="field-help">Por exemplo: quando a máquina de lavar termina, criar «Estender a roupa». Acrescenta isto a <code>configuration.yaml</code> e chama <code>rest_command.casa_em_dia_tarefa</code> nas automações.</p><pre class="code-block">${esc(yaml)}</pre><div class="backup-actions"><button class="button small" type="button" data-action="ha-copy-yaml">Copiar configuração</button><button class="button small" type="button" data-action="ha-token">Gerar novo token</button></div><p class="field-help">O token dá acesso à criação de tarefas e de produtos de compras. Se o partilhares por engano, gera um novo.</p></details></div>`;
 }
-async function loadHa(){try{haData=await api('/api/ha');}catch(e){haData={available:false};}const el=document.getElementById('ha-card');if(el&&page==='settings')el.outerHTML=haCard();}
+async function loadHa(){try{haData=await api('/api/ha');}catch(e){haData={available:false};}const el=document.getElementById('ha-card');if(el&&page==='settings'){if(!modal&&!formDirty)render();else el.outerHTML=haCard();}}
 document.addEventListener('submit',async e=>{
  if(e.target.id==='ha-form'){e.preventDefault();const f=e.target;const notify={};f.querySelectorAll('select[name^="notify:"]').forEach(s=>{notify[s.name.slice(7)]=s.value;});
   const body={notify,events:{assigned:f.elements.assigned.checked,daily:f.elements.daily.checked},dailyTime:f.elements.dailyTime.value||'08:30',sensors:f.elements.sensors.checked};
@@ -148,7 +148,7 @@ function calendarPage(){
  const label=new Date(sel+'T12:00:00Z').toLocaleDateString('pt-PT',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'});
  const all=seasonal(),active=all.filter(x=>x.active!==false),inactive=all.filter(x=>x.active===false);const sugg=active.filter(x=>x.months.includes(m));
  const monthName=MONTHS_FULL[m-1][0].toUpperCase()+MONTHS_FULL[m-1].slice(1);
- return `${head('Calendário','Tarefas, rotinas, aniversários e feriados, mês a mês.',false)}
+ return `
  <div class="cal-toolbar"><div class="cal-nav"><button type="button" class="icon-btn" data-action="cal-step" data-step="-1" aria-label="Mês anterior">‹</button><h2 class="cal-title">${monthName} <span>${y}</span></h2><button type="button" class="icon-btn" data-action="cal-step" data-step="1" aria-label="Mês seguinte">›</button><button type="button" class="button small" data-action="cal-today">Hoje</button></div>
  <div class="cal-filters" role="group" aria-label="Mostrar tarefas de">${chip('all','Tudo')}${chip('me','Só eu')}${collab?'':people().filter(p=>p.active!==false&&p.id!==store.user.id).map(p=>chip(p.id,esc(shortName(p)))).join('')}</div>
  <div class="cal-types" role="group" aria-label="Tipos de evento">${tchip('task','Tarefas')}${tchip('routine','Rotinas')}${collab?'':tchip('birthday','Aniversários')}${tchip('holiday','Feriados')}</div></div>
@@ -338,7 +338,7 @@ function personEditModal(id){const p=people().find(x=>x.id===id);if(!p)return;pe
 /* ───────────── Notificações (sino) ───────────── */
 let notifOpen=false;
 const notifications=()=>Array.isArray(store.notifications)?store.notifications:[];
-const NOTIF_ICON={assigned:'list',rotation:'repeat',done:'check-square',birthday:'cake',due:'clock',season:'calendar'};
+const NOTIF_ICON={assigned:'list',rotation:'repeat',done:'check-square',birthday:'cake',due:'clock',season:'calendar',equipment:'tool'};
 function relTime(iso){const d=(Date.now()-Date.parse(iso))/1000;if(d<60)return 'agora';if(d<3600)return `há ${Math.floor(d/60)} min`;if(d<86400)return `há ${Math.floor(d/3600)} h`;if(d<172800)return 'ontem';if(d<7*86400)return `há ${Math.floor(d/86400)} dias`;return new Date(iso).toLocaleDateString('pt-PT',{day:'numeric',month:'short'});}
 function bellButton(){const n=notifications().filter(x=>!x.read&&!x.cleared).length;return `<button type="button" class="icon-btn bell-btn ${notifOpen?'is-open':''}" data-action="notif-toggle" aria-haspopup="dialog" aria-expanded="${notifOpen}" aria-label="Notificações${n?`: ${n} por ler`:''}">${ico('bell')}${n?`<span class="bell-badge" aria-hidden="true">${n>9?'9+':n}</span>`:''}</button>`;}
 function notifItem(n){return `<button type="button" class="notif-item ${n.read?'':'unread'}" data-action="notif-open" data-id="${esc(n.id)}"><span class="notif-ico t-${esc(n.type)}" aria-hidden="true">${ico(NOTIF_ICON[n.type]||'info')}</span><span class="notif-text"><b>${esc(n.title)}</b>${n.body?`<small>${esc(n.body)}</small>`:''}<em>${esc(relTime(n.at))}</em></span>${n.read?'':'<i class="notif-dot" aria-label="Por ler"></i>'}</button>`;}
@@ -357,8 +357,8 @@ async function notifAction(name,el){
  if(name==='notif-clear'){try{const r=await api('/api/notifications/clear','POST',{});store.notifications=r.notifications||[];}catch(e){toast(e.message);}render();toast('Sino limpo. Continuam em «Ver todas» durante 30 dias.');return true;}
  if(name==='notif-all'){notifOpen=false;page='notifications';render();window.scrollTo(0,0);return true;}
  if(name==='notif-open'){const n=notifications().find(x=>x.id===el.dataset.id);if(!n)return true;if(!n.read)await notifRead([n.id]);notifOpen=false;const l=n.link||{};
-  if(l.page){page=l.page;query='';roomFilter='all';statusFilter='all';priorityFilter='all';personFilter=l.filter==='mine'?store.user.id:'all';tab='active';}
-  render();window.scrollTo(0,0);if(l.taskId&&tasks().some(t=>t.id===l.taskId))openTask(l.taskId);return true;}
+  if(l.page){page=l.page;taskView='list';normalizePage();query='';roomFilter='all';statusFilter='all';priorityFilter='all';personFilter=l.filter==='mine'?store.user.id:'all';tab='active';}
+  render();window.scrollTo(0,0);if(l.taskId&&tasks().some(t=>t.id===l.taskId))openTask(l.taskId);if(l.equipmentId)openEquipmentView(l.equipmentId);return true;}
  return false;}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&notifOpen){notifOpen=false;render();document.querySelector('.bell-btn')?.focus();}});
 

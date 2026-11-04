@@ -1,3 +1,30 @@
+# 2.0.0 — Nova navegação, «Hoje», equipamentos e documentos
+
+Revisão completa da organização da app, a partir da análise «atual vs proposto».
+
+**Navegação e páginas**
+- Barra com quatro destinos: **Hoje · Tarefas · + · Compras · Casa**. O que se usa menos (Calendário, Equilíbrio, Equipamentos, Finanças, Pessoas, Registo de horas, Definições) está em **Casa**, com o estado de cada secção à vista. No computador, a barra lateral mostra o mesmo.
+- **Hoje** substitui o Painel: saudação com o progresso do dia, a semana numa tira de sete dias, atrasadas e para hoje (as tuas e as por atribuir, ou toda a casa), compras e os trabalhos sazonais do mês.
+- **Plano do dia**: «Tenho 15 min / 30 min / 1 hora» escolhe as tarefas mais urgentes que cabem nesse tempo.
+- **Tarefas** numa só página com quatro vistas: Lista, Rotinas, Calendário e Divisões. A lista está agrupada por quando (Atrasadas, Hoje, Esta semana, Mais tarde, Sem data), com filtros rápidos (Minhas, Por atribuir, Urgentes, Até 30 min). A prioridade aparece em palavras (Urgente, Importante) em vez de P1–P4; a estrela do plano semanal deu lugar ao grupo «Esta semana».
+- **Estado das divisões**: percentagem «em dia» de cada divisão, calculada a partir das rotinas e das tarefas atrasadas, e a média da casa.
+- **Definições** em índice: A casa, Notificações e Home Assistant, Dados e cópias, Aparência, Sobre.
+- «Trabalhos realizados» passa a **Registo de horas**.
+
+**Funções novas**
+- **Criar por escrita natural**: «Trocar lâmpada amanhã @Ana #Hall !urgente 20 min». A app reconhece datas (hoje, amanhã, sexta, dia 12, 15/11, fim do mês, daqui a 3 dias), pessoas, divisões, prioridade, repetição («todas as semanas», «todas as sextas») e duração, e mostra-as como etiquetas que se podem tirar ou acrescentar. «Mais detalhes» abre o formulário completo já preenchido.
+- **Equilíbrio da casa**: tempo estimado de cada pessoa na semana (feito e por fazer), sem pontos nem classificação, com sugestão de reatribuição quando há desequilíbrio.
+- **Equipamentos e documentos**: caldeira, AC, eletrodomésticos, rega… com marca, modelo, garantia, técnico e documentos (PDF ou fotografia até 8 MB, guardados no servidor da casa). Trinta dias antes de cada revisão é criada a tarefa «Revisão: …» e o administrador e o gestor são avisados; concluir a tarefa marca a próxima revisão. Avisos de garantias a terminar.
+- **Modo loja** nas Compras: lista em letra grande pela ordem dos corredores, com o ecrã sempre ligado.
+- **Assistente de início** para instalações novas (tipo de casa, divisões e rotinas sugeridas); também disponível em Definições › A casa.
+- **Sem rede**: a app abre com os últimos dados guardados no dispositivo; concluir tarefas e mexer nas compras fica em fila e é enviado quando a ligação voltar.
+- **Cartão para o painel do Home Assistant** (Definições › Notificações e Home Assistant) e dois sensores novos: `sensor.casa_em_dia_hoje` e `sensor.casa_em_dia_estado_da_casa`.
+
+**Correções**
+- Ler as Finanças já não altera a revisão dos dados (antes, abrir as Finanças fazia todos os dispositivos recarregar).
+- Texto secundário com mais contraste (acessibilidade AA).
+- A página mantém a posição ao atualizar com alterações de outras pessoas.
+
 # 1.8.4 — Ícone na barra lateral
 
 - Ícone da app na barra lateral do Home Assistant passa a `mdi:home-variant-outline`.

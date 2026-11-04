@@ -323,6 +323,34 @@ html[data-theme="dark"] .cal-item.t-birthday i{background:#c0703f}
 html[data-theme="dark"] .cal-item.t-task-done i{background:#444946}
 html[data-theme="dark"] .toast{background:#1c2520;border:1px solid #3c4a42}
 html[data-theme="dark"] .notif-list.page{background:#1c2520}
+html[data-theme="dark"]{--muted:#b2bab4}
+html[data-theme="dark"]{--ok:#abdabd;--ok-bg:#27312b;--warn:#e9ce9d;--warn-bg:#453a21;--bad:#d4948d;--bad-bg:#452821;--card:#1c2520;--soft:#26302a}
+html[data-theme="dark"] .chip.on,html[data-theme="dark"] .chip[aria-pressed="true"]{color:#ffffff}
+html[data-theme="dark"] .tag-s{color:#bdc6bf}
+html[data-theme="dark"] .index-row:hover{background:#222b26}
+html[data-theme="dark"] .today-hero h1{color:#ffffff}
+html[data-theme="dark"] .hero-pill{border:1px solid #3838382e;background:#1c252014;color:#ffffff}
+html[data-theme="dark"] .today-ring{background:radial-gradient(closest-side,var(--brand-green) 78%,transparent 79% 100%),conic-gradient(var(--brand-gold) calc(var(--p)*1%),#1c252026 0)}
+html[data-theme="dark"] .today-ring b{color:#ffffff}
+html[data-theme="dark"] .week-day.is-today b{color:#ffffff}
+html[data-theme="dark"] .suggest-card{background:var(--gold-soft,#453a21);border:1px solid #415047}
+html[data-theme="dark"] .suggest-card>svg{color:#dfc8a0}
+html[data-theme="dark"] .view-tabs button{color:#bdc6bf}
+html[data-theme="dark"] .view-tabs button.active{background:#1c2520}
+html[data-theme="dark"] .qt-input{background:#1c2520}
+html[data-theme="dark"] .qt-chip{background:#1c2520}
+html[data-theme="dark"] .qt-chip.on{color:#ffffff}
+html[data-theme="dark"] .qt-chip.on button{background:#1c252026;color:#ffffff}
+html[data-theme="dark"] .qt-chip.warn{border-color:#425148}
+html[data-theme="dark"] .qt-date{background:#1c2520}
+html[data-theme="dark"] .eq-log{color:#bdc6bf}
+html[data-theme="dark"] .store-mode{background:var(--brand-paper,#242d27)}
+html[data-theme="dark"] .store-head{color:#ffffff}
+html[data-theme="dark"] .store-item{background:#1c2520}
+html[data-theme="dark"] .store-check{border:2px solid #49554e}
+html[data-theme="dark"] .store-check svg{color:#ffffff}
+html[data-theme="dark"] .ob-type{background:#1c2520}
+html[data-theme="dark"] .code-block{background:#242e28}
 html[data-theme="dark"]{color-scheme:dark;--dk-page:#131916;--dk-surface:#1c2520;--dk-raised:#26302b;--dk-ink:#E7ECE8;--dk-muted:#A3AFA7;--dk-line:#2C3A32}
 html[data-theme="dark"] body{background:var(--dk-page);color:var(--dk-ink)}
 html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background:var(--dk-raised);color:var(--dk-ink);border-color:#34443a}
@@ -362,4 +390,23 @@ html[data-theme="dark"] .cal-type.t-task.on i{background:#8fb39b}
 html[data-theme="dark"] .toast{background:var(--dk-raised);color:var(--dk-ink);border-color:#3a4a40}
 html[data-theme="dark"] .notif-list.page{background:var(--dk-surface);border-color:var(--dk-line)}
 html[data-theme="dark"] .notif-foot{border-color:var(--dk-line)}
+html[data-theme="dark"] .today-hero{background:#0f1a14;border:1px solid var(--dk-line)}
+html[data-theme="dark"] .today-ring{background:radial-gradient(closest-side,#0f1a14 78%,transparent 79% 100%),conic-gradient(var(--brand-gold) calc(var(--p)*1%),#ffffff26 0)}
+html[data-theme="dark"] .week-day.is-today{background:var(--brand-gold);border-color:var(--brand-gold);color:#17261E}
+html[data-theme="dark"] .week-day.is-today b{color:#17261E}
+html[data-theme="dark"] .index-ico,html[data-theme="dark"] .eq-ico,html[data-theme="dark"] .kind-tag,html[data-theme="dark"] .count-pill,html[data-theme="dark"] .group-title span,html[data-theme="dark"] .room-pct,html[data-theme="dark"] .plan-min,html[data-theme="dark"] .more-link,html[data-theme="dark"] .today-card-head svg,html[data-theme="dark"] .store-qty,html[data-theme="dark"] .house-score-ring b,html[data-theme="dark"] .eq-doc-link svg,html[data-theme="dark"] .offline-banner.sending{color:var(--brand-gold)}
+html[data-theme="dark"] .index-ico,html[data-theme="dark"] .eq-ico,html[data-theme="dark"] .count-pill,html[data-theme="dark"] .group-title span{background:#22302a}
+html[data-theme="dark"] .view-tabs button.active,html[data-theme="dark"] .seg-control button[aria-checked="true"]{background:var(--dk-raised);color:var(--dk-ink)}
+html[data-theme="dark"] .chip.on,html[data-theme="dark"] .chip[aria-pressed="true"],html[data-theme="dark"] .qt-chip.on,html[data-theme="dark"] .ob-type.on{background:var(--brand-gold);border-color:var(--brand-gold);color:#17261E}
+html[data-theme="dark"] .qt-chip.on button{background:#17261e2e;color:#17261E}
+html[data-theme="dark"] i.done,html[data-theme="dark"] .balance-bar i.done{background:#8fb39b}
+html[data-theme="dark"] .store-mode{background:var(--dk-page)}
+html[data-theme="dark"] .store-head{background:#0f1a14;border-bottom:1px solid var(--dk-line)}
+html[data-theme="dark"] .store-item{background:var(--dk-surface);border-color:var(--dk-line);color:var(--dk-ink)}
+html[data-theme="dark"] .store-item.done{background:transparent}
+html[data-theme="dark"] .qt-input{background:var(--dk-raised);color:var(--dk-ink)}
+html[data-theme="dark"] .lvl-ok,html[data-theme="dark"] .tag-s.lvl-ok{color:#8fd0a5}
+html[data-theme="dark"] .lvl-warn,html[data-theme="dark"] .tag-s.lvl-warn{color:#e6c27a}
+html[data-theme="dark"] .lvl-bad,html[data-theme="dark"] .tag-s.lvl-bad,html[data-theme="dark"] .group-title.is-late{color:#f0a89c}
+html[data-theme="dark"] .suggest-card{background:#2a281d;border-color:#4a4230}
 html[data-theme="dark"] .muted,html[data-theme="dark"] .field-help,html[data-theme="dark"] .page-subtitle,html[data-theme="dark"] .section-sub,html[data-theme="dark"] .modal-sub{color:var(--dk-muted)}
