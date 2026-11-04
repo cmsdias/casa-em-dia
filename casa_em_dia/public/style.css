@@ -1698,3 +1698,7 @@ i.planned{background:var(--brand-gold);opacity:.55}
 /* 2.1.7 · seta nas listas de escolha (iOS e Android não a mostram com appearance:none) */
 select:not([multiple]):not([size]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237a857d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 14px center!important;background-size:16px 16px!important;padding-right:42px!important}
 .phone-field select.phone-code{background-position:right 8px center!important;background-size:13px 13px!important;padding-right:26px!important}
+/* 2.1.8 · linha à volta do avatar, com folga transparente (serve com fotografia e com iniciais) */
+.profile-btn .avatar,.profile-pill .avatar{outline:1.5px solid var(--brand-green);outline-offset:2px}
+.sidebar .profile-pill .avatar{outline-color:var(--brand-gold)}
+.profile-btn:focus-visible{outline-offset:6px}
