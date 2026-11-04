@@ -1,3 +1,7 @@
+# 2.1.8 — Avatar com contorno
+
+- O avatar no cabeçalho e na barra lateral passa a ter uma linha fina à volta, separada por uma pequena folga: verde-escura no modo claro e dourada no modo escuro e na barra lateral. Vê-se tanto com fotografia como só com as iniciais.
+
 # 2.1.7 — Listas de escolha
 
 - Todas as listas de escolha (prioridade, responsável, repetição, categoria, filtros…) passam a mostrar uma seta à direita, também no iPhone e no Android.

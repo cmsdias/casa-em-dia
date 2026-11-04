@@ -374,4 +374,5 @@ html[data-theme="dark"] .theme-toggle{background:#0f1a14;border-color:var(--dk-l
 html[data-theme="dark"] .theme-toggle::before{background:var(--dk-raised);box-shadow:0 1px 3px #0006}
 html[data-theme="dark"] .theme-toggle button{color:#7f8c84}
 html[data-theme="dark"] .theme-toggle button[aria-checked="true"]{color:var(--brand-gold)}
+html[data-theme="dark"] .profile-btn .avatar,html[data-theme="dark"] .profile-pill .avatar{outline-color:var(--brand-gold)}
 html[data-theme="dark"] .muted,html[data-theme="dark"] .field-help,html[data-theme="dark"] .page-subtitle,html[data-theme="dark"] .section-sub,html[data-theme="dark"] .modal-sub{color:var(--dk-muted)}
