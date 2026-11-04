@@ -1,3 +1,7 @@
+# 2.1.1 — Animação de abertura
+
+- A animação de abertura deixa de ser cortada a meio: quando aparece, corre até ao fim (símbolo, ponto dourado e nome) e só depois desvanece. Se a app abrir em menos de 0,3 s, continua a não aparecer.
+
 # 2.1.0 — Aprovações e arrumação dos estilos
 
 - **Moradores podem pedir para atribuir tarefas a colaboradores.** A tarefa fica por atribuir, com o pedido à vista, até um administrador ou gestor aprovar; o colaborador só a vê depois de aprovada. Quem pediu pode retirar o pedido e é avisado da decisão.
