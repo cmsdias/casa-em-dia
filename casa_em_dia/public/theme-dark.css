@@ -322,6 +322,7 @@ html[data-theme="dark"] .cal-item.t-routine i{background:#5e7fa6}
 html[data-theme="dark"] .cal-item.t-birthday i{background:#c0703f}
 html[data-theme="dark"] .cal-item.t-task-done i{background:#444946}
 html[data-theme="dark"] .toast{background:#1c2520;border:1px solid #3c4a42}
+html[data-theme="dark"] .notif-list.page{background:#1c2520}
 html[data-theme="dark"]{color-scheme:dark;--dk-page:#131916;--dk-surface:#1c2520;--dk-raised:#26302b;--dk-ink:#E7ECE8;--dk-muted:#A3AFA7;--dk-line:#2C3A32}
 html[data-theme="dark"] body{background:var(--dk-page);color:var(--dk-ink)}
 html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background:var(--dk-raised);color:var(--dk-ink);border-color:#34443a}
@@ -359,4 +360,6 @@ html[data-theme="dark"] .cal-chip.active{background:var(--brand-gold);border-col
 html[data-theme="dark"] .cal-hol,html[data-theme="dark"] .cal-hol-tag{color:#e0c48e}
 html[data-theme="dark"] .cal-type.t-task.on i{background:#8fb39b}
 html[data-theme="dark"] .toast{background:var(--dk-raised);color:var(--dk-ink);border-color:#3a4a40}
+html[data-theme="dark"] .notif-list.page{background:var(--dk-surface);border-color:var(--dk-line)}
+html[data-theme="dark"] .notif-foot{border-color:var(--dk-line)}
 html[data-theme="dark"] .muted,html[data-theme="dark"] .field-help,html[data-theme="dark"] .page-subtitle,html[data-theme="dark"] .section-sub,html[data-theme="dark"] .modal-sub{color:var(--dk-muted)}

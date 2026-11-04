@@ -1,8 +1,9 @@
 'use strict';
 // Notificações dentro da app (sino junto ao avatar).
 // Guardadas em db.notifications: {id, userId, type, title, body, link, at, read}.
-// Cada pessoa vê apenas as suas; ficam no máximo 100 por pessoa e 90 dias.
-const MAX_PER_USER = 100, MAX_AGE_DAYS = 90;
+// Cada pessoa vê apenas as suas; ficam 30 dias (no máximo 200 por pessoa).
+// «Limpar» só as tira do sino (cleared); continuam visíveis em «Ver todas» até expirarem.
+const MAX_PER_USER = 200, MAX_AGE_DAYS = 30;
 
 function createNotifications({ getDb, save, newId, todayISO, canSeeTask, isActive, roleOf }) {
   const db = () => getDb();
@@ -70,9 +71,9 @@ function createNotifications({ getDb, save, newId, todayISO, canSeeTask, isActiv
     prune(); save(); return true;
   }
 
-  function forUser(u) { return list().filter(n => n.userId === u.id).slice(-60).reverse().map(({ key, userId, ...n }) => n); }
+  function forUser(u) { const limit = Date.now() - MAX_AGE_DAYS * 86400_000; return list().filter(n => n.userId === u.id && Date.parse(n.at) > limit).slice(-MAX_PER_USER).reverse().map(({ key, userId, ...n }) => n); }
   function markRead(u, ids) { let n = 0; for (const x of list()) if (x.userId === u.id && !x.read && (ids === 'all' || ids.includes(x.id))) { x.read = true; n++; } return n; }
-  function clear(u) { const d = db(); const before = list().length; d.notifications = list().filter(n => n.userId !== u.id); return before - d.notifications.length; }
+  function clear(u) { let n = 0; for (const x of list()) if (x.userId === u.id && !x.cleared) { x.cleared = true; x.read = true; n++; } return n; }
   return { add, taskAssigned, taskRotated, taskCompleted, daily, forUser, markRead, clear, prune };
 }
 module.exports = { createNotifications };

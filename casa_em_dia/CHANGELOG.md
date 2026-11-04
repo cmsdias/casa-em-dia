@@ -1,3 +1,7 @@
+# 1.8.3 — Histórico de notificações
+
+- «Limpar» no sino passa a tirar as notificações do sino sem as apagar. No fundo do sino, «Ver todas» abre a página com as notificações dos últimos 30 dias (incluindo as limpas), agrupadas por dia. As notificações apagam-se sozinhas ao fim de 30 dias.
+
 # 1.8.2 — Avisos e telefone
 
 - Avisos flutuantes («Produto adicionado», «Tarefa concluída»…): no telemóvel aparecem acima da barra de navegação, com folga em relação ao botão «+», e com fundo claro para não se confundirem com a barra.
