@@ -22,8 +22,9 @@ function createHa({getDb,todayISO,nowHM,save=()=>{},onError=console.error,fetchI
     if(!available())return {available:false};
     if(!selfInfo){try{const r=await call('GET','/addons/self/info');selfInfo=r?.data||r||{};}catch(e){onError('HA self info:',e.message);selfInfo={};}}
     // O endereço de ingress (/api/hassio_ingress/<token>/) é temporário: abri-lo diretamente dá erro.
-    // Para abrir a app a partir de uma notificação usa-se a página do painel (/hassio/ingress/<slug>).
-    return {available:true,ingressUrl:selfInfo.ingress_url||'',panelUrl:selfInfo.slug?`/hassio/ingress/${selfInfo.slug}`:'',hostname:selfInfo.hostname||''};
+    // Para abrir a app a partir de uma notificação usa-se o mesmo endereço da entrada na barra lateral:
+    // o Home Assistant regista o painel de cada app com o slug como caminho (/<slug>).
+    return {available:true,ingressUrl:selfInfo.ingress_url||'',panelUrl:selfInfo.slug?`/${selfInfo.slug}`:'',hostname:selfInfo.hostname||''};
   }
   async function notifyServices(){
     const services=await call('GET','/core/api/services');

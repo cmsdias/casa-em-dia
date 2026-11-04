@@ -1,3 +1,7 @@
+# 1.8.1 — Correção
+
+- Notificações no telemóvel: passam a abrir a Casa em Dia pelo mesmo endereço da entrada na barra lateral do Home Assistant (o endereço anterior podia mostrar «You're disconnected»).
+
 # 1.8.0 — Notificações, perfil completo, modo escuro e animações
 
 - Sino de notificações junto ao avatar, com contador: tarefa atribuída a ti, tarefa que criaste concluída por outra pessoa, «é a tua vez» nas rotações, aniversários (no dia e na véspera), tarefas para hoje e atrasadas (uma vez por dia) e calendário da casa no início de cada mês. Tocar abre a tarefa ou a página; «Marcar todas como lidas» e «Limpar». As tarefas privadas nunca geram avisos para outras pessoas.
