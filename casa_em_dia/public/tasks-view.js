@@ -73,7 +73,7 @@ function qtPicker(){
  const k=modal.qt.picker;if(!k)return '';const opt=(text,ins)=>`<button type="button" class="chip" data-action="qt-insert" data-text="${esc(ins)}">${esc(text)}</button>`;
  let items='';
  if(k==='date')items=[['Hoje','hoje'],['Amanhã','amanhã'],['Sexta','sexta'],['Fim de semana','fim de semana'],['Próxima semana','próxima semana'],['Fim do mês','fim do mês']].map(([a,b])=>opt(a,b)).join('')+`<input type="date" class="qt-date" aria-label="Escolher a data" />`;
- if(k==='person')items=people().filter(p=>p.active!==false).map(p=>opt(p.name,'@'+(p.username||p.name.split(' ')[0]))).join('');
+ if(k==='person')items=people().filter(p=>p.active!==false).map(p=>opt(p.name,'@'+(people().filter(x=>x.active!==false&&x.name.split(' ')[0]===p.name.split(' ')[0]).length>1?p.name.replace(/\s+/g,''):p.name.split(' ')[0]))).join('');
  if(k==='room')items=config().rooms.map(r=>opt(roomShort(r),'#'+r)).join('');
  if(k==='priority')items=[['Urgente','!urgente'],['Importante','!importante'],['Sem pressa','!baixa']].map(([a,b])=>opt(a,b)).join('');
  if(k==='repeat')items=[['Todos os dias','todos os dias'],['Todas as semanas','todas as semanas'],['De 15 em 15 dias','quinzenal'],['Todos os meses','todos os meses'],['Trimestral','trimestral'],['Anual','anual']].map(([a,b])=>opt(a,b)).join('');

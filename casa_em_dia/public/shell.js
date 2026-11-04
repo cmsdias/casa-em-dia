@@ -104,3 +104,34 @@ actionHandlers.push(async(name)=>{
  const r=await api('/api/import','POST',{tasks:payload.tasks,settings:payload.settings,replace:rep?{tasks:true,other:!!other}:false});
  modal=null;await reload();toast(`${r.imported} importadas${r.skipped?`, ${r.skipped} ignoradas`:''}${r.removed?` · ${r.removed} antigas apagadas (cópia guardada)`:''}.`);return true;
 });
+
+/* ───────────── 2.2 · Notificações no telemóvel (perfil) e recuperar a palavra-passe ───────────── */
+Object.assign(paths,{login:'<path d="M10 17l5-5-5-5M15 12H3"/><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/>'});
+// Interruptor por pessoa: as notificações chegam pela app Home Assistant do telemóvel (o administrador escolhe o telemóvel de cada um).
+function pushField(){
+ const u=me();const ready=demo||!!u.pushReady;const on=ready&&!u.pushOff;
+ const state=!ready?(store.haAvailable?'O administrador ainda não ligou o teu telemóvel':'Disponível na app instalada no Home Assistant'):on?'Ligadas · tarefas atribuídas e resumo diário':'Desligadas · continuas a ver tudo no sino';
+ return `<div class="field pref-row"><div><span class="field-label" id="push-label">Notificações no telemóvel</span><small class="appearance-state" id="push-state">${esc(state)}</small></div><button type="button" class="switch" role="switch" aria-checked="${on}" aria-labelledby="push-label" data-action="push-toggle" ${ready?'':'disabled'}><span></span></button></div>`;
+}
+actionHandlers.push(async(name,el)=>{
+ if(name==='push-toggle'){const on=el.getAttribute('aria-checked')!=='true';el.setAttribute('aria-checked',String(on));
+  try{if(demo){me().pushOff=!on;}else{const r=await api('/api/me','PATCH',{pushOff:!on});if(r.people)store.people=r.people;}const st=document.getElementById('push-state');if(st)st.textContent=on?'Ligadas · tarefas atribuídas e resumo diário':'Desligadas · continuas a ver tudo no sino';toast(on?'Notificações no telemóvel ligadas.':'Notificações no telemóvel desligadas.');}
+  catch(e){el.setAttribute('aria-checked',String(!on));toast(e.message);}return true;}
+ if(name==='forgot-open'){renderForgot(1,document.querySelector('#auth-form [name=email]')?.value||'');return true;}
+ if(name==='forgot-back'){renderAuth('login');return true;}
+ return false;
+});
+// Recuperar a palavra-passe: 1) pedir o código (chega à app Home Assistant do telemóvel; o administrador é avisado); 2) código + nova palavra-passe.
+function renderForgot(step,email='',msg=''){
+ const box=document.querySelector('.auth-inner');if(!box)return;
+ box.innerHTML=`<img class="auth-mobile-logo" src="logo-primary-dark.svg" alt="Casa em Dia" /><div class="eyebrow">CASA EM DIA · RECUPERAR ACESSO</div><h2>${step===1?'Esqueceste-te da palavra-passe?':'Escolhe uma nova palavra-passe.'}</h2>
+ <p>${step===1?'Indica o teu email. Se o teu telemóvel estiver ligado ao Home Assistant, recebes lá um código; o administrador é também avisado e pode repor-te a palavra-passe.':'Escreve o código de 6 dígitos que recebeste na app Home Assistant e a nova palavra-passe.'}</p>
+ <form id="forgot-form">${step===1?`<div class="field"><label>Email</label><input type="email" name="email" required autocomplete="username" autocapitalize="none" spellcheck="false" value="${esc(email)}" placeholder="nome@exemplo.pt"/></div>`:`<input type="hidden" name="email" value="${esc(email)}"/><div class="field"><label>Código</label><input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="\\d{6}" maxlength="6" required placeholder="000000"/></div><div class="field"><label>Nova palavra-passe</label><input type="password" name="password" autocomplete="new-password" minlength="10" required placeholder="Mínimo de 10 caracteres"/></div>`}
+ <button class="button primary auth-submit" type="submit">${ico(step===1?'mail':'check')}<span>${step===1?'Enviar código':'Guardar e entrar'}</span></button><div class="auth-message ${msg?'ok':''}" id="auth-error">${esc(msg)}</div>
+ <button type="button" class="auth-link" data-action="forgot-back">${ico('back')} Voltar ao login</button>${step===2?`<button type="button" class="auth-link" data-action="forgot-open">Pedir um novo código</button>`:''}</form>`;
+ const f=box.querySelector('#forgot-form');f.querySelector('input:not([type=hidden])')?.focus();
+ f.addEventListener('submit',async e=>{e.preventDefault();const v=Object.fromEntries(new FormData(f));const b=f.querySelector('[type=submit]');b.disabled=true;
+  try{if(step===1){await api('/api/password/forgot','POST',{email:v.email});renderForgot(2,v.email,'Se o email estiver registado, o código foi enviado para a app Home Assistant do teu telemóvel (válido 15 minutos). Se não chegar, o administrador já foi avisado.');}
+   else{await api('/api/password/reset','POST',v);await load();render();toast('Palavra-passe alterada. Bem-vindo de volta.');}}
+  catch(err){const m=box.querySelector('#auth-error');m.classList.remove('ok');m.textContent=err.message;b.disabled=false;}});
+}
