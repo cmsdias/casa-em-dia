@@ -33,12 +33,11 @@ function approvalsCard(){
 // Regras da casa (Definições › A casa).
 function rulesCard(){
  const r=houseRules();const dis=canManage()||demo?'':'disabled';
- return `<div class="settings-card"><h3>Regras da casa</h3><p>Decide o que precisa da aprovação de um administrador ou gestor.</p>
- <label class="check-line"><input type="checkbox" data-rule="residentAssign" ${r.residentAssign?'checked':''} ${dis}/> Moradores podem pedir para atribuir tarefas a colaboradores <small class="muted">(fica pendente até ser aprovado)</small></label>
- <label class="check-line"><input type="checkbox" data-rule="reviewCollaborators" ${r.reviewCollaborators?'checked':''} ${dis}/> O trabalho dos colaboradores precisa de aprovação <small class="muted">(as tarefas que concluem ficam «Por aprovar»)</small></label></div>`;
+ const row=(k,title,desc)=>`<div class="pref-row rule-row"><div><span class="field-label" id="rule-${k}">${title}</span><small class="appearance-state">${desc}</small></div><button type="button" class="switch" role="switch" aria-checked="${r[k]}" aria-labelledby="rule-${k}" data-action="rule-toggle" data-rule="${k}" ${dis}><span></span></button></div>`;
+ return `<div class="settings-card"><h3>Regras da casa</h3><p>Decide o que precisa da aprovação de um administrador ou gestor.</p><div class="rules-list">${row('residentAssign','Moradores podem pedir para atribuir tarefas a colaboradores','O pedido fica pendente até ser aprovado.')}${row('reviewCollaborators','O trabalho dos colaboradores precisa de aprovação','As tarefas que concluem ficam «Por aprovar».')}</div></div>`;
 }
-document.addEventListener('change',async e=>{const k=e.target.dataset?.rule;if(!k)return;const rules={...houseRules(),[k]:e.target.checked};
- try{const r=await api('/api/settings','PATCH',{rules});if(r.settings)store.settings=r.settings;await reload();toast(k==='reviewCollaborators'?(rules[k]?'O trabalho dos colaboradores passa a precisar de aprovação.':'O trabalho dos colaboradores deixa de precisar de aprovação.'):(rules[k]?'Os moradores podem pedir atribuições a colaboradores.':'Os moradores deixam de poder pedir atribuições.'));}catch(err){e.target.checked=!e.target.checked;toast(err.message);}});
+actionHandlers.push(async(name,el)=>{if(name!=='rule-toggle')return false;const k=el.dataset.rule;const on=el.getAttribute('aria-checked')!=='true';const rules={...houseRules(),[k]:on};el.setAttribute('aria-checked',String(on));
+ try{const r=await api('/api/settings','PATCH',{rules});if(r.settings)store.settings=r.settings;await reload();toast(k==='reviewCollaborators'?(on?'O trabalho dos colaboradores passa a precisar de aprovação.':'O trabalho dos colaboradores deixa de precisar de aprovação.'):(on?'Os moradores podem pedir atribuições a colaboradores.':'Os moradores deixam de poder pedir atribuições.'));}catch(err){el.setAttribute('aria-checked',String(!on));toast(err.message);}return true;});
 
 actionHandlers.push(async(name,el)=>{
  if(name!=='review-decide'&&name!=='assign-decide')return false;

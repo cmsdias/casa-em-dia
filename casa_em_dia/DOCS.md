@@ -51,7 +51,8 @@ As permissões são verificadas no servidor em cada pedido, não apenas escondid
 Por omissão a app abre dentro do Home Assistant. Para a ter como app própria no iPhone ou no Android, na rede de casa:
 
 1. Em **Definições → Aplicações → Casa em Dia → Configuração**, na secção **Rede**, escreva `3000` no campo do acesso direto e guarde. A aplicação reinicia.
-2. No telemóvel, ligado ao Wi-Fi de casa, abra no Safari (ou no Chrome) `http://homeassistant.local:3000` (ou o endereço IP do Home Assistant, ex.: `http://192.168.1.50:3000`).
+2. No telemóvel, ligado ao Wi-Fi de casa, abra no Safari (ou no Chrome) o endereço IP do Home Assistant com a porta, por exemplo `http://192.168.1.50:3000` (o IP está em Definições → Sistema → Rede). O nome `homeassistant.local` nem sempre funciona no iPhone.
+   Convém reservar esse IP no router (reserva DHCP), para não mudar e a app instalada continuar a abrir.
 3. Entre com o utilizador e a palavra-passe da Casa em Dia.
 4. iPhone: **Partilhar → Adicionar ao ecrã principal**. Android: **menu → Instalar aplicação**.
 

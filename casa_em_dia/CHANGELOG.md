@@ -1,3 +1,8 @@
+# 2.2.2 — Regras da casa e acesso direto
+
+- Regras da casa (Definições › A casa) com interruptores, alinhadas e com a explicação por baixo de cada regra.
+- Instruções do acesso direto: usar o endereço IP do Home Assistant (o nome `homeassistant.local` nem sempre funciona no iPhone) e reservar o IP no router.
+
 # 2.2.1 — App instalada no iPhone
 
 - Com a app instalada no ecrã principal, o cabeçalho passa a começar abaixo da barra de estado (hora, rede, bateria) e, ao deslizar, o conteúdo deixa de passar por baixo dela.
