@@ -1729,3 +1729,4 @@ select:not([multiple]):not([size]){background-image:url("data:image/svg+xml,%3Cs
 /* 2.2.1 · app instalada no iPhone: o conteúdo começa abaixo da barra de estado e não passa por baixo dela ao deslizar */
 @media (max-width:650px){.mobile-header{padding-top:calc(17px + env(safe-area-inset-top,0px))}}
 body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:inherit;z-index:80;pointer-events:none}
+.rules-list{display:grid;margin-top:6px}.rule-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-top:1px solid var(--line)}.rule-row:first-child{border-top:0}.rule-row .field-label{display:block;font-weight:650;line-height:1.35}
