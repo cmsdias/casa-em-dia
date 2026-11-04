@@ -1,3 +1,7 @@
+# 2.1.5 — Ícone do separador
+
+- O ícone no separador do browser passa a ter os cantos ligeiramente arredondados. Os ícones da app no telemóvel continuam quadrados, porque é o próprio sistema que lhes aplica a forma.
+
 # 2.1.4 — Localização no topo
 
 - No computador, a localização no topo deixa de repetir «Casa /» em todas as páginas. Nas páginas principais mostra só o nome (Hoje, Tarefas, Compras, Casa); nas páginas dentro de Casa mostra o caminho com ligações para voltar (ex.: Casa / Definições / Aparência).
