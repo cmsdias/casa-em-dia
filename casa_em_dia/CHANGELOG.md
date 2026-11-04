@@ -1,3 +1,8 @@
+# 2.1.7 — Listas de escolha
+
+- Todas as listas de escolha (prioridade, responsável, repetição, categoria, filtros…) passam a mostrar uma seta à direita, também no iPhone e no Android.
+- A prioridade aparece só em palavras: Urgente, Importante, Normal, Sem pressa (sem «P1»–«P4»).
+
 # 2.1.6 — Importar a substituir
 
 - Ao importar um ficheiro de tarefas (Definições › Dados e cópias › Importar), o administrador vê o resumo do ficheiro e pode **apagar primeiro as tarefas e rotinas atuais** e, opcionalmente, as compras, os registos de horas e o histórico. Antes de apagar é guardada uma cópia de segurança «Antes de importar», para poder voltar atrás.
