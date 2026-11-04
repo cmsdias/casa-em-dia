@@ -1,4 +1,36 @@
 'use strict';
+/* ───────────── Esperas: abertura, barra de carregamento e botões ocupados ───────────── */
+// Abertura: o símbolo desenha-se num só traço. Só fica visível se o arranque passar 0,3 s;
+// uma vez visível, fica até o traço terminar, para não ser cortado a meio.
+(function splashControl(){
+ const el=document.getElementById('splash');if(!el)return;
+ if(window.__CASA_DEMO__){try{if(!sessionStorage.getItem('casa-splash')){sessionStorage.setItem('casa-splash','1');el.classList.add('instant');}else{el.remove();return;}}catch{el.remove();return;}}
+ const shownAt=el.classList.contains('instant')?0:300,minEnd=el.classList.contains('instant')?2000:1500;
+ const hide=()=>{if(!el.isConnected||el.classList.contains('out'))return;const t=performance.now();if(t<shownAt){el.remove();return;}setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),320);},Math.max(0,minEnd-t));};
+ const app=document.getElementById('app');new MutationObserver((m,obs)=>{if(app.childElementCount){obs.disconnect();hide();}}).observe(app,{childList:true});
+ setTimeout(hide,8000);
+})();
+// Barra dourada no topo enquanto a app vai buscar dados (só se demorar mais de 0,2 s).
+const topLoad=document.createElement('div');topLoad.className='topbar-load';topLoad.setAttribute('aria-hidden','true');document.body.appendChild(topLoad);
+let loadCount=0,loadTimer=null;
+function loadStart(){if(++loadCount===1){clearTimeout(loadTimer);loadTimer=setTimeout(()=>topLoad.classList.add('on'),200);}}
+function loadEnd(){loadCount=Math.max(0,loadCount-1);if(!loadCount){clearTimeout(loadTimer);topLoad.classList.remove('on');}}
+// Botões a guardar: o botão tocado mostra três pontos dourados e fica bloqueado até a gravação terminar.
+let lastTrigger=null,lastTriggerAt=0;
+const markTrigger=b=>{if(b&&b.matches?.('button')){lastTrigger=b;lastTriggerAt=performance.now();}};
+document.addEventListener('click',e=>markTrigger(e.target.closest?.('button')),true);
+document.addEventListener('submit',e=>markTrigger(e.submitter||e.target.querySelector('[type=submit]')),true);
+function busyStart(){const b=lastTrigger;if(!b||!b.isConnected||performance.now()-lastTriggerAt>2000||b.offsetWidth<64)return null;
+ b._busy=(b._busy||0)+1;if(b._busy>1)return b;
+ b._busyTimer=setTimeout(()=>{if(!b.isConnected||!b._busy)return;b._busyState={html:b.innerHTML,w:b.style.width,dis:b.disabled};b.style.width=b.offsetWidth+'px';b.classList.add('is-busy');b.setAttribute('aria-busy','true');b.disabled=true;b.innerHTML='<span class="busy-dots" role="status" aria-label="A guardar"><i></i><i></i><i></i></span>';},150);
+ return b;}
+function busyEnd(b){if(!b)return;b._busy=Math.max(0,(b._busy||1)-1);if(b._busy)return;clearTimeout(b._busyTimer);const st=b._busyState;if(!st)return;b._busyState=null;b.classList.remove('is-busy');b.removeAttribute('aria-busy');b.disabled=st.dis;b.innerHTML=st.html;b.style.width=st.w;}
+const apiCore=api;
+// eslint-disable-next-line no-global-assign
+api=async function(endpoint,method='GET',data){const write=method!=='GET';const b=write?busyStart():null;if(!write)loadStart();
+ try{if(demo&&write)await new Promise(r=>setTimeout(r,450));return await apiCore(endpoint,method,data);}finally{if(write)busyEnd(b);else loadEnd();}};
+const skeletonLines=(n=3)=>`<div class="sk-group" aria-hidden="true">${Array.from({length:n},(_,i)=>`<div class="sk sk-line" style="width:${[92,74,83,66][i%4]}%"></div>`).join('')}</div>`;
+
 // Casa em Dia 1.7 — funcionalidades acrescentadas ao núcleo (app.js):
 // atualização automática, cópias de segurança, calendário sazonal, compras rápidas,
 // rotação de rotinas, fotografias nas tarefas e Home Assistant.
@@ -34,7 +66,7 @@ const BACKUP_REASONS={auto:'Automática',manual:'Manual','pre-restore':'Antes de
 let backupsData=null;
 function backupsCard(){
  if(!isAdmin())return '';
- if(!backupsData){queueMicrotask(loadBackups);return `<div class="settings-card" id="backups-card"><h3>Cópias de segurança</h3><p class="muted">A carregar…</p></div>`;}
+ if(!backupsData){queueMicrotask(loadBackups);return `<div class="settings-card" id="backups-card" aria-busy="true"><h3>Cópias de segurança</h3>${skeletonLines(4)}</div>`;}
  const list=backupsData.backups||[];const auto=list.find(b=>b.reason==='auto');
  return `<div class="settings-card" id="backups-card"><h3>Cópias de segurança</h3><p>É feita uma cópia automática por dia (ficam as últimas 14). Antes de restaurar uma cópia, o estado atual é sempre guardado.${demo?' <b>Na demonstração, as cópias são apenas ilustrativas.</b>':''}</p>
  <div class="backup-status">${ico('check-square')}<span>${auto?`Última cópia automática: <b>${esc(fmtDateTime(auto.createdAt))}</b>`:'Ainda não há cópias automáticas.'}</span></div>
@@ -48,7 +80,7 @@ async function loadBackups(){try{backupsData=await api('/api/backups');}catch(e)
 let haData=null;
 function haCard(){
  if(!isAdmin())return '';
- if(!haData){queueMicrotask(loadHa);return `<div class="settings-card" id="ha-card"><h3>Home Assistant</h3><p class="muted">A verificar a ligação…</p></div>`;}
+ if(!haData){queueMicrotask(loadHa);return `<div class="settings-card" id="ha-card" aria-busy="true"><h3>Home Assistant</h3>${skeletonLines(3)}</div>`;}
  const h=haData;
  if(!h.available)return `<div class="settings-card" id="ha-card"><h3>Home Assistant</h3><p>As notificações e os sensores funcionam apenas na app instalada no Home Assistant. Nesta instalação, a ligação não está disponível.</p></div>`;
  const act=people().filter(p=>p.active!==false);
@@ -74,19 +106,58 @@ document.addEventListener('submit',async e=>{
 /* ───────────── Calendário sazonal ───────────── */
 let calMonth=new Date().getMonth()+1,calEditing=false;
 const seasonal=()=>Array.isArray(store.seasonal)?store.seasonal:[];
+const calMonthName=m=>MONTHS_FULL[m-1];
 function calYearFor(m){const now=new Date();return m>=now.getMonth()+1?now.getFullYear():now.getFullYear()+1;}
-function seasonalTaskFor(item,m){const key=`${item.id}:${calYearFor(m)}-${String(m).padStart(2,'0')}`;return tasks().find(t=>t.seasonalKey===key);}
-function seasonalCard(item,m,compact=false){const t=seasonalTaskFor(item,m);
- return `<article class="season-item ${t?'is-created':''}"><div class="season-art room-art art-${esc(roomArt(item.room))}" aria-hidden="true"></div><div class="season-body"><strong>${esc(item.title)}</strong><small>${esc(roomShort(item.room))}${item.minutes?` · ${esc(fmtMinutes(item.minutes))}`:''}${item.months.length>1?` · também em ${esc(item.months.filter(x=>x!==m).map(x=>MONTHS_FULL[x-1]).join(', '))}`:''}</small>${!compact&&item.notes?`<p>${esc(item.notes)}</p>`:''}</div><div class="season-actions">${t?`<button type="button" class="button small" data-action="edit" data-id="${esc(t.id)}">${t.status==='done'?ico('check')+' Feito':ico('check-square')+' Ver tarefa'}</button>`:`<button type="button" class="button small primary" data-action="season-task" data-id="${esc(item.id)}" data-month="${m}" ${store.user?.role==='collaborator'?'disabled':''}>${ico('plus-square')} Criar tarefa</button>`}${calEditing&&(canManage()||demo)&&!compact?`<button type="button" class="button small" data-action="season-edit" data-id="${esc(item.id)}" aria-label="Editar ${esc(item.title)}">${ico('edit')}</button>`:''}</div></article>`;}
+function seasonalTaskFor(item,m,y=calYearFor(m)){const key=`${item.id}:${y}-${String(m).padStart(2,'0')}`;return tasks().find(t=>t.seasonalKey===key);}
+function seasonalCard(item,m,compact=false,y=calYearFor(m)){const t=seasonalTaskFor(item,m,y);
+ return `<article class="season-item ${t?'is-created':''}"><div class="season-art room-art art-${esc(roomArt(item.room))}" aria-hidden="true"></div><div class="season-body"><strong>${esc(item.title)}</strong><small>${esc(roomShort(item.room))}${item.minutes?` · ${esc(fmtMinutes(item.minutes))}`:''}${item.months.length>1?` · também em ${esc(item.months.filter(x=>x!==m).map(x=>MONTHS_FULL[x-1]).join(', '))}`:''}</small>${!compact&&item.notes?`<p>${esc(item.notes)}</p>`:''}</div><div class="season-actions">${t?`<button type="button" class="button small" data-action="edit" data-id="${esc(t.id)}">${t.status==='done'?ico('check')+' Feito':ico('check-square')+' Ver tarefa'}</button>`:`<button type="button" class="button small primary" data-action="season-task" data-id="${esc(item.id)}" data-month="${m}" data-year="${y}" ${store.user?.role==='collaborator'?'disabled':''}>${ico('plus-square')} Criar tarefa</button>`}${calEditing&&(canManage()||demo)&&!compact?`<button type="button" class="button small" data-action="season-edit" data-id="${esc(item.id)}" aria-label="Editar ${esc(item.title)}">${ico('edit')}</button>`:''}</div></article>`;}
+// Feriados em Portugal: nacionais (fixos e móveis, a partir da Páscoa), São João (feriado municipal do Porto)
+// e dias habituais de tolerância (Carnaval e vésperas de Natal e de Ano Novo).
+function easterDate(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),month=Math.floor((h+l-7*m+114)/31),day=((h+l-7*m+114)%31)+1;return new Date(Date.UTC(y,month-1,day));}
+const isoUTC=d=>d.toISOString().slice(0,10);
+const holidayCache={};
+function holidays(y){if(holidayCache[y])return holidayCache[y];const e=easterDate(y);const rel=n=>isoUTC(new Date(e.getTime()+n*864e5));const f=md=>`${y}-${md}`;
+ const list=[[f('01-01'),'Ano Novo','nacional'],[rel(-47),'Carnaval','tolerancia'],[rel(-2),'Sexta-feira Santa','nacional'],[rel(0),'Páscoa','nacional'],[f('04-25'),'Dia da Liberdade','nacional'],[f('05-01'),'Dia do Trabalhador','nacional'],[rel(60),'Corpo de Deus','nacional'],[f('06-10'),'Dia de Portugal','nacional'],[f('06-24'),'São João (Porto)','municipal'],[f('08-15'),'Assunção de Nossa Senhora','nacional'],[f('10-05'),'Implantação da República','nacional'],[f('11-01'),'Dia de Todos os Santos','nacional'],[f('12-01'),'Restauração da Independência','nacional'],[f('12-08'),'Imaculada Conceição','nacional'],[f('12-24'),'Véspera de Natal','tolerancia'],[f('12-25'),'Natal','nacional'],[f('12-31'),'Véspera de Ano Novo','tolerancia']];
+ return holidayCache[y]=Object.fromEntries(list.map(([d,name,kind])=>[d,{name,kind}]));}
+const HOLIDAY_KIND={nacional:'Feriado nacional',municipal:'Feriado municipal',tolerancia:'Tolerância habitual'};
+// Estado do calendário (mês visível, dia escolhido, filtros).
+const calNow=new Date();let calView={y:calNow.getFullYear(),m:calNow.getMonth()+1},calSel=today(),calFilter='all',calTypes={task:true,routine:true,birthday:true,holiday:true};
+const pad2=n=>String(n).padStart(2,'0');
+function addStep(d,rep){const x=new Date(d.getTime());if(rep==='daily')x.setUTCDate(x.getUTCDate()+1);else if(rep==='weekly')x.setUTCDate(x.getUTCDate()+7);else if(rep==='biweekly')x.setUTCDate(x.getUTCDate()+14);else if(rep==='monthly')x.setUTCMonth(x.getUTCMonth()+1);else if(rep==='quarterly')x.setUTCMonth(x.getUTCMonth()+3);else if(rep==='yearly')x.setUTCFullYear(x.getUTCFullYear()+1);else return null;return x;}
+// Eventos de um intervalo de datas (inclusive), já filtrados.
+function calEvents(from,to){const ev=[];const who=t=>calFilter==='all'||(calFilter==='me'?t.assignedTo===store.user.id:t.assignedTo===calFilter);const tdy=today();
+ if(calTypes.task)for(const t of tasks())if(t.kind==='project'&&t.dueDate&&t.dueDate>=from&&t.dueDate<=to&&who(t))ev.push({date:t.dueDate,type:t.status==='done'?'task-done':t.dueDate<tdy?'task-late':'task',title:t.title,taskId:t.id,who:t.assignedTo});
+ if(calTypes.routine)for(const t of tasks()){if(t.kind!=='routine'||!t.dueDate||!who(t)||t.status==='done')continue;let d=new Date(t.dueDate+'T12:00:00Z');let n=0;
+  while(d&&isoUTC(d)<=to&&n++<400){const iso=isoUTC(d);if(iso>=from)ev.push({date:iso,type:'routine',title:t.title,taskId:t.id,who:t.assignedTo,daily:t.repeat==='daily',future:iso!==t.dueDate});if(t.repeat==='none')break;d=addStep(d,t.repeat);}}
+ if(calTypes.birthday)for(const p of people()){const md=p.birthDate?p.birthDate.slice(5):p.birthday;if(!md||p.active===false)continue;for(let y=Number(from.slice(0,4));y<=Number(to.slice(0,4));y++){const iso=`${y}-${md}`;if(iso>=from&&iso<=to)ev.push({date:iso,type:'birthday',title:`Aniversário de ${p.name.split(' ')[0]}`});}}
+ return ev;}
+function holidayOn(iso){return calTypes.holiday?holidays(Number(iso.slice(0,4)))[iso]:null;}
+const EVENT_LABEL={task:'Tarefa','task-late':'Atrasada','task-done':'Concluída',routine:'Rotina',birthday:'Aniversário'};
 function calendarPage(){
- const all=seasonal(),active=all.filter(x=>x.active!==false),inactive=all.filter(x=>x.active===false);
- const counts=m=>active.filter(x=>x.months.includes(m)).length;const nowM=new Date().getMonth()+1;
- const list=active.filter(x=>x.months.includes(calMonth));
- return `${head('Calendário da casa','Manutenção ao longo do ano: o que fazer em cada mês, na casa e no jardim.',false)}
- <div class="month-strip" role="tablist" aria-label="Meses">${MONTHS_PT.map((l,i)=>{const m=i+1;return `<button type="button" role="tab" class="month-chip ${m===calMonth?'active':''} ${m===nowM?'is-now':''}" data-action="cal-month" data-month="${m}" aria-selected="${m===calMonth}"><span>${l}</span><small>${counts(m)||'·'}</small></button>`;}).join('')}</div>
- <div class="season-head"><div><h2 class="section-title">${MONTHS_FULL[calMonth-1][0].toUpperCase()+MONTHS_FULL[calMonth-1].slice(1)} ${calYearFor(calMonth)}</h2><p class="section-sub">${list.length} ${list.length===1?'trabalho sugerido':'trabalhos sugeridos'}${calMonth===nowM?' · este mês':''}. «Criar tarefa» acrescenta-o às Tarefas com prazo até ao fim do mês.</p></div>${canManage()||demo?`<div class="season-tools"><button type="button" class="button" data-action="season-new">${ico('plus-square')} Novo trabalho</button><button type="button" class="button ${calEditing?'primary':''}" data-action="season-editing" aria-pressed="${calEditing}">${ico('edit')} ${calEditing?'Concluir edição':'Editar'}</button></div>`:''}</div>
- <div class="season-list">${list.map(x=>seasonalCard(x,calMonth)).join('')||empty('calendar','Nada previsto para este mês','Acrescenta um trabalho ou escolhe outro mês.')}</div>
- ${inactive.length&&(canManage()||demo)?`<details class="season-inactive"><summary><span class="disc-ico" aria-hidden="true"></span>${inactive.length} ${inactive.length===1?'trabalho desativado':'trabalhos desativados'}</summary>${inactive.map(x=>`<div class="shopping-line"><span>${esc(x.title)} <small class="muted">· ${esc(x.months.map(m=>MONTHS_PT[m-1]).join(', '))}</small></span><button type="button" class="button small" data-action="season-toggle" data-id="${esc(x.id)}">Reativar</button></div>`).join('')}</details>`:''}`;
+ const {y,m}=calView;const first=new Date(Date.UTC(y,m-1,1));const startDow=(first.getUTCDay()+6)%7;const gridStart=new Date(first.getTime()-startDow*864e5);
+ const cells=[];for(let i=0;i<42;i++){const d=new Date(gridStart.getTime()+i*864e5);cells.push(isoUTC(d));}
+ const weeks=cells.slice(35).every(c=>c.slice(5,7)!==pad2(m))?5:6;const shown=cells.slice(0,weeks*7);
+ const ev=calEvents(shown[0],shown[shown.length-1]);const byDay={};ev.forEach(e=>(byDay[e.date]??=[]).push(e));
+ const order={birthday:0,'task-late':1,task:2,routine:3,'task-done':4};Object.values(byDay).forEach(a=>a.sort((x,z)=>order[x.type]-order[z.type]));
+ const tdy=today();const collab=store.user?.role==='collaborator';
+ const chip=(v,l)=>`<button type="button" class="cal-chip ${calFilter===v?'active':''}" data-action="cal-filter" data-value="${esc(v)}" aria-pressed="${calFilter===v}">${l}</button>`;
+ const tchip=(k,l)=>`<button type="button" class="cal-type t-${k} ${calTypes[k]?'on':''}" data-action="cal-type" data-value="${k}" aria-pressed="${calTypes[k]}"><i aria-hidden="true"></i>${l}</button>`;
+ const dayCell=iso=>{const inMonth=iso.slice(5,7)===pad2(m);const h=holidayOn(iso);const list=(byDay[iso]||[]).filter(e=>!e.daily);const dow=(new Date(iso+'T12:00:00Z').getUTCDay()+6)%7;
+  return `<button type="button" class="cal-day ${inMonth?'':'out'} ${iso===tdy?'is-today':''} ${iso===calSel?'is-sel':''} ${h?'is-holiday':''} ${dow>=5?'is-weekend':''}" data-action="cal-day" data-date="${iso}" aria-label="${esc(new Date(iso+'T12:00:00Z').toLocaleDateString('pt-PT',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'}))}${h?', '+esc(h.name):''}${list.length?`, ${list.length} ${list.length===1?'evento':'eventos'}`:''}" aria-pressed="${iso===calSel}"><span class="cal-num">${Number(iso.slice(8))}</span>${h?`<span class="cal-hol">${esc(h.name)}</span>`:''}<span class="cal-evs">${list.slice(0,3).map(e=>`<span class="cal-ev t-${e.type}">${esc(e.title)}</span>`).join('')}${list.length>3?`<span class="cal-more">+${list.length-3}</span>`:''}</span><span class="cal-dots" aria-hidden="true">${list.slice(0,4).map(e=>`<i class="t-${e.type}"></i>`).join('')}</span></button>`;};
+ const sel=calSel;const selH=holidayOn(sel);const selEv=(byDay[sel]||calEvents(sel,sel));
+ const label=new Date(sel+'T12:00:00Z').toLocaleDateString('pt-PT',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'});
+ const all=seasonal(),active=all.filter(x=>x.active!==false),inactive=all.filter(x=>x.active===false);const sugg=active.filter(x=>x.months.includes(m));
+ const monthName=MONTHS_FULL[m-1][0].toUpperCase()+MONTHS_FULL[m-1].slice(1);
+ return `${head('Calendário','Tarefas, rotinas, aniversários e feriados, mês a mês.',false)}
+ <div class="cal-toolbar"><div class="cal-nav"><button type="button" class="icon-btn" data-action="cal-step" data-step="-1" aria-label="Mês anterior">‹</button><h2 class="cal-title">${monthName} <span>${y}</span></h2><button type="button" class="icon-btn" data-action="cal-step" data-step="1" aria-label="Mês seguinte">›</button><button type="button" class="button small" data-action="cal-today">Hoje</button></div>
+ <div class="cal-filters" role="group" aria-label="Mostrar tarefas de">${chip('all','Tudo')}${chip('me','Só eu')}${collab?'':people().filter(p=>p.active!==false&&p.id!==store.user.id).map(p=>chip(p.id,esc(shortName(p)))).join('')}</div>
+ <div class="cal-types" role="group" aria-label="Tipos de evento">${tchip('task','Tarefas')}${tchip('routine','Rotinas')}${collab?'':tchip('birthday','Aniversários')}${tchip('holiday','Feriados')}</div></div>
+ <div class="cal-grid" role="grid" aria-label="${monthName} ${y}"><div class="cal-dows" role="row">${['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'].map(d=>`<span role="columnheader">${d}</span>`).join('')}</div><div class="cal-cells">${shown.map(dayCell).join('')}</div></div>
+ <section class="cal-daylist" aria-live="polite"><div class="cal-daylist-head"><div><h3>${esc(label[0].toUpperCase()+label.slice(1))}</h3>${selH?`<span class="cal-hol-tag">${esc(selH.name)} · ${esc(HOLIDAY_KIND[selH.kind])}</span>`:''}</div>${collab?'':`<button type="button" class="button small primary" data-action="cal-new" data-date="${sel}">${ico('plus')} Tarefa neste dia</button>`}</div>
+ ${selEv.length?`<div class="cal-list">${selEv.map(e=>`<${e.taskId?'button type="button" data-action="edit" data-id="'+esc(e.taskId)+'"':'div'} class="cal-item t-${e.type}"><i aria-hidden="true"></i><span><b>${esc(e.title)}</b><small>${EVENT_LABEL[e.type]}${e.future?' (próxima ocorrência)':''}${e.who?' · '+esc(owner(e.who)):''}</small></span></${e.taskId?'button':'div'}>`).join('')}</div>`:`<p class="muted">${selH?'Dia de descanso: nada marcado.':'Nada marcado para este dia.'}</p>`}</section>
+ ${collab?'':`<section class="cal-sugg"><div class="season-head"><div><span class="eyebrow">SUGESTÕES PARA ${esc(MONTHS_FULL[m-1].toUpperCase())}</span><h2 class="section-title">Manutenção da casa e do jardim</h2><p class="section-sub">${sugg.length} ${sugg.length===1?'trabalho sugerido':'trabalhos sugeridos'}. «Criar tarefa» acrescenta-o às Tarefas com prazo até ao fim do mês.</p></div>${canManage()||demo?`<div class="season-tools"><button type="button" class="button" data-action="season-new">${ico('plus-square')} Novo trabalho</button><button type="button" class="button ${calEditing?'primary':''}" data-action="season-editing" aria-pressed="${calEditing}">${ico('edit')} ${calEditing?'Concluir edição':'Editar'}</button></div>`:''}</div>
+ <div class="season-list">${sugg.map(x=>seasonalCard(x,m,false,y)).join('')||'<p class="muted">Sem sugestões para este mês.</p>'}</div>
+ ${inactive.length&&(canManage()||demo)?`<details class="season-inactive"><summary><span class="disc-ico" aria-hidden="true"></span>${inactive.length} ${inactive.length===1?'trabalho desativado':'trabalhos desativados'}</summary>${inactive.map(x=>`<div class="shopping-line"><span>${esc(x.title)} <small class="muted">· ${esc(x.months.map(mm=>MONTHS_PT[mm-1]).join(', '))}</small></span><button type="button" class="button small" data-action="season-toggle" data-id="${esc(x.id)}">Reativar</button></div>`).join('')}</details>`:''}</section>`}`;
 }
 function seasonalDashboard(){if(store.user?.role==='collaborator')return '';const m=new Date().getMonth()+1;const items=seasonal().filter(x=>x.active!==false&&x.months.includes(m));const pending=items.filter(x=>!seasonalTaskFor(x,m));if(!items.length)return '';
  return `<section class="season-dash"><div class="season-dash-head"><div><span class="eyebrow">CALENDÁRIO DA CASA</span><h2 class="editorial-title">${esc(MONTHS_FULL[m-1][0].toUpperCase()+MONTHS_FULL[m-1].slice(1))}, <em>na casa e no jardim.</em></h2></div><button type="button" class="rooms-hint rooms-explore" data-action="nav" data-page="calendar">Ver o ano <span aria-hidden="true">↗</span></button></div><div class="season-list compact">${(pending.length?pending:items).slice(0,3).map(x=>seasonalCard(x,m,true)).join('')}</div>${pending.length>3?`<p class="muted season-more">E mais ${pending.length-3} por planear este mês.</p>`:''}</section>`;}
@@ -162,7 +233,7 @@ function taskPhotosHtml(t){if(!t?.id)return '';
 function resizePhoto(file,max=demo?800:1600,q=demo?0.7:0.82){return new Promise((resolve,reject)=>{const url=URL.createObjectURL(file);const img=new Image();img.onload=()=>{const s=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*s);c.height=Math.round(img.naturalHeight*s);const ctx=c.getContext('2d');ctx.imageSmoothingQuality='high';ctx.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);resolve(c.toDataURL('image/jpeg',q));};img.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Não foi possível ler esta imagem.'));};img.src=url;});}
 let photoTarget=null;
 document.addEventListener('change',async e=>{if(e.target.id!=='task-photo-input'||!e.target.files?.[0]||!photoTarget)return;const file=e.target.files[0];e.target.value='';const taskId=photoTarget;
- const grid=document.querySelector('#task-photos .photo-grid');grid?.insertAdjacentHTML('beforeend','<span class="photo-thumb is-loading" aria-label="A enviar">…</span>');
+ const grid=document.querySelector('#task-photos .photo-grid');grid?.insertAdjacentHTML('beforeend','<span class="photo-thumb is-loading sk" role="status" aria-label="A enviar a fotografia"></span>');
  try{const data=await resizePhoto(file);const caption=(tasks().find(t=>t.id===taskId)?.photos||[]).length?'':'Antes';const r=await api(`/api/tasks/${taskId}/photos`,'POST',{data,caption});const t=tasks().find(x=>x.id===taskId);if(t&&r.task)t.photos=r.task.photos;const box=document.getElementById('task-photos');if(box&&t)box.outerHTML=taskPhotosHtml(t);toast('Fotografia acrescentada.');}catch(err){document.querySelector('#task-photos .is-loading')?.remove();toast(err.message);}});
 function viewPhoto(taskId,photoId){const t=tasks().find(x=>x.id===taskId);const ph=t?.photos?.find(x=>x.id===photoId);if(!ph)return;const canDel=ph.by===store.user?.id||canEditVisible(t);
  const v=document.createElement('div');v.id='photo-viewer';v.innerHTML=`<div class="confirm-overlay photo-overlay" data-photo-close><figure class="photo-figure" role="dialog" aria-modal="true" aria-label="Fotografia da tarefa"><img src="${esc(photoSrc(ph))}" alt="${esc(ph.caption||'Fotografia da tarefa')}"/><figcaption><span><b>${esc(ph.caption||t.title)}</b><small>${esc(owner(ph.by))} · ${esc(fmtDateTime(ph.at))}</small></span><span class="photo-figure-actions">${canDel?`<button type="button" class="button small danger" data-photo-delete>${ico('trash')} Remover</button>`:''}<button type="button" class="button small" data-photo-close>Fechar</button></span></figcaption></figure></div>`;
@@ -172,9 +243,14 @@ function viewPhoto(taskId,photoId){const t=tasks().find(x=>x.id===taskId);const 
 
 /* ───────────── Ações ───────────── */
 async function featureAction(name,el){
+ if(name.startsWith('notif-'))return notifAction(name,el);
  switch(name){
   // Tocar fora da janela fecha-a; se já houver alterações escritas, pergunta antes de as perder.
   case 'overlay':{if(el.dataset.dirty==='1'&&!await confirmDialog({title:'Fechar sem guardar?',message:'As alterações que fizeste nesta janela perdem-se.',confirmLabel:'Fechar',danger:true}))return true;closeModal();return true;}
+  case 'person-edit':personEditModal(el.dataset.id);return true;
+  case 'pe-photo-pick':document.getElementById('pe-photo-input')?.click();return true;
+  case 'pe-photo-remove':peDraft.photo=null;pePhotoRefresh();return true;
+  case 'theme-set':{window.casaSetTheme?.(el.dataset.themeValue);el.parentElement.querySelectorAll('[role=radio]').forEach(b=>b.setAttribute('aria-checked',String(b===el)));return true;}
   case 'sync-apply':await syncApply();return true;
   case 'backup-create':{if(demo){toast('Na demonstração não há cópias de segurança.');return true;}const r=await api('/api/backups','POST',{});backupsData={...backupsData,backups:r.backups};loadBackups();toast('Cópia de segurança criada.');return true;}
   case 'backup-download':{if(demo){toast('Indisponível na demonstração.');return true;}const res=await fetch('api/backups/'+encodeURIComponent(el.dataset.name),{credentials:'same-origin'});if(!res.ok)throw Error('Não foi possível descarregar a cópia.');downloadBlob(await res.blob(),el.dataset.name);toast('Transferência iniciada.');return true;}
@@ -185,10 +261,16 @@ async function featureAction(name,el){
   case 'ha-copy-yaml':{await copyText(document.querySelector('#ha-card pre')?.textContent||'','Configuração copiada.');return true;}
   case 'ha-token':{if(!await confirmDialog({title:'Gerar um novo token?',message:'As automações que usam o token atual deixam de funcionar até atualizares a configuração.',confirmLabel:'Gerar novo',danger:true}))return true;await api('/api/ha/token','POST',{});haData=null;await loadHa();toast('Novo token gerado.');return true;}
   case 'cal-month':calMonth=Number(el.dataset.month);render();return true;
+  case 'cal-step':{let {y,m}=calView;m+=Number(el.dataset.step);if(m<1){m=12;y--;}if(m>12){m=1;y++;}calView={y,m};calSel=`${y}-${pad2(m)}-01`;if(calSel.slice(0,7)===today().slice(0,7))calSel=today();render();return true;}
+  case 'cal-today':{const t=today();calView={y:Number(t.slice(0,4)),m:Number(t.slice(5,7))};calSel=t;render();return true;}
+  case 'cal-day':{calSel=el.dataset.date;const y=Number(calSel.slice(0,4)),m=Number(calSel.slice(5,7));if(y!==calView.y||m!==calView.m)calView={y,m};render();document.querySelector('.cal-daylist')?.scrollIntoView({block:'nearest',behavior:'smooth'});return true;}
+  case 'cal-filter':calFilter=el.dataset.value;render();return true;
+  case 'cal-type':calTypes[el.dataset.value]=!calTypes[el.dataset.value];render();return true;
+  case 'cal-new':{openTask(null,'project');const f=document.getElementById('task-form');if(f){f.elements.dueDate.value=el.dataset.date;}return true;}
   case 'season-editing':calEditing=!calEditing;render();return true;
   case 'season-new':seasonModal(null);return true;
   case 'season-edit':seasonModal(seasonal().find(x=>x.id===el.dataset.id));return true;
-  case 'season-task':{const it=seasonal().find(x=>x.id===el.dataset.id);const m=Number(el.dataset.month);const r=await api('/api/seasonal/'+it.id+'/task','POST',{year:calYearFor(m),month:m});await reload();toast('Tarefa criada até '+shortDate(r.task.dueDate)+'.');return true;}
+  case 'season-task':{const it=seasonal().find(x=>x.id===el.dataset.id);const m=Number(el.dataset.month);const r=await api('/api/seasonal/'+it.id+'/task','POST',{year:Number(el.dataset.year)||calYearFor(m),month:m});await reload();toast('Tarefa criada até '+shortDate(r.task.dueDate)+'.');return true;}
   case 'season-toggle':{const it=seasonal().find(x=>x.id===el.dataset.id);await api('/api/seasonal/'+it.id,'PATCH',{active:it.active===false});modal=null;await reload();toast(it.active===false?'Trabalho reativado.':'Trabalho desativado.');return true;}
   case 'season-delete':{const it=seasonal().find(x=>x.id===el.dataset.id);if(!await confirmDialog({title:'Eliminar este trabalho?',message:`«${it.title}» sai do calendário. As tarefas já criadas mantêm-se.`,confirmLabel:'Eliminar',danger:true}))return true;await api('/api/seasonal/'+it.id,'DELETE',{});modal=null;await reload();toast('Trabalho eliminado.');return true;}
   case 'shop-usual':{await api('/api/shopping','POST',{title:el.dataset.title,quantity:el.dataset.quantity||'1',unit:el.dataset.unit||'',category:el.dataset.category||guessShopCategory(el.dataset.title)});await reload();toast(el.dataset.title+' adicionado.');return true;}
@@ -204,6 +286,8 @@ async function featureAction(name,el){
 
 /* ───────────── Demonstração (sem servidor) ───────────── */
 function demoFeatureApi(p,method,b){
+ if(p==='/api/notifications/read'){store.notifications=notifications().map(n=>b.ids==='all'||b.ids.includes(n.id)?{...n,read:true}:n);persistDemo();return {notifications:store.notifications};}
+ if(p==='/api/notifications/clear'){store.notifications=[];persistDemo();return {notifications:[]};}
  const SEED=window.__CASA_SEASONAL__||[];
  if(!Array.isArray(store.seasonal))store.seasonal=SEED.map(x=>({...x}));
  if(p==='/api/rev')return {rev:'demo'};
@@ -229,3 +313,44 @@ function demoFeatureApi(p,method,b){
 // A rotação só faz sentido em rotinas: mostra/esconde ao mudar o tipo da tarefa.
 document.addEventListener('change',e=>{if(e.target.name!=='kind'||!e.target.closest('#task-form'))return;const f=e.target.closest('#task-form').querySelector('[data-rotation-field]');if(f)f.hidden=e.target.value!=='routine';});
 document.addEventListener('input',e=>{const o=e.target.closest?.('.overlay[data-action="overlay"]');if(o)o.dataset.dirty='1';},true);
+
+/* ───────────── Aparência (claro / escuro), por dispositivo ───────────── */
+function appearanceField(){const cur=window.casaThemePref?.()||'auto';const opts=[['auto','Automático'],['light','Claro'],['dark','Escuro']];
+ return `<div class="field"><span class="field-label" id="appearance-label">Aparência</span><div class="seg-control" role="radiogroup" aria-labelledby="appearance-label">${opts.map(([v,l])=>`<button type="button" role="radio" aria-checked="${cur===v}" data-action="theme-set" data-theme-value="${v}">${l}</button>`).join('')}</div><small class="field-help">Aplica-se logo, só neste dispositivo. «Automático» segue o modo do telemóvel ou do computador.</small></div>`;}
+
+/* ───────────── Pessoas: contactos e edição pelo administrador ───────────── */
+const fmtBirthday=mmdd=>{const m=/^(\d{2})-(\d{2})$/.exec(mmdd||'');return m?`${Number(m[2])} ${MONTHS_PT[Number(m[1])-1]}`:'';};
+function personContacts(p){const bd=p.birthDate?p.birthDate.slice(5):p.birthday;const items=[];
+ if(bd)items.push(`<span>${ico('cake')}${esc(fmtBirthday(bd))}</span>`);
+ if(p.phone)items.push(`<a href="tel:${esc(p.phone.replace(/[^\d+]/g,''))}">${ico('phone')}${esc(p.phone)}</a>`);
+ if(p.email)items.push(`<a href="mailto:${esc(p.email)}">${ico('mail')}${esc(p.email)}</a>`);
+ return items.length?`<div class="person-contacts">${items.join('')}</div>`:'';}
+let peDraft={};
+function pePhotoBlock(p){const ph='photo'in peDraft?peDraft.photo:p.photo;return `${avatarHtml({...p,photo:ph||''},'profile-avatar')}<div class="profile-photo-actions"><input type="file" id="pe-photo-input" accept="image/*" hidden/><button class="button" type="button" data-action="pe-photo-pick">${ico('camera')} ${ph?'Mudar fotografia':'Adicionar fotografia'}</button>${ph?`<button class="button" type="button" data-action="pe-photo-remove">${ico('trash')} Remover</button>`:''}</div>${'photo'in peDraft?'<p class="profile-pending">Fotografia por guardar.</p>':''}`;}
+function pePhotoRefresh(){const p=people().find(x=>x.id===peDraft.__id);const b=document.getElementById('pe-photo');if(p&&b){b.innerHTML=pePhotoBlock(p);const o=b.closest('.overlay');if(o)o.dataset.dirty='1';}}
+document.addEventListener('change',async e=>{if(e.target.id!=='pe-photo-input'||!e.target.files?.[0])return;const f=e.target.files[0];e.target.value='';try{const data=await cropPhoto(f);if(data){peDraft.photo=data;pePhotoRefresh();}}catch(err){toast(err.message);}});
+function personEditModal(id){const p=people().find(x=>x.id===id);if(!p)return;peDraft={__id:p.id};const h=$('#modal-holder');modal={type:'person-edit'};
+ h.innerHTML=`<div class="overlay" data-action="overlay"><div class="modal quick-modal" role="dialog" aria-modal="true" aria-labelledby="pe-title"><div class="modal-head"><div><h2 id="pe-title">Editar ${esc(p.name.split(' ')[0])}</h2><p class="modal-sub">Fotografia, nome, utilizador de entrada e contactos.</p></div><button type="button" class="close" data-action="close" aria-label="Fechar">×</button></div><div class="modal-body"><form id="person-edit-form" novalidate><div class="pe-photo" id="pe-photo">${pePhotoBlock(p)}</div><div class="field"><label>Nome</label><input name="name" required minlength="2" maxlength="80" value="${esc(p.name)}"/></div><div class="field"><label>Nome de utilizador</label><input name="username" autocapitalize="none" spellcheck="false" maxlength="40" value="${esc(p.username||'')}"/><small class="field-help">Se mudares, avisa a pessoa: passa a entrar com o novo nome. A palavra-passe mantém-se.</small></div><div class="form-row"><div class="field"><label>Data de nascimento</label><input type="date" name="birthDate" max="${today()}" value="${esc(p.birthDate||'')}"/></div><div class="field"><label>Telefone</label><input type="tel" name="phone" maxlength="30" value="${esc(p.phone||'')}"/></div></div><div class="field"><label>Email</label><input type="email" name="email" maxlength="120" value="${esc(p.email||'')}"/></div><div class="modal-actions"><span class="spacer"></span><button type="button" class="button" data-action="close">Cancelar</button><button type="submit" class="button primary">${ico('check')} Guardar</button></div></form></div></div></div>`;
+ associateLabels(h);$('#person-edit-form').addEventListener('submit',async e=>{e.preventDefault();const v=Object.fromEntries(new FormData(e.target));const body={};for(const k of ['name','username','birthDate','email','phone']){const val=String(v[k]??'').trim();if(val!==String(p[k]||''))body[k]=k==='username'?val.toLowerCase():val;}if('photo'in peDraft)body.photo=peDraft.photo||null;
+  if(!Object.keys(body).length){closeModal();return;}
+  try{const r=await api('/api/people/'+p.id,'PATCH',body);if(r.people)store.people=r.people;modal=null;h.innerHTML='';await reload();toast(body.username?`Dados guardados. ${p.name.split(' ')[0]} passa a entrar como «${body.username}».`:'Dados guardados.');}catch(err){toast(err.message);}});}
+
+/* ───────────── Notificações (sino) ───────────── */
+let notifOpen=false;
+const notifications=()=>Array.isArray(store.notifications)?store.notifications:[];
+const NOTIF_ICON={assigned:'list',rotation:'repeat',done:'check-square',birthday:'cake',due:'clock',season:'calendar'};
+function relTime(iso){const d=(Date.now()-Date.parse(iso))/1000;if(d<60)return 'agora';if(d<3600)return `há ${Math.floor(d/60)} min`;if(d<86400)return `há ${Math.floor(d/3600)} h`;if(d<172800)return 'ontem';if(d<7*86400)return `há ${Math.floor(d/86400)} dias`;return new Date(iso).toLocaleDateString('pt-PT',{day:'numeric',month:'short'});}
+function bellButton(){const n=notifications().filter(x=>!x.read).length;return `<button type="button" class="icon-btn bell-btn ${notifOpen?'is-open':''}" data-action="notif-toggle" aria-haspopup="dialog" aria-expanded="${notifOpen}" aria-label="Notificações${n?`: ${n} por ler`:''}">${ico('bell')}${n?`<span class="bell-badge" aria-hidden="true">${n>9?'9+':n}</span>`:''}</button>`;}
+function notifPanel(){if(!notifOpen)return '';const list=notifications();const unread=list.filter(x=>!x.read).length;
+ return `<button class="notif-dismiss" type="button" data-action="notif-close" tabindex="-1" aria-label="Fechar notificações"></button><section class="notif-panel" role="dialog" aria-label="Notificações" tabindex="-1"><header class="notif-head"><strong>Notificações</strong><span>${unread?`<button type="button" class="link-btn" data-action="notif-read-all">Marcar todas como lidas</button>`:''}${list.length?`<button type="button" class="link-btn" data-action="notif-clear">Limpar</button>`:''}</span></header><div class="notif-list">${list.map(n=>`<button type="button" class="notif-item ${n.read?'':'unread'}" data-action="notif-open" data-id="${esc(n.id)}"><span class="notif-ico t-${esc(n.type)}" aria-hidden="true">${ico(NOTIF_ICON[n.type]||'info')}</span><span class="notif-text"><b>${esc(n.title)}</b>${n.body?`<small>${esc(n.body)}</small>`:''}<em>${esc(relTime(n.at))}</em></span>${n.read?'':'<i class="notif-dot" aria-label="Por ler"></i>'}</button>`).join('')||`<div class="notif-empty">${ico('bell')}<p>Sem notificações.</p><small>Aqui aparecem tarefas atribuídas, conclusões, rotações, aniversários e lembretes.</small></div>`}</div></section>`;}
+async function notifRead(ids){try{const r=await api('/api/notifications/read','POST',{ids});if(r.notifications)store.notifications=r.notifications;}catch(e){toast(e.message);}}
+async function notifAction(name,el){
+ if(name==='notif-toggle'){notifOpen=!notifOpen;moreOpen=false;quickCreateOpen=false;render();if(notifOpen)(document.querySelector('.notif-panel .notif-item')||document.querySelector('.notif-panel'))?.focus();return true;}
+ if(name==='notif-close'){notifOpen=false;render();return true;}
+ if(name==='notif-read-all'){await notifRead('all');render();return true;}
+ if(name==='notif-clear'){try{await api('/api/notifications/clear','POST',{});store.notifications=[];}catch(e){toast(e.message);}render();return true;}
+ if(name==='notif-open'){const n=notifications().find(x=>x.id===el.dataset.id);if(!n)return true;if(!n.read)await notifRead([n.id]);notifOpen=false;const l=n.link||{};
+  if(l.page){page=l.page;query='';roomFilter='all';statusFilter='all';priorityFilter='all';personFilter=l.filter==='mine'?store.user.id:'all';tab='active';}
+  render();window.scrollTo(0,0);if(l.taskId&&tasks().some(t=>t.id===l.taskId))openTask(l.taskId);return true;}
+ return false;}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&notifOpen){notifOpen=false;render();document.querySelector('.bell-btn')?.focus();}});

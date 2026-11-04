@@ -1,6 +1,24 @@
+# 1.8.0 — Notificações, perfil completo, modo escuro e animações
+
+- Sino de notificações junto ao avatar, com contador: tarefa atribuída a ti, tarefa que criaste concluída por outra pessoa, «é a tua vez» nas rotações, aniversários (no dia e na véspera), tarefas para hoje e atrasadas (uma vez por dia) e calendário da casa no início de cada mês. Tocar abre a tarefa ou a página; «Marcar todas como lidas» e «Limpar». As tarefas privadas nunca geram avisos para outras pessoas.
+- Perfil: nome de utilizador (para entrar) pode ser alterado, data de nascimento, email e telefone. Contactos visíveis só para o próprio, administrador e gestores; os restantes veem apenas o dia e o mês do aniversário. Colaboradores não veem aniversários.
+- Calendário passa a vista de mês: tarefas com data (atrasadas a vermelho), próximas ocorrências das rotinas, aniversários e feriados (nacionais, incluindo os móveis, São João no Porto, Carnaval e vésperas de Natal e de Ano Novo), calculados na app. Filtros «Tudo», «Só eu» e por pessoa; tipos de evento ligáveis. Tocar num dia mostra a lista e permite criar uma tarefa nesse dia. Os trabalhos sazonais passam a «Sugestões» do mês, por baixo. Colaboradores veem o calendário com as suas tarefas e os feriados.
+- Pessoas: o administrador pode editar fotografia, nome, utilizador, nascimento e contactos de qualquer pessoa; os cartões mostram aniversário, telefone e email (para quem os pode ver).
+
+- Modo escuro: no perfil, «Aparência» com Automático (segue o telemóvel/computador), Claro ou Escuro. A escolha fica guardada em cada dispositivo. As cores escuras são geradas a partir do `style.css` por `build_dark.py` (voltar a correr depois de mudar estilos).
+- Perfil num só formulário: fotografia, nome e (opcional) nova palavra-passe, com um único «Cancelar / Guardar». A fotografia escolhida só é gravada ao guardar. Mudar a palavra-passe já não obriga a voltar a entrar.
+
+- Abertura da app: o símbolo da casa desenha-se num só traço e o ponto dourado acende-se. Só aparece se o arranque demorar mais de 0,3 s.
+- Páginas a carregar (Finanças, cópias de segurança, Home Assistant, fotografias a enviar): esqueletos com brilho em vez de «A carregar…». Abrir as Finanças já não espera pelos dados para mudar de página.
+- Botões a guardar: três pontos dourados e botão bloqueado até terminar (evita toques duplos).
+- Linha dourada no topo enquanto a app vai buscar dados em segundo plano.
+- Com «reduzir movimento» ativo no telemóvel, as animações ficam paradas.
+- Aviso «Tarefa concluída!»: o botão de fechar (×) estava invisível (círculo branco); passa a ver-se e o aviso desaparece sozinho ao fim de 10 segundos.
+- Tarefas: «Limpar» passa a «Limpar filtros», para não se confundir com «Limpar concluídas».
 # 1.7.2 — Correção
 
 - Notificações no telemóvel: tocar abria um endereço temporário do Home Assistant que dava erro. Passam a abrir a app Casa em Dia no painel do Home Assistant.
+
 
 # 1.7.1 — Correções
 

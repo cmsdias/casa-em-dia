@@ -3,7 +3,8 @@
 // A lógica de dados está em finance-core.js (a mesma no servidor e na demonstração).
 let financeData=null,finTab='resumo',finYear=new Date().getFullYear();
 const canFinance=()=>['admin','manager'].includes(store.user?.role);
-async function refreshFinance(){if(!canFinance())return;financeData=(await api('/api/finance')).finance;}
+let finLoading=null;
+async function refreshFinance(){if(!canFinance())return;if(finLoading)return finLoading;finLoading=api('/api/finance').then(r=>{financeData=r.finance;}).finally(()=>{finLoading=null;});return finLoading;}
 const eur=n=>(n/100).toLocaleString('pt-PT',{style:'currency',currency:'EUR',maximumFractionDigits:n%100?2:0});
 const eurFull=n=>(n/100).toLocaleString('pt-PT',{style:'currency',currency:'EUR'});
 // Aceita «1 234,56», «1234.56», «1.234,56» ou «1234».
@@ -17,7 +18,7 @@ const dueLabel=d=>`${d.getDate()} ${MONTHS_PT[d.getMonth()]}`;
 function finTabs(){const tabs=[['resumo','Resumo'],['despesas','Despesas'],['fixas','Fixas'],['patrimonio','Património']];return `<div class="fin-tabs" role="tablist" aria-label="Secções das finanças">${tabs.map(([k,l])=>`<button type="button" role="tab" class="${finTab===k?'active':''}" aria-selected="${finTab===k}" data-action="fin-tab" data-tab="${k}">${l}</button>`).join('')}</div>`;}
 function financePage(){
  if(!canFinance())return empty('lock','Sem acesso','As finanças estão disponíveis apenas para administradores e gestores da casa.');
- if(!financeData){queueMicrotask(async()=>{try{await refreshFinance();if(page==='finance')render();}catch(e){toast(e.message);}});return `${head('Finanças','A carregar…',false)}`;}
+ if(!financeData){queueMicrotask(async()=>{try{await refreshFinance();if(page==='finance')render();}catch(e){toast(e.message);}});return `${head('Finanças','Despesas grandes da casa, despesas fixas e património.',false)}${finTabs()}<div class="fin-body" aria-busy="true"><div class="sk" style="height:168px;border-radius:20px"></div><div class="fin-minis"><div class="sk" style="height:84px;border-radius:16px"></div><div class="sk" style="height:84px;border-radius:16px"></div></div><div class="fin-card">${skeletonLines(4)}</div></div>`;}
  const body={resumo:finResumo,despesas:finDespesas,fixas:finFixas,patrimonio:finPatrimonio}[finTab]||finResumo;
  return `${head('Finanças','Despesas grandes da casa, despesas fixas e património.',false)}${finTabs()}<div class="fin-body">${body()}</div>`;}
 function assetGroups(){const f=financeData;return f.assetGroups.map(g=>({...g,items:f.assets.filter(a=>g.types.includes(a.type)),total:f.assets.filter(a=>g.types.includes(a.type)).reduce((n,a)=>n+a.valueCents,0)}));}
