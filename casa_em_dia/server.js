@@ -78,6 +78,27 @@ function elevated(u){return ['admin','manager'].includes(roleOf(u));}
 function canSeeTask(u,t){if(t.visibility==='private')return t.createdBy===u.id;if(roleOf(u)==='admin')return true;if(roleOf(u)==='collaborator')return t.createdBy===u.id||t.assignedTo===u.id;return true;}
 function canEditTask(u,t){if(t.visibility==='private')return t.createdBy===u.id;return roleOf(u)==='admin'||roleOf(u)==='manager'||t.createdBy===u.id;}
 function canCompleteTask(u,t){return canEditTask(u,t)||t.assignedTo===u.id;}
+// Regras da casa (Definições › A casa): pedidos de atribuição a colaboradores e aprovação do trabalho dos colaboradores.
+const houseRules=()=>({residentAssign:db.settings?.rules?.residentAssign!==false,reviewCollaborators:db.settings?.rules?.reviewCollaborators===true});
+const needsReview=u=>roleOf(u)==='collaborator'&&houseRules().reviewCollaborators;
+// Conclusão de uma tarefa (byId = quem a fez; pode ser diferente de quem aprova).
+function completeTask(t,actor,byId){
+  const time=new Date().toISOString();db.history.push({id:id(),taskId:t.id,title:t.title,kind:t.kind,assignedTo:t.assignedTo,by:byId,at:time});
+  if(db.history.length>2000)db.history=db.history.slice(-2000);
+  delete t.review;let rotated=false;if(t.kind==='routine'&&t.repeat!=='none'){t.status='todo';t.dueDate=nextDate(t.dueDate,t.repeat);t.suggested=false;rotated=rotate(t);}else t.status='done';
+  if(t.status==='done'&&t.equipmentId)equip.onTaskCompleted(t,actor);
+  const doer=db.people.find(p=>p.id===byId)||actor;
+  t.updatedAt=time;logAction(actor,'task.complete',t.id);if(rotated)notif.taskRotated(t,doer);else if(t.status==='done')notif.taskCompleted(t,doer);
+  return {rotated};
+}
+// Moradores podem pedir a atribuição de uma tarefa sua a um colaborador; fica pendente até um administrador ou gestor aprovar.
+function assignRequest(u,t,target){
+  if(roleOf(u)!=='resident'||!houseRules().residentAssign)throw Object.assign(Error('Sem permissão para atribuir tarefas.'),{status:403});
+  const p=db.people.find(x=>x.id===target&&isActive(x));
+  if(!p||roleOf(p)!=='collaborator')throw Object.assign(Error('Só podes atribuir tarefas a colaboradores (com aprovação) ou a ti.'),{status:403});
+  if(t.visibility==='private')throw Object.assign(Error('Uma tarefa privada não pode ser atribuída a outra pessoa.'),{status:403});
+  return {to:target,by:u.id,at:new Date().toISOString()};
+}
 function allowedTaskPatch(u,t,b){if(canEditTask(u,t))return true;
  return canCompleteTask(u,t)&&Object.keys(b).every(k=>['status','subtasks'].includes(k));}
 function logAction(u,action,entityId){db.audit.push({id:id(),actor:u.id,action,entityId,at:new Date().toISOString()});if(db.audit.length>3000)db.audit=db.audit.slice(-3000);}
@@ -144,7 +165,7 @@ function patchTask(t,b){
   if('estimatedMinutes'in b){const n=b.estimatedMinutes;if(n===''||n===null||n===undefined)t.estimatedMinutes=null;else if(!Number.isInteger(Number(n))||Number(n)<0||Number(n)>10080)throw Error('Duração inválida.');else t.estimatedMinutes=Number(n);}
   if('priority'in b){if(!['P1','P2','P3','P4'].includes(b.priority))throw Error('Prioridade inválida.');t.priority=b.priority;}
   if('kind'in b){if(!['project','routine'].includes(b.kind))throw Error('Tipo inválido.');t.kind=b.kind;}
-  if('status'in b){if(!['todo','doing','waiting','done'].includes(b.status))throw Error('Estado inválido.');t.status=b.status;}
+  if('status'in b){if(b.status==='review'&&t.status==='review'){}else if(!['todo','doing','waiting','done'].includes(b.status))throw Error('Estado inválido.');else{t.status=b.status;delete t.review;}}
   if('assignedTo'in b){delete t.unassignedFrom;if(b.assignedTo && !db.people.some(p=>p.id===b.assignedTo&&isActive(p)))throw Error('Responsável não existe ou está desativado.');t.assignedTo=b.assignedTo||null;}
   if('dueDate'in b){const d=cleanStr(b.dueDate,10);t.dueDate=d?dateISO(d):'';}
   if('repeat'in b){if(!['none','daily','weekly','biweekly','monthly','quarterly','yearly'].includes(b.repeat))throw Error('Periodicidade inválida.');t.repeat=b.repeat;}
@@ -343,24 +364,37 @@ const server=http.createServer(async (req,res)=>{
       db.settings=db.settings||{rooms:[],categories:[]};
       const incoming={...db.settings};if('rooms'in b)incoming.rooms=normalize(b.rooms);if('categories'in b)incoming.categories=normalize(b.categories);if('floors'in b){const f=normalize(b.floors);if(f.length>20)throw Error('No máximo 20 pisos.');incoming.floors=f.map(x=>cleanStr(x,40));}
       if('roomFloors'in b){if(!b.roomFloors||typeof b.roomFloors!=='object'||Array.isArray(b.roomFloors))throw Error('Pisos das divisões inválidos.');const rooms=new Set(incoming.rooms||[]),floors=new Set(incoming.floors||[]);incoming.roomFloors=Object.fromEntries(Object.entries(b.roomFloors).filter(([r,f])=>rooms.has(r)&&typeof f==='string'&&floors.has(f)));}
-      else if(incoming.roomFloors){const rooms=new Set(incoming.rooms||[]),floors=new Set(incoming.floors||[]);incoming.roomFloors=Object.fromEntries(Object.entries(incoming.roomFloors).filter(([r,f])=>rooms.has(r)&&floors.has(f)));}db.settings=incoming;logAction(user,'settings.update','global');save();return send(res,200,{settings:db.settings});
+      else if(incoming.roomFloors){const rooms=new Set(incoming.rooms||[]),floors=new Set(incoming.floors||[]);incoming.roomFloors=Object.fromEntries(Object.entries(incoming.roomFloors).filter(([r,f])=>rooms.has(r)&&floors.has(f)));}if('rules'in b){if(!b.rules||typeof b.rules!=='object')return fail(res,400,'Regras inválidas.');incoming.rules={residentAssign:b.rules.residentAssign!==false,reviewCollaborators:b.rules.reviewCollaborators===true};if(!incoming.rules.reviewCollaborators)for(const t of db.tasks)if(t.status==='review'){t.status=t.review?.prev||'todo';delete t.review;}}db.settings=incoming;logAction(user,'settings.update','global');save();return send(res,200,{settings:db.settings});
     }
     if(p==='/api/tasks'&&req.method==='POST'){
-      const task={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P3',estimatedMinutes:null,category:'Geral',thisWeek:false,subtasks:[],status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString(),createdBy:user.id,visibility:'shared'};patchTask(task,b);if(!elevated(user)&&task.assignedTo&&task.assignedTo!==user.id)return fail(res,403,'Não podes atribuir esta tarefa a outra pessoa.');if(!elevated(user)&&(task.rotation||[]).some(x=>x!==user.id))return fail(res,403,'Só gestores podem criar rotações entre pessoas.');if(roleOf(user)==='collaborator'&&task.visibility==='private')return fail(res,403,'Colaboradores não podem criar tarefas privadas.');if(task.visibility==='private'&&task.assignedTo&&task.assignedTo!==user.id)return fail(res,403,'Uma tarefa privada não pode ser atribuída a outra pessoa.');if(!task.title)return fail(res,400,'Introduz o nome da tarefa.');db.tasks.push(task);logAction(user,'task.create',task.id);notif.taskAssigned(task,user);save();ha?.taskAssigned(task,user);return send(res,201,{task});
+      const task={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P3',estimatedMinutes:null,category:'Geral',thisWeek:false,subtasks:[],status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString(),createdBy:user.id,visibility:'shared'};patchTask(task,b);if(!elevated(user)&&task.assignedTo&&task.assignedTo!==user.id){try{task.assignRequest=assignRequest(user,task,task.assignedTo);}catch(e){return fail(res,e.status||403,e.message);}task.assignedTo=null;}if(!elevated(user)&&(task.rotation||[]).some(x=>x!==user.id))return fail(res,403,'Só gestores podem criar rotações entre pessoas.');if(roleOf(user)==='collaborator'&&task.visibility==='private')return fail(res,403,'Colaboradores não podem criar tarefas privadas.');if(task.visibility==='private'&&task.assignedTo&&task.assignedTo!==user.id)return fail(res,403,'Uma tarefa privada não pode ser atribuída a outra pessoa.');if(!task.title)return fail(res,400,'Introduz o nome da tarefa.');db.tasks.push(task);logAction(user,'task.create',task.id);notif.taskAssigned(task,user);if(task.assignRequest)notif.assignRequested(task,user);save();ha?.taskAssigned(task,user);return send(res,201,{task});
     }
     // Limpar as tarefas pontuais concluídas (só administrador; as rotinas nunca são apagadas; o histórico de conclusões mantém-se).
     if(p==='/api/tasks/clear-done'&&req.method==='POST'){if(roleOf(user)!=='admin')return fail(res,403,'Só um administrador pode eliminar tarefas.');const gone=db.tasks.filter(t=>t.kind==='project'&&t.status==='done'&&canSeeTask(user,t));gone.forEach(removePhotoFiles);const ids=new Set(gone.map(t=>t.id));db.tasks=db.tasks.filter(t=>!ids.has(t.id));logAction(user,'tasks.clear-done',String(gone.length));save();return send(res,200,{removed:gone.length});}
+    // Aprovar ou devolver o trabalho de um colaborador (administrador/gestor).
+    const rvw=p.match(/^\/api\/tasks\/([^/]+)\/review$/);
+    if(rvw&&req.method==='POST'){const t=db.tasks.find(x=>x.id===rvw[1]);if(!t||!canSeeTask(user,t)||t.status!=='review'||!t.review)return fail(res,404,'Não há trabalho por aprovar nesta tarefa.');if(!elevated(user))return fail(res,403,'Só o administrador ou o gestor podem aprovar.');
+      const rv=t.review;const approve=b.approve===true;const note=cleanStr(b.note,300);let out={rotated:false};
+      if(approve)out=completeTask(t,user,rv.by);else{t.status=rv.prev||'todo';delete t.review;t.updatedAt=new Date().toISOString();logAction(user,'task.review.reject',t.id);}
+      notif.reviewDecided(t,user,rv,approve,note);save();if(out.rotated)ha?.taskAssigned(t,user);return send(res,200,{task:t});}
+    // Aprovar ou recusar um pedido de atribuição (administrador/gestor); quem pediu também o pode retirar.
+    const arq=p.match(/^\/api\/tasks\/([^/]+)\/assign-request$/);
+    if(arq&&req.method==='POST'){const t=db.tasks.find(x=>x.id===arq[1]);if(!t||!canSeeTask(user,t)||!t.assignRequest)return fail(res,404,'Não há pedido de atribuição para esta tarefa.');const rq=t.assignRequest;const approve=b.approve===true;
+      if(!elevated(user)&&!(rq.by===user.id&&!approve))return fail(res,403,'Só o administrador ou o gestor podem aprovar.');
+      delete t.assignRequest;t.updatedAt=new Date().toISOString();
+      if(approve){const p=db.people.find(x=>x.id===rq.to&&isActive(x));if(!p)return fail(res,400,'Esta pessoa já não tem conta ativa.');t.assignedTo=rq.to;notif.taskAssigned(t,user);}
+      if(rq.by!==user.id)notif.assignDecided(t,user,rq,approve);
+      logAction(user,approve?'task.assign.approve':'task.assign.reject',t.id);save();if(approve)ha?.taskAssigned(t,user);return send(res,200,{task:t});}
     const match=p.match(/^\/api\/tasks\/([^/]+)(\/complete)?$/);
     if(match){const t=db.tasks.find(x=>x.id===match[1]);if(!t||!canSeeTask(user,t))return fail(res,404,'Tarefa não encontrada.');
       if(match[2]&&req.method==='POST'){
         if(!canCompleteTask(user,t))return fail(res,403,'Sem permissão para concluir esta tarefa.');
-        const time=new Date().toISOString();db.history.push({id:id(),taskId:t.id,title:t.title,kind:t.kind,assignedTo:t.assignedTo,by:user.id,at:time});
-        if(db.history.length>2000)db.history=db.history.slice(-2000);
-        let rotated=false;if(t.kind==='routine'&&t.repeat!=='none') {t.status='todo';t.dueDate=nextDate(t.dueDate,t.repeat);t.suggested=false;rotated=rotate(t);}else t.status='done';
-        if(t.status==='done'&&t.equipmentId)equip.onTaskCompleted(t,user);
-        t.updatedAt=time;logAction(user,'task.complete',t.id);if(rotated)notif.taskRotated(t,user);else if(t.status==='done')notif.taskCompleted(t,user);save();if(rotated)ha?.taskAssigned(t,user);return send(res,200,{task:t,rotatedTo:rotated?t.assignedTo:null});
+        if(t.status==='review')return fail(res,409,'Esta tarefa já está à espera de aprovação.');
+        // Trabalho de colaborador com aprovação ativa: fica «A aguardar aprovação» até um administrador ou gestor confirmar.
+        if(needsReview(user)){t.review={by:user.id,at:new Date().toISOString(),prev:t.status==='doing'?'doing':'todo'};t.status='review';t.updatedAt=t.review.at;logAction(user,'task.review.request',t.id);notif.reviewRequested(t,user);save();return send(res,200,{task:t,review:true});}
+        const out=completeTask(t,user,user.id);save();if(out.rotated)ha?.taskAssigned(t,user);return send(res,200,{task:t,rotatedTo:out.rotated?t.assignedTo:null});
       }
-      if(!match[2]&&req.method==='PATCH'){if(!allowedTaskPatch(user,t,b))return fail(res,403,'Sem permissão para alterar esta tarefa.');const updated={...t};patchTask(updated,b);if(!canEditTask(user,t)){if('status'in b && !['doing','done'].includes(b.status))return fail(res,403,'Só podes iniciar ou concluir esta tarefa.');if('subtasks'in b){if(!Array.isArray(b.subtasks)||b.subtasks.length!==(t.subtasks||[]).length||b.subtasks.some((v,i)=>v.title!==t.subtasks[i].title||v.id!==t.subtasks[i].id))return fail(res,403,'Só podes marcar subtarefas como concluídas.');}}if(!elevated(user)&&('assignedTo'in b)&&updated.assignedTo!==t.assignedTo)return fail(res,403,'Sem permissão para atribuir tarefas.');if(!elevated(user)&&('rotation'in b)&&JSON.stringify(updated.rotation||[])!==JSON.stringify(t.rotation||[]))return fail(res,403,'Só gestores podem alterar a rotação.');const reassigned=updated.assignedTo&&updated.assignedTo!==t.assignedTo;if(updated.visibility==='private'&&updated.assignedTo&&updated.assignedTo!==updated.createdBy)return fail(res,403,'Uma tarefa privada não pode ser atribuída a outra pessoa.');if(roleOf(user)==='collaborator'&&updated.visibility==='private')return fail(res,403,'Colaboradores não podem criar tarefas privadas.');Object.assign(t,updated);logAction(user,'task.update',t.id);if(reassigned)notif.taskAssigned(t,user);save();if(reassigned)ha?.taskAssigned(t,user);return send(res,200,{task:t});}
+      if(!match[2]&&req.method==='PATCH'){if(!allowedTaskPatch(user,t,b))return fail(res,403,'Sem permissão para alterar esta tarefa.');const updated={...t};patchTask(updated,b);if(!canEditTask(user,t)){if('status'in b && !['doing','done'].includes(b.status))return fail(res,403,'Só podes iniciar ou concluir esta tarefa.');if('subtasks'in b){if(!Array.isArray(b.subtasks)||b.subtasks.length!==(t.subtasks||[]).length||b.subtasks.some((v,i)=>v.title!==t.subtasks[i].title||v.id!==t.subtasks[i].id))return fail(res,403,'Só podes marcar subtarefas como concluídas.');}}if(needsReview(user)&&updated.status==='done'&&t.status!=='done'){if(t.status==='review')return fail(res,409,'Esta tarefa já está à espera de aprovação.');updated.status='review';updated.review={by:user.id,at:new Date().toISOString(),prev:t.status==='doing'?'doing':'todo'};}const reviewRequested=updated.status==='review'&&t.status!=='review';let requested=false;if(!elevated(user)&&('assignedTo'in b)&&updated.assignedTo!==t.assignedTo){if(!updated.assignedTo||updated.assignedTo===user.id||!canEditTask(user,t))return fail(res,403,'Sem permissão para atribuir tarefas.');try{updated.assignRequest=assignRequest(user,updated,updated.assignedTo);}catch(e){return fail(res,e.status||403,e.message);}updated.assignedTo=t.assignedTo;requested=true;}if(elevated(user)&&('assignedTo'in b))delete updated.assignRequest;if(!elevated(user)&&('rotation'in b)&&JSON.stringify(updated.rotation||[])!==JSON.stringify(t.rotation||[]))return fail(res,403,'Só gestores podem alterar a rotação.');const reassigned=updated.assignedTo&&updated.assignedTo!==t.assignedTo;if(updated.visibility==='private'&&updated.assignedTo&&updated.assignedTo!==updated.createdBy)return fail(res,403,'Uma tarefa privada não pode ser atribuída a outra pessoa.');if(roleOf(user)==='collaborator'&&updated.visibility==='private')return fail(res,403,'Colaboradores não podem criar tarefas privadas.');if(!('assignRequest'in updated))delete t.assignRequest;Object.assign(t,updated);logAction(user,'task.update',t.id);if(reassigned)notif.taskAssigned(t,user);if(requested)notif.assignRequested(t,user);if(reviewRequested)notif.reviewRequested(t,user);save();if(reassigned)ha?.taskAssigned(t,user);return send(res,200,{task:t});}
       if(!match[2]&&req.method==='DELETE'){if(roleOf(user)!=='admin')return fail(res,403,'Só um administrador pode eliminar tarefas.');removePhotoFiles(t);db.tasks=db.tasks.filter(x=>x.id!==t.id);logAction(user,'task.delete',t.id);save();return send(res,200,{ok:true});}
     }
     if(p==='/api/shopping'&&req.method==='POST'){

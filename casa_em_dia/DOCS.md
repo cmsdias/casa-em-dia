@@ -24,8 +24,8 @@ Aplicação para organizar a casa em conjunto: tarefas pontuais, rotinas recorre
 | --- | --- |
 | Administrador | Tudo: contas, perfis, definições, cópias de segurança, Home Assistant, importação/exportação, todas as tarefas partilhadas e as Finanças. |
 | Gestor | Gerir tarefas partilhadas, atribuir tarefas e rotações, alterar divisões, categorias e o calendário da casa. Finanças. |
-| Morador | Ver tarefas partilhadas, gerir as suas e concluir as que lhe foram atribuídas. Sem acesso às Finanças. |
-| Colaborador | Apenas tarefas que criou ou que lhe foram atribuídas. Sem acesso às finanças. |
+| Morador | Ver tarefas partilhadas, gerir as suas e concluir as que lhe foram atribuídas. Pode pedir para atribuir tarefas suas a colaboradores (precisa de aprovação). Sem acesso às Finanças. |
+| Colaborador | Apenas tarefas que criou ou que lhe foram atribuídas. Sem acesso às finanças. Se a regra estiver ligada, o que conclui fica «Por aprovar». |
 
 As permissões são verificadas no servidor em cada pedido, não apenas escondidas na interface. Ao mudar o perfil ou a palavra-passe de alguém, as sessões dessa pessoa terminam.
 
@@ -35,6 +35,7 @@ As permissões são verificadas no servidor em cada pedido, não apenas escondid
 - **Dias de acesso** (só colaboradores): o administrador escolhe os dias da semana em que a pessoa pode entrar. Sem dias marcados, o acesso é diário. Usa o fuso horário `Europe/Lisbon` (ou a variável `TZ` do contentor).
 - **Equipamentos** (administrador e gestor alteram; moradores consultam; colaboradores não veem): marca, garantia, técnico, documentos e revisões. Trinta dias antes de uma revisão é criada uma tarefa e o administrador e o gestor são avisados.
 - **Finanças** (só administrador e gestor): despesas grandes da casa, despesas fixas lançadas automaticamente todos os meses, património (contas, depósitos, investimentos, cofre), orçamento anual e objetivos de poupança. Os itens do património marcados «só eu» são visíveis apenas para quem os criou.
+- **Regras da casa** (Definições → A casa): «Moradores podem pedir para atribuir tarefas a colaboradores» (ligada por omissão) e «O trabalho dos colaboradores precisa de aprovação» (desligada por omissão). O administrador e o gestor aprovam em «Hoje» ou na ficha da tarefa.
 - A tabela completa está em **Pessoas → O que cada perfil pode fazer**.
 
 ## Acesso

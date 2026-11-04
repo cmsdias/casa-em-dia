@@ -40,6 +40,27 @@ function createNotifications({ getDb, save, newId, todayISO, canSeeTask, isActiv
     for (const uid of who) { const p = db().people.find(x => x.id === uid); if (p && canSeeTask(p, task)) add(uid, 'done', `${firstName(actor)} concluiu uma tarefa`, task.title, taskLink(task)); }
   }
 
+  // Pedidos de atribuição a colaboradores (feitos por moradores) e a resposta.
+  function assignRequested(task, actor) {
+    const rq = task.assignRequest; if (!rq) return; const to = db().people.find(x => x.id === rq.to);
+    for (const p of db().people.filter(x => isActive(x) && ['admin', 'manager'].includes(roleOf(x)) && x.id !== actor.id))
+      if (canSeeTask(p, task)) add(p.id, 'approval', `${firstName(actor)} pede para atribuir uma tarefa a ${firstName(to)}`, task.title, taskLink(task));
+  }
+  function assignDecided(task, actor, rq, approved) {
+    const to = db().people.find(x => x.id === rq.to);
+    add(rq.by, 'approval', approved ? `${firstName(actor)} aprovou: ${firstName(to)} fica com a tarefa` : `${firstName(actor)} não aprovou a atribuição a ${firstName(to)}`, task.title, taskLink(task));
+  }
+
+  // Trabalho de colaborador à espera de aprovação, e a resposta.
+  function reviewRequested(task, actor) {
+    for (const p of db().people.filter(x => isActive(x) && ['admin', 'manager'].includes(roleOf(x)) && x.id !== actor.id))
+      if (canSeeTask(p, task)) add(p.id, 'approval', `${firstName(actor)} concluiu: falta aprovar`, task.title, taskLink(task));
+  }
+  function reviewDecided(task, actor, rv, approved, note) {
+    if (rv.by === actor.id) return;
+    add(rv.by, 'approval', approved ? `${firstName(actor)} aprovou o teu trabalho` : `${firstName(actor)} pediu para rever o trabalho`, task.title + (note ? ` · ${note}` : ''), taskLink(task));
+  }
+
   // Uma vez por dia: aniversários (hoje e amanhã), tarefas atrasadas/para hoje e, no início do mês, o calendário da casa.
   function daily() {
     const today = todayISO(); const st = state(); if (st.lastDaily === today) return false;
@@ -74,6 +95,6 @@ function createNotifications({ getDb, save, newId, todayISO, canSeeTask, isActiv
   function forUser(u) { const limit = Date.now() - MAX_AGE_DAYS * 86400_000; return list().filter(n => n.userId === u.id && Date.parse(n.at) > limit).slice(-MAX_PER_USER).reverse().map(({ key, userId, ...n }) => n); }
   function markRead(u, ids) { let n = 0; for (const x of list()) if (x.userId === u.id && !x.read && (ids === 'all' || ids.includes(x.id))) { x.read = true; n++; } return n; }
   function clear(u) { let n = 0; for (const x of list()) if (x.userId === u.id && !x.cleared) { x.cleared = true; x.read = true; n++; } return n; }
-  return { add, taskAssigned, taskRotated, taskCompleted, daily, forUser, markRead, clear, prune };
+  return { add, taskAssigned, taskRotated, taskCompleted, assignRequested, assignDecided, reviewRequested, reviewDecided, daily, forUser, markRead, clear, prune };
 }
 module.exports = { createNotifications };

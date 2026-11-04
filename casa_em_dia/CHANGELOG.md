@@ -1,3 +1,11 @@
+# 2.1.0 — Aprovações e arrumação dos estilos
+
+- **Moradores podem pedir para atribuir tarefas a colaboradores.** A tarefa fica por atribuir, com o pedido à vista, até um administrador ou gestor aprovar; o colaborador só a vê depois de aprovada. Quem pediu pode retirar o pedido e é avisado da decisão.
+- **Aprovação do trabalho dos colaboradores (opcional).** Quando ligada, as tarefas que um colaborador conclui ficam «Por aprovar»; o administrador ou o gestor aprova (entra no histórico em nome de quem fez) ou devolve (a tarefa volta à lista do colaborador, com aviso).
+- As duas regras ligam-se e desligam-se em **Definições › A casa › Regras da casa**. Ao desligar a aprovação do trabalho, as tarefas pendentes voltam à lista.
+- Em «Hoje», o administrador e o gestor têm o cartão **Para aprovar**; na ficha da tarefa aparecem os botões Aprovar / Devolver / Recusar.
+- Estilos arrumados (`tidy_css.py`): 368 declarações que nunca chegavam a ser aplicadas foram retiradas e as cores e medidas passaram para um único bloco de tokens no início do ficheiro. Verificado em 84 capturas (claro/escuro, telemóvel/computador): aspeto idêntico.
+
 # 2.0.0 — Nova navegação, «Hoje», equipamentos e documentos
 
 Revisão completa da organização da app, a partir da análise «atual vs proposto».
