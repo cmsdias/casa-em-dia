@@ -1,3 +1,8 @@
+# 1.8.2 — Avisos e telefone
+
+- Avisos flutuantes («Produto adicionado», «Tarefa concluída»…): no telemóvel aparecem acima da barra de navegação, com folga em relação ao botão «+», e com fundo claro para não se confundirem com a barra.
+- Telefone com indicativo do país numa lista com bandeiras (Portugal +351 por omissão), no perfil e na edição de pessoas.
+
 # 1.8.1 — Correção
 
 - Notificações no telemóvel: passam a abrir a Casa em Dia pelo mesmo endereço da entrada na barra lateral do Home Assistant (o endereço anterior podia mostrar «You're disconnected»).
