@@ -4,8 +4,8 @@
 const fs=require('node:fs');
 const path=require('node:path');
 
-const REASONS={auto:14,manual:20,'pre-restore':5,upload:5,upgrade:5};
-const NAME_RE=/^casa-(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}(?:-\d{3})?Z)-(auto|manual|pre-restore|upload|upgrade)\.json$/;
+const REASONS={auto:14,manual:20,'pre-restore':5,upload:5,upgrade:5,'pre-import':5};
+const NAME_RE=/^casa-(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}(?:-\d{3})?Z)-(auto|manual|pre-restore|upload|upgrade|pre-import)\.json$/;
 
 function stamp(d=new Date()){return d.toISOString().replace(/:/g,'-').replace(/\.(\d{3})Z$/,'-$1Z');}
 function parseStamp(s){const m=/^(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})(?:-(\d{3}))?Z$/.exec(s);return m?new Date(`${m[1]}T${m[2]}:${m[3]}:${m[4]}.${m[5]||'000'}Z`):null;}

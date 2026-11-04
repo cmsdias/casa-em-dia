@@ -350,9 +350,7 @@ if(name==='profile-open'){moreOpen=false;quickCreateOpen=false;profileDraft={};m
      try{
        const payload=JSON.parse(await file.text());
        if(!Array.isArray(payload.tasks))throw Error('O ficheiro não contém uma lista de tarefas válida.');
-       if(!await confirmDialog({title:'Importar tarefas?',message:`Até ${payload.tasks.length} tarefas de «${file.name}». As repetidas serão ignoradas.`,confirmLabel:'Importar'}))return;
-       if(demo){let n=0;const ids=new Set(store.tasks.map(t=>[t.title,t.room,t.kind].join('|')));for(const raw of payload.tasks){const key=[raw.title,raw.room,raw.kind].join('|');if(!raw.title||ids.has(key))continue;ids.add(key);store.tasks.push({...raw,id:'import-'+Date.now()+'-'+n++});}persistDemo();render();toast(`${n} tarefas importadas para a demonstração.`);return;}
-       const result=await api('/api/import','POST',{tasks:payload.tasks});await reload();toast(`${result.imported} tarefas importadas; ${result.skipped} ignoradas.`);
+       modal={type:'import',payload,file:file.name};renderModal();
      }catch(e){toast(e.message||'Falha ao importar.');}
    };input.click();return;
  }

@@ -68,7 +68,7 @@ async function copyText(text,msg='Copiado.'){try{await navigator.clipboard.write
 function downloadBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500);}
 
 /* ───────────── Cópias de segurança (Definições, administrador) ───────────── */
-const BACKUP_REASONS={auto:'Automática',manual:'Manual','pre-restore':'Antes de restaurar',upload:'Carregada',upgrade:'Antes da atualização'};
+const BACKUP_REASONS={auto:'Automática',manual:'Manual','pre-restore':'Antes de restaurar',upload:'Carregada',upgrade:'Antes da atualização','pre-import':'Antes de importar'};
 let backupsData=null;
 function backupsCard(){
  if(!isAdmin())return '';

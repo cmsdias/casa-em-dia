@@ -1,3 +1,8 @@
+# 2.1.6 — Importar a substituir
+
+- Ao importar um ficheiro de tarefas (Definições › Dados e cópias › Importar), o administrador vê o resumo do ficheiro e pode **apagar primeiro as tarefas e rotinas atuais** e, opcionalmente, as compras, os registos de horas e o histórico. Antes de apagar é guardada uma cópia de segurança «Antes de importar», para poder voltar atrás.
+- O ficheiro pode trazer também pisos e divisões (`settings.floors`, `settings.rooms`, `settings.roomFloors`), que se acrescentam aos existentes.
+
 # 2.1.5 — Ícone do separador
 
 - O ícone no separador do browser passa a ter os cantos ligeiramente arredondados. Os ícones da app no telemóvel continuam quadrados, porque é o próprio sistema que lhes aplica a forma.
