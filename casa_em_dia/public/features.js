@@ -256,7 +256,7 @@ async function featureAction(name,el){
   case 'person-edit':personEditModal(el.dataset.id);return true;
   case 'pe-photo-pick':document.getElementById('pe-photo-input')?.click();return true;
   case 'pe-photo-remove':peDraft.photo=null;pePhotoRefresh();return true;
-  case 'theme-set':{window.casaSetTheme?.(el.dataset.themeValue);el.parentElement.querySelectorAll('[role=radio]').forEach(b=>b.setAttribute('aria-checked',String(b===el)));return true;}
+  case 'theme-set':{window.casaSetTheme?.(el.dataset.themeValue);const g=el.parentElement;g.querySelectorAll('[role=radio]').forEach(b=>b.setAttribute('aria-checked',String(b===el)));const i=THEME_OPTS.findIndex(o=>o[0]===el.dataset.themeValue);g.style.setProperty('--i',i);const st=g.closest('.appearance-field')?.querySelector('.appearance-state');if(st)st.textContent=THEME_OPTS[i][3];return true;}
   case 'sync-apply':await syncApply();return true;
   case 'backup-create':{if(demo){toast('Na demonstração não há cópias de segurança.');return true;}const r=await api('/api/backups','POST',{});backupsData={...backupsData,backups:r.backups};loadBackups();toast('Cópia de segurança criada.');return true;}
   case 'backup-download':{if(demo){toast('Indisponível na demonstração.');return true;}const res=await fetch('api/backups/'+encodeURIComponent(el.dataset.name),{credentials:'same-origin'});if(!res.ok)throw Error('Não foi possível descarregar a cópia.');downloadBlob(await res.blob(),el.dataset.name);toast('Transferência iniciada.');return true;}
@@ -321,8 +321,10 @@ document.addEventListener('change',e=>{if(e.target.name!=='kind'||!e.target.clos
 document.addEventListener('input',e=>{const o=e.target.closest?.('.overlay[data-action="overlay"]');if(o)o.dataset.dirty='1';},true);
 
 /* ───────────── Aparência (claro / escuro), por dispositivo ───────────── */
-function appearanceField(){const cur=window.casaThemePref?.()||'auto';const opts=[['auto','Automático'],['light','Claro'],['dark','Escuro']];
- return `<div class="field"><span class="field-label" id="appearance-label">Aparência</span><div class="seg-control" role="radiogroup" aria-labelledby="appearance-label">${opts.map(([v,l])=>`<button type="button" role="radio" aria-checked="${cur===v}" data-action="theme-set" data-theme-value="${v}">${l}</button>`).join('')}</div><small class="field-help">Aplica-se logo, só neste dispositivo. «Automático» segue o modo do telemóvel ou do computador.</small></div>`;}
+// Aparência: três símbolos (automático · claro · escuro) num interruptor compacto; o nome do modo escolhido aparece ao lado.
+const THEME_OPTS=[['auto','Automático','theme-auto','Automático · segue o dispositivo'],['light','Claro','sun','Claro'],['dark','Escuro','moon','Escuro']];
+function appearanceField(){const cur=window.casaThemePref?.()||'auto';const sel=THEME_OPTS.find(o=>o[0]===cur)||THEME_OPTS[0];
+ return `<div class="field appearance-field"><div class="appearance-row"><div><span class="field-label" id="appearance-label">Aparência</span><small class="appearance-state" aria-live="polite">${sel[3]}</small></div><div class="theme-toggle" role="radiogroup" aria-labelledby="appearance-label" style="--i:${THEME_OPTS.indexOf(sel)}">${THEME_OPTS.map(([v,l,ic])=>`<button type="button" role="radio" aria-checked="${cur===v}" aria-label="${l}" title="${l}" data-action="theme-set" data-theme-value="${v}">${ico(ic)}</button>`).join('')}</div></div></div>`;}
 
 /* ───────────── Pessoas: contactos e edição pelo administrador ───────────── */
 const fmtBirthday=mmdd=>{const m=/^(\d{2})-(\d{2})$/.exec(mmdd||'');return m?`${Number(m[2])} ${MONTHS_PT[Number(m[1])-1]}`:'';};
