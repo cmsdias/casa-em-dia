@@ -928,3 +928,7 @@ details>summary:focus-visible,.task-more:focus-visible{outline:2px solid var(--b
  .sk::after,.topbar-load::after{animation:none}.topbar-load::after{transform:none;width:100%;opacity:.6}
  .busy-dots i{animation:none;opacity:.8}
 }
+/* Aviso «Tarefa concluída»: botão de fechar visível sobre o fundo verde; desaparece sozinho ao fim de 10 s. */
+.completion-followup .followup-close{background:transparent;border:1px solid #ffffff40;color:var(--brand-paper);width:40px;height:40px;min-width:40px;min-height:40px;border-radius:50%;font-size:20px;line-height:1;display:grid;place-items:center}
+.completion-followup .followup-close:hover{background:#ffffff14}
+.completion-followup.out{opacity:0;transition:opacity .3s}

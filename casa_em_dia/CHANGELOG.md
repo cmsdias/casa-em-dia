@@ -5,6 +5,8 @@
 - Botões a guardar: três pontos dourados e botão bloqueado até terminar (evita toques duplos).
 - Linha dourada no topo enquanto a app vai buscar dados em segundo plano.
 - Com «reduzir movimento» ativo no telemóvel, as animações ficam paradas.
+- Aviso «Tarefa concluída!»: o botão de fechar (×) estava invisível (círculo branco); passa a ver-se e o aviso desaparece sozinho ao fim de 10 segundos.
+- Tarefas: «Limpar» passa a «Limpar filtros», para não se confundir com «Limpar concluídas».
 
 # 1.7.1 — Correções
 
