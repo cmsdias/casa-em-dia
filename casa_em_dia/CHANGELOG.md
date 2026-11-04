@@ -1,3 +1,7 @@
+# 1.8.4 — Ícone na barra lateral
+
+- Ícone da app na barra lateral do Home Assistant passa a `mdi:home-variant-outline`.
+
 # 1.8.3 — Histórico de notificações
 
 - «Limpar» no sino passa a tirar as notificações do sino sem as apagar. No fundo do sino, «Ver todas» abre a página com as notificações dos últimos 30 dias (incluindo as limpas), agrupadas por dia. As notificações apagam-se sozinhas ao fim de 30 dias.
