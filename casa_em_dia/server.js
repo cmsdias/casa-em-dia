@@ -6,6 +6,7 @@ const crypto=require('node:crypto');
 const {URL}=require('node:url');
 const {createBackups}=require('./lib/backups');
 const {createHa}=require('./lib/ha');
+const {createNotifications}=require('./lib/notifications');
 const SEASONAL=require('./public/seasonal-defaults.js');
 const FIN=require('./public/finance-core.js');
 const UNITS=require('./public/shopping-units.js');
@@ -58,6 +59,7 @@ const backups=createBackups({dataDir:DATA_DIR,getDb:()=>db,dateInTz});
 if(rawDb&&db.appVersion!==APP_VERSION){try{backups.create('upgrade',rawDb);}catch(e){console.error('Não foi possível guardar a cópia anterior à atualização:',e.message);}}
 rawDb=null;
 migrate();save();
+const notif=createNotifications({getDb:()=>db,save,newId:()=>id(),todayISO:()=>dateInTz(new Date()),canSeeTask:(u,t)=>canSeeTask(u,t),isActive:u=>isActive(u),roleOf:u=>roleOf(u)});
 function roleOf(u){return u.role==='member'?'resident':u.role;}
 const isActive=u=>u.active!==false;
 // Dias de acesso de colaboradores (0 = domingo … 6 = sábado), no fuso horário da casa.
@@ -73,7 +75,7 @@ function canCompleteTask(u,t){return canEditTask(u,t)||t.assignedTo===u.id;}
 function allowedTaskPatch(u,t,b){if(canEditTask(u,t))return true;
  return canCompleteTask(u,t)&&Object.keys(b).every(k=>['status','subtasks'].includes(k));}
 function logAction(u,action,entityId){db.audit.push({id:id(),actor:u.id,action,entityId,at:new Date().toISOString()});if(db.audit.length>3000)db.audit=db.audit.slice(-3000);}
-function visibleState(u){const allowed=db.tasks.filter(t=>canSeeTask(u,t));const ids=new Set(allowed.map(t=>t.id));const users=roleOf(u)==='collaborator'?db.people.filter(p=>p.id===u.id||allowed.some(t=>t.assignedTo===p.id||t.createdBy===p.id)):db.people;const people=users.map(({id,name,username,role,avatar,photo,active,accessDays,mustChangePassword})=>({id,name,username:roleOf(u)==='collaborator'?'':username,role:roleOf({role}),avatar:avatar||'●',photo:photo||'',active:active!==false,...(roleOf(u)==='admin'?{accessDays:Array.isArray(accessDays)?accessDays:[],mustChangePassword:!!mustChangePassword}:{})}));return {...state(),people,tasks:allowed,history:db.history.filter(h=>h.taskId?ids.has(h.taskId):h.by===u.id).slice(-200),shopping:db.shopping,workLogs:db.workLogs.filter(l=>elevated(u)?(!l.taskId||ids.has(l.taskId)):l.userId===u.id||l.actor===u.id),audit:elevated(u)?db.audit.filter(a=>!a.action.startsWith('task.')||ids.has(a.entityId)).slice(-300):[],permissions:{manageUsers:roleOf(u)==='admin',manageSettings:elevated(u),manageAllShared:elevated(u)},rev:rev(),seasonal:roleOf(u)==='collaborator'?[]:db.seasonal,shoppingFrequent:frequentShopping(),haAvailable:!!ha?.available()};}
+function visibleState(u){const allowed=db.tasks.filter(t=>canSeeTask(u,t));const ids=new Set(allowed.map(t=>t.id));const users=roleOf(u)==='collaborator'?db.people.filter(p=>p.id===u.id||allowed.some(t=>t.assignedTo===p.id||t.createdBy===p.id)):db.people;const people=users.map(p=>personView(u,p));return {...state(),people,tasks:allowed,history:db.history.filter(h=>h.taskId?ids.has(h.taskId):h.by===u.id).slice(-200),shopping:db.shopping,workLogs:db.workLogs.filter(l=>elevated(u)?(!l.taskId||ids.has(l.taskId)):l.userId===u.id||l.actor===u.id),audit:elevated(u)?db.audit.filter(a=>!a.action.startsWith('task.')||ids.has(a.entityId)).slice(-300):[],permissions:{manageUsers:roleOf(u)==='admin',manageSettings:elevated(u),manageAllShared:elevated(u)},notifications:notif.forUser(u),rev:rev(),seasonal:roleOf(u)==='collaborator'?[]:db.seasonal,shoppingFrequent:frequentShopping(),haAvailable:!!ha?.available()};}
 function frequentShopping(){return Object.values(db.shoppingFreq).sort((a,b)=>b.count-a.count||String(b.last).localeCompare(String(a.last))).slice(0,16).map(({title,category,quantity,unit})=>({title,category,quantity,unit:unit||''}));}
 
 
@@ -99,6 +101,26 @@ function readUser(req){const token=((req.headers.cookie||'').match(/(?:^|;\s*)ca
 try{const [payload,mac]=token.split('.');const sig=crypto.createHmac('sha256',db.secret).update(payload).digest('base64url');if(!mac||sig.length!==mac.length||!crypto.timingSafeEqual(Buffer.from(mac),Buffer.from(sig)))return null;const claim=JSON.parse(Buffer.from(payload,'base64url').toString());if(claim.exp<Date.now())return null;const u=db.people.find(x=>x.id===claim.id&&(x.authVersion||1)===claim.v);return u&&isActive(u)&&scheduleAllows(u)?u:null;}catch{return null;}}
 function cookie(req,token){const secure=(req.headers['x-forwarded-proto']==='https'||req.socket.encrypted)?'; Secure':'';return `casa_session=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${token?14*86400:0}${secure}`;}
 async function parseBody(req,limit=256_000){let size=0;let chunks=[];for await(const c of req){size+=c.length;if(size>limit)throw new Error('Pedido demasiado grande.');chunks.push(c);}try{return JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}catch{throw new Error('JSON inválido.');}}
+// O que cada pessoa vê das outras: contactos (email, telefone) só para o próprio, administrador e gestores;
+// a data de nascimento completa só para o próprio e o administrador (os restantes veem o dia e o mês, para os aniversários).
+function personView(viewer,p){const self=viewer.id===p.id,admin=roleOf(viewer)==='admin',collab=roleOf(viewer)==='collaborator';
+ return {id:p.id,name:p.name,username:collab&&!self?'':p.username,role:roleOf(p),avatar:p.avatar||'●',photo:p.photo||'',active:p.active!==false,
+  ...(admin?{accessDays:Array.isArray(p.accessDays)?p.accessDays:[],mustChangePassword:!!p.mustChangePassword}:{}),
+  ...(self||admin||elevated(viewer)?{email:p.email||'',phone:p.phone||''}:{}),
+  ...(self||admin?{birthDate:p.birthDate||''}:(!collab&&p.birthDate?{birthday:p.birthDate.slice(5)}:{}))};}
+function peopleFor(viewer){if(roleOf(viewer)!=='collaborator')return db.people.map(p=>personView(viewer,p));const allowed=db.tasks.filter(t=>canSeeTask(viewer,t));return db.people.filter(p=>p.id===viewer.id||allowed.some(t=>t.assignedTo===p.id||t.createdBy===p.id)).map(p=>personView(viewer,p));}
+function cleanEmail(v){const e=cleanStr(v,120).toLowerCase();if(e&&!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e))throw Error('Email inválido.');return e;}
+function cleanPhone(v){const t=cleanStr(v,30);if(t&&!/^\+?[\d\s().-]{6,20}$/.test(t))throw Error('Telefone inválido: usa só números, espaços e o indicativo (ex.: +351 912 345 678).');return t;}
+function cleanBirth(v){const d=cleanStr(v,10);if(!d)return '';dateISO(d);if(d<'1900-01-01'||d>new Date().toISOString().slice(0,10))throw Error('Data de nascimento inválida.');return d;}
+function cleanUsername(v,exceptId){const u=cleanStr(v,40).toLowerCase();if(!/^[a-z0-9._-]{3,40}$/.test(u))throw Error('Nome de utilizador inválido: 3 a 40 caracteres, só letras minúsculas, números, ponto, hífen ou sublinhado.');if(db.people.some(p=>p.username===u&&p.id!==exceptId))throw Error('Esse nome de utilizador já existe.');return u;}
+// Campos de perfil que podem ser alterados pelo próprio (PATCH /api/me) ou pelo administrador (PATCH /api/people/:id).
+function applyProfile(target,b){
+ if('name'in b){const name=cleanStr(b.name,80);if(name.length<2)throw Error('O nome deve ter pelo menos 2 caracteres.');target.name=name;}
+ if('username'in b)target.username=cleanUsername(b.username,target.id);
+ if('email'in b)target.email=cleanEmail(b.email);
+ if('phone'in b)target.phone=cleanPhone(b.phone);
+ if('birthDate'in b)target.birthDate=cleanBirth(b.birthDate);
+ if('photo'in b)target.photo=cleanPhoto(b.photo);}
 function publicPeople(){return db.people.map(({id,name,username,role,avatar,photo,active,accessDays,mustChangePassword})=>({id,name,username,role:role==='member'?'resident':role,avatar:avatar||'●',photo:photo||'',active:active!==false,accessDays:Array.isArray(accessDays)?accessDays:[],mustChangePassword:!!mustChangePassword}));}
 // Fotografia de perfil: imagem pequena (redimensionada no browser) guardada como data URL.
 const PHOTO_MAX=200_000;
@@ -189,7 +211,7 @@ const server=http.createServer(async (req,res)=>{
         const assignee=b.assignedTo?db.people.find(x=>x.username===String(b.assignedTo).toLowerCase()&&isActive(x)):null;
         const task={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P3',estimatedMinutes:null,category:'Geral',thisWeek:false,subtasks:[],status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString(),createdBy:robot.id,visibility:'shared',source:'home-assistant'};
         patchTask(task,{title,room:b.room||'Geral',notes:b.notes||'',priority:['P1','P2','P3','P4'].includes(b.priority)?b.priority:'P3',dueDate:b.dueDate||'',assignedTo:assignee?.id||null,category:b.category||'Geral'});
-        db.tasks.push(task);logAction(robot,'task.create.ha',task.id);save();ha?.taskAssigned(task,actor);return send(res,201,{task});
+        db.tasks.push(task);logAction(robot,'task.create.ha',task.id);notif.taskAssigned(task,actor);save();ha?.taskAssigned(task,actor);return send(res,201,{task});
       }
       if(p==='/api/integracao/compras'&&req.method==='POST'){
         const title=cleanStr(b.title,180);if(!title)return fail(res,400,'Indica o produto.');
@@ -202,6 +224,8 @@ const server=http.createServer(async (req,res)=>{
     const user=readUser(req);if(!user)return fail(res,401,'Inicia sessão para continuar.');
     if(user.mustChangePassword&&!(p===`/api/people/${user.id}/password`&&req.method==='POST'))return fail(res,428,'Define uma nova palavra-passe para continuar.');
     if(p==='/api/rev'&&req.method==='GET')return send(res,200,{rev:rev()});
+    if(p==='/api/notifications/read'&&req.method==='POST'){const ids=b.ids==='all'?'all':Array.isArray(b.ids)?b.ids.filter(x=>typeof x==='string').slice(0,200):null;if(!ids)return fail(res,400,'Pedido inválido.');const n=notif.markRead(user,ids);if(n)save();return send(res,200,{notifications:notif.forUser(user)});}
+    if(p==='/api/notifications/clear'&&req.method==='POST'){if(notif.clear(user))save();return send(res,200,{notifications:[]});}
     // Fotografias das tarefas: ficheiros em DATA_DIR/photos, servidos só a quem pode ver a tarefa.
     const photoGet=p.match(/^\/api\/photos\/([^/]+)$/);
     if(photoGet&&req.method==='GET'){const pid=photoGet[1];if(!PHOTO_ID.test(pid))return fail(res,404,'Fotografia não encontrada.');const t=db.tasks.find(x=>(x.photos||[]).some(ph=>ph.id===pid));if(!t||!canSeeTask(user,t))return fail(res,404,'Fotografia não encontrada.');let buf;try{buf=fs.readFileSync(path.join(PHOTO_DIR,pid+'.jpg'));}catch{return fail(res,404,'Fotografia não encontrada.');}res.writeHead(200,{'Content-Type':'image/jpeg','Content-Length':buf.length,'Cache-Control':'private, max-age=604800, immutable','X-Content-Type-Options':'nosniff'});return res.end(buf);}
@@ -289,7 +313,7 @@ const server=http.createServer(async (req,res)=>{
       else if(incoming.roomFloors){const rooms=new Set(incoming.rooms||[]),floors=new Set(incoming.floors||[]);incoming.roomFloors=Object.fromEntries(Object.entries(incoming.roomFloors).filter(([r,f])=>rooms.has(r)&&floors.has(f)));}db.settings=incoming;logAction(user,'settings.update','global');save();return send(res,200,{settings:db.settings});
     }
     if(p==='/api/tasks'&&req.method==='POST'){
-      const task={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P3',estimatedMinutes:null,category:'Geral',thisWeek:false,subtasks:[],status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString(),createdBy:user.id,visibility:'shared'};patchTask(task,b);if(!elevated(user)&&task.assignedTo&&task.assignedTo!==user.id)return fail(res,403,'Não podes atribuir esta tarefa a outra pessoa.');if(!elevated(user)&&(task.rotation||[]).some(x=>x!==user.id))return fail(res,403,'Só gestores podem criar rotações entre pessoas.');if(roleOf(user)==='collaborator'&&task.visibility==='private')return fail(res,403,'Colaboradores não podem criar tarefas privadas.');if(task.visibility==='private'&&task.assignedTo&&task.assignedTo!==user.id)return fail(res,403,'Uma tarefa privada não pode ser atribuída a outra pessoa.');if(!task.title)return fail(res,400,'Introduz o nome da tarefa.');db.tasks.push(task);logAction(user,'task.create',task.id);save();ha?.taskAssigned(task,user);return send(res,201,{task});
+      const task={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P3',estimatedMinutes:null,category:'Geral',thisWeek:false,subtasks:[],status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString(),createdBy:user.id,visibility:'shared'};patchTask(task,b);if(!elevated(user)&&task.assignedTo&&task.assignedTo!==user.id)return fail(res,403,'Não podes atribuir esta tarefa a outra pessoa.');if(!elevated(user)&&(task.rotation||[]).some(x=>x!==user.id))return fail(res,403,'Só gestores podem criar rotações entre pessoas.');if(roleOf(user)==='collaborator'&&task.visibility==='private')return fail(res,403,'Colaboradores não podem criar tarefas privadas.');if(task.visibility==='private'&&task.assignedTo&&task.assignedTo!==user.id)return fail(res,403,'Uma tarefa privada não pode ser atribuída a outra pessoa.');if(!task.title)return fail(res,400,'Introduz o nome da tarefa.');db.tasks.push(task);logAction(user,'task.create',task.id);notif.taskAssigned(task,user);save();ha?.taskAssigned(task,user);return send(res,201,{task});
     }
     // Limpar as tarefas pontuais concluídas (só administrador; as rotinas nunca são apagadas; o histórico de conclusões mantém-se).
     if(p==='/api/tasks/clear-done'&&req.method==='POST'){if(roleOf(user)!=='admin')return fail(res,403,'Só um administrador pode eliminar tarefas.');const gone=db.tasks.filter(t=>t.kind==='project'&&t.status==='done'&&canSeeTask(user,t));gone.forEach(removePhotoFiles);const ids=new Set(gone.map(t=>t.id));db.tasks=db.tasks.filter(t=>!ids.has(t.id));logAction(user,'tasks.clear-done',String(gone.length));save();return send(res,200,{removed:gone.length});}
@@ -300,9 +324,9 @@ const server=http.createServer(async (req,res)=>{
         const time=new Date().toISOString();db.history.push({id:id(),taskId:t.id,title:t.title,kind:t.kind,assignedTo:t.assignedTo,by:user.id,at:time});
         if(db.history.length>2000)db.history=db.history.slice(-2000);
         let rotated=false;if(t.kind==='routine'&&t.repeat!=='none') {t.status='todo';t.dueDate=nextDate(t.dueDate,t.repeat);t.suggested=false;rotated=rotate(t);}else t.status='done';
-        t.updatedAt=time;logAction(user,'task.complete',t.id);save();if(rotated)ha?.taskAssigned(t,user);return send(res,200,{task:t,rotatedTo:rotated?t.assignedTo:null});
+        t.updatedAt=time;logAction(user,'task.complete',t.id);if(rotated)notif.taskRotated(t,user);else if(t.status==='done')notif.taskCompleted(t,user);save();if(rotated)ha?.taskAssigned(t,user);return send(res,200,{task:t,rotatedTo:rotated?t.assignedTo:null});
       }
-      if(!match[2]&&req.method==='PATCH'){if(!allowedTaskPatch(user,t,b))return fail(res,403,'Sem permissão para alterar esta tarefa.');const updated={...t};patchTask(updated,b);if(!canEditTask(user,t)){if('status'in b && !['doing','done'].includes(b.status))return fail(res,403,'Só podes iniciar ou concluir esta tarefa.');if('subtasks'in b){if(!Array.isArray(b.subtasks)||b.subtasks.length!==(t.subtasks||[]).length||b.subtasks.some((v,i)=>v.title!==t.subtasks[i].title||v.id!==t.subtasks[i].id))return fail(res,403,'Só podes marcar subtarefas como concluídas.');}}if(!elevated(user)&&('assignedTo'in b)&&updated.assignedTo!==t.assignedTo)return fail(res,403,'Sem permissão para atribuir tarefas.');if(!elevated(user)&&('rotation'in b)&&JSON.stringify(updated.rotation||[])!==JSON.stringify(t.rotation||[]))return fail(res,403,'Só gestores podem alterar a rotação.');const reassigned=updated.assignedTo&&updated.assignedTo!==t.assignedTo;if(updated.visibility==='private'&&updated.assignedTo&&updated.assignedTo!==updated.createdBy)return fail(res,403,'Uma tarefa privada não pode ser atribuída a outra pessoa.');if(roleOf(user)==='collaborator'&&updated.visibility==='private')return fail(res,403,'Colaboradores não podem criar tarefas privadas.');Object.assign(t,updated);logAction(user,'task.update',t.id);save();if(reassigned)ha?.taskAssigned(t,user);return send(res,200,{task:t});}
+      if(!match[2]&&req.method==='PATCH'){if(!allowedTaskPatch(user,t,b))return fail(res,403,'Sem permissão para alterar esta tarefa.');const updated={...t};patchTask(updated,b);if(!canEditTask(user,t)){if('status'in b && !['doing','done'].includes(b.status))return fail(res,403,'Só podes iniciar ou concluir esta tarefa.');if('subtasks'in b){if(!Array.isArray(b.subtasks)||b.subtasks.length!==(t.subtasks||[]).length||b.subtasks.some((v,i)=>v.title!==t.subtasks[i].title||v.id!==t.subtasks[i].id))return fail(res,403,'Só podes marcar subtarefas como concluídas.');}}if(!elevated(user)&&('assignedTo'in b)&&updated.assignedTo!==t.assignedTo)return fail(res,403,'Sem permissão para atribuir tarefas.');if(!elevated(user)&&('rotation'in b)&&JSON.stringify(updated.rotation||[])!==JSON.stringify(t.rotation||[]))return fail(res,403,'Só gestores podem alterar a rotação.');const reassigned=updated.assignedTo&&updated.assignedTo!==t.assignedTo;if(updated.visibility==='private'&&updated.assignedTo&&updated.assignedTo!==updated.createdBy)return fail(res,403,'Uma tarefa privada não pode ser atribuída a outra pessoa.');if(roleOf(user)==='collaborator'&&updated.visibility==='private')return fail(res,403,'Colaboradores não podem criar tarefas privadas.');Object.assign(t,updated);logAction(user,'task.update',t.id);if(reassigned)notif.taskAssigned(t,user);save();if(reassigned)ha?.taskAssigned(t,user);return send(res,200,{task:t});}
       if(!match[2]&&req.method==='DELETE'){if(roleOf(user)!=='admin')return fail(res,403,'Só um administrador pode eliminar tarefas.');removePhotoFiles(t);db.tasks=db.tasks.filter(x=>x.id!==t.id);logAction(user,'task.delete',t.id);save();return send(res,200,{ok:true});}
     }
     if(p==='/api/shopping'&&req.method==='POST'){
@@ -340,20 +364,27 @@ const server=http.createServer(async (req,res)=>{
       const target=db.people.find(x=>x.id===roleMatch[1]);if(!target)return fail(res,404,'Pessoa não encontrada.');
       if(!['admin','manager','resident','collaborator'].includes(b.role))return fail(res,400,'Perfil inválido.');
       if(target.id===user.id&&b.role!=='admin')return fail(res,403,'Não podes retirar o teu próprio acesso de administrador.');if(target.role==='admin'&&b.role!=='admin'&&db.people.filter(x=>roleOf(x)==='admin').length===1)return fail(res,403,'É obrigatório manter um administrador.');
-      target.role=b.role;target.authVersion=(target.authVersion||1)+1;logAction(user,'person.role',target.id);save();return send(res,200,{people:publicPeople()});
+      target.role=b.role;target.authVersion=(target.authVersion||1)+1;logAction(user,'person.role',target.id);save();return send(res,200,{people:peopleFor(user)});
     }
     if(p==='/api/people'&&req.method==='POST'){
       if(user.role!=='admin')return fail(res,403,'Apenas administradores.');
       const name=cleanStr(b.name,80),username=cleanStr(b.username,40).toLowerCase(),pw=String(b.password||'');
       if(name.length<2||!/^[a-z0-9._-]{3,40}$/.test(username)||pw.length<10)return fail(res,400,'Nome, utilizador (mín. 3 caracteres) e palavra-passe (mín. 10 caracteres) obrigatórios.');
       if(db.people.some(p=>p.username===username))return fail(res,409,'Esse nome de utilizador já existe.');
-      const person={id:id(),name,username,passwordHash:passwordHash(pw),role:['manager','resident','collaborator'].includes(b.role)?b.role:'resident',authVersion:1,avatar:'●',active:true,mustChangePassword:true};db.people.push(person);logAction(user,'person.create',person.id);save();return send(res,201,{people:publicPeople()});
+      const person={id:id(),name,username,passwordHash:passwordHash(pw),role:['manager','resident','collaborator'].includes(b.role)?b.role:'resident',authVersion:1,avatar:'●',active:true,mustChangePassword:true};db.people.push(person);logAction(user,'person.create',person.id);save();return send(res,201,{people:peopleFor(user)});
     }
     if(p==='/api/me'&&req.method==='PATCH'){
-      const target=db.people.find(x=>x.id===user.id);
-      if('name'in b){const name=cleanStr(b.name,80);if(name.length<2)return fail(res,400,'O nome deve ter pelo menos 2 caracteres.');target.name=name;}
-      if('photo'in b)target.photo=cleanPhoto(b.photo);
-      logAction(user,'person.profile',user.id);save();return send(res,200,{user:{id:target.id,name:target.name,role:roleOf(target)},people:publicPeople()});
+      const target=db.people.find(x=>x.id===user.id);const draft={...target};applyProfile(draft,b);Object.assign(target,draft);
+      logAction(user,'person.profile',user.id);save();return send(res,200,{user:{id:target.id,name:target.name,role:roleOf(target)},people:peopleFor(user)});
+    }
+    // Administrador: editar nome, utilizador e contactos de outra pessoa.
+    const personEdit=p.match(/^\/api\/people\/([^/]+)$/);
+    if(personEdit&&req.method==='PATCH'){
+      if(roleOf(user)!=='admin')return fail(res,403,'Apenas administradores.');
+      const target=db.people.find(x=>x.id===personEdit[1]);if(!target)return fail(res,404,'Pessoa não encontrada.');
+      const allowed={};for(const k of ['name','username','email','phone','birthDate'])if(k in b)allowed[k]=b[k];
+      const draft={...target};applyProfile(draft,allowed);Object.assign(target,draft);
+      logAction(user,'person.edit',target.id);save();return send(res,200,{people:peopleFor(user)});
     }
     const statusMatch=p.match(/^\/api\/people\/([^/]+)\/status$/);
     if(statusMatch&&req.method==='PATCH'){
@@ -370,7 +401,7 @@ const server=http.createServer(async (req,res)=>{
         if(!b.active&&t.assignedTo===target.id&&t.status!=='done'){t.assignedTo=null;t.unassignedFrom=target.id;affected++;}
         else if(b.active&&t.unassignedFrom===target.id){if(!t.assignedTo&&t.status!=='done'){t.assignedTo=target.id;affected++;}delete t.unassignedFrom;}
       }
-      logAction(user,b.active?'person.activate':'person.deactivate',target.id);save();return send(res,200,{people:publicPeople(),tasks:affected});
+      logAction(user,b.active?'person.activate':'person.deactivate',target.id);save();return send(res,200,{people:peopleFor(user),tasks:affected});
     }
     const scheduleMatch=p.match(/^\/api\/people\/([^/]+)\/schedule$/);
     if(scheduleMatch&&req.method==='PATCH'){
@@ -378,7 +409,7 @@ const server=http.createServer(async (req,res)=>{
       const target=db.people.find(x=>x.id===scheduleMatch[1]);if(!target)return fail(res,404,'Pessoa não encontrada.');
       if(!Array.isArray(b.accessDays)||b.accessDays.some(d=>!Number.isInteger(d)||d<0||d>6))return fail(res,400,'Dias inválidos.');
       target.accessDays=[...new Set(b.accessDays)].sort();target.authVersion=(target.authVersion||1)+1;
-      logAction(user,'person.schedule',target.id);save();return send(res,200,{people:publicPeople()});
+      logAction(user,'person.schedule',target.id);save();return send(res,200,{people:peopleFor(user)});
     }
     const personMatch=p.match(/^\/api\/people\/([^/]+)\/password$/);
     if(personMatch&&req.method==='POST'){
@@ -400,7 +431,8 @@ process.on('uncaughtException',e=>console.error('Exceção não tratada:',e));
 for(const sig of ['SIGTERM','SIGINT'])process.on(sig,()=>{console.log(`${sig} recebido, a terminar.`);server.close(()=>process.exit(0));setTimeout(()=>process.exit(0),3000).unref();});
 // Cópia de segurança automática diária e integração com o Home Assistant (se disponível).
 try{const bk=backups.autoTick();if(bk)console.log('Cópia de segurança automática:',bk.name);}catch(e){console.error('Cópia automática falhou:',e.message);}
-setInterval(()=>{try{backups.autoTick();}catch(e){console.error('Cópia automática falhou:',e.message);}try{if(FIN.generateRecurring(db.finance,dateInTz(new Date()),id))save();}catch(e){console.error('Despesas fixas:',e.message);}},30*60_000).unref();
+setInterval(()=>{try{backups.autoTick();}catch(e){console.error('Cópia automática falhou:',e.message);}try{if(FIN.generateRecurring(db.finance,dateInTz(new Date()),id))save();}catch(e){console.error('Despesas fixas:',e.message);}try{notif.daily();}catch(e){console.error('Notificações diárias:',e.message);}},30*60_000).unref();
+try{notif.daily();}catch(e){console.error('Notificações diárias:',e.message);}
 try{if(FIN.generateRecurring(db.finance,dateInTz(new Date()),id))save();}catch(e){console.error('Despesas fixas:',e.message);}
 const hhmm=()=>new Intl.DateTimeFormat('en-GB',{timeZone:HOUSE_TZ,hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date());
 ha=createHa({getDb:()=>db,todayISO:()=>dateInTz(new Date()),nowHM:hhmm,save});ha.start();

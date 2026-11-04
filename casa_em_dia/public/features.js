@@ -204,9 +204,11 @@ function viewPhoto(taskId,photoId){const t=tasks().find(x=>x.id===taskId);const 
 
 /* ───────────── Ações ───────────── */
 async function featureAction(name,el){
+ if(name.startsWith('notif-'))return notifAction(name,el);
  switch(name){
   // Tocar fora da janela fecha-a; se já houver alterações escritas, pergunta antes de as perder.
   case 'overlay':{if(el.dataset.dirty==='1'&&!await confirmDialog({title:'Fechar sem guardar?',message:'As alterações que fizeste nesta janela perdem-se.',confirmLabel:'Fechar',danger:true}))return true;closeModal();return true;}
+  case 'person-edit':personEditModal(el.dataset.id);return true;
   case 'theme-set':{window.casaSetTheme?.(el.dataset.themeValue);el.parentElement.querySelectorAll('[role=radio]').forEach(b=>b.setAttribute('aria-checked',String(b===el)));return true;}
   case 'sync-apply':await syncApply();return true;
   case 'backup-create':{if(demo){toast('Na demonstração não há cópias de segurança.');return true;}const r=await api('/api/backups','POST',{});backupsData={...backupsData,backups:r.backups};loadBackups();toast('Cópia de segurança criada.');return true;}
@@ -237,6 +239,8 @@ async function featureAction(name,el){
 
 /* ───────────── Demonstração (sem servidor) ───────────── */
 function demoFeatureApi(p,method,b){
+ if(p==='/api/notifications/read'){store.notifications=notifications().map(n=>b.ids==='all'||b.ids.includes(n.id)?{...n,read:true}:n);persistDemo();return {notifications:store.notifications};}
+ if(p==='/api/notifications/clear'){store.notifications=[];persistDemo();return {notifications:[]};}
  const SEED=window.__CASA_SEASONAL__||[];
  if(!Array.isArray(store.seasonal))store.seasonal=SEED.map(x=>({...x}));
  if(p==='/api/rev')return {rev:'demo'};
@@ -266,3 +270,36 @@ document.addEventListener('input',e=>{const o=e.target.closest?.('.overlay[data-
 /* ───────────── Aparência (claro / escuro), por dispositivo ───────────── */
 function appearanceField(){const cur=window.casaThemePref?.()||'auto';const opts=[['auto','Automático'],['light','Claro'],['dark','Escuro']];
  return `<div class="field"><span class="field-label" id="appearance-label">Aparência</span><div class="seg-control" role="radiogroup" aria-labelledby="appearance-label">${opts.map(([v,l])=>`<button type="button" role="radio" aria-checked="${cur===v}" data-action="theme-set" data-theme-value="${v}">${l}</button>`).join('')}</div><small class="field-help">Aplica-se logo, só neste dispositivo. «Automático» segue o modo do telemóvel ou do computador.</small></div>`;}
+
+/* ───────────── Pessoas: contactos e edição pelo administrador ───────────── */
+const fmtBirthday=mmdd=>{const m=/^(\d{2})-(\d{2})$/.exec(mmdd||'');return m?`${Number(m[2])} ${MONTHS_PT[Number(m[1])-1]}`:'';};
+function personContacts(p){const bd=p.birthDate?p.birthDate.slice(5):p.birthday;const items=[];
+ if(bd)items.push(`<span>${ico('cake')}${esc(fmtBirthday(bd))}</span>`);
+ if(p.phone)items.push(`<a href="tel:${esc(p.phone.replace(/[^\d+]/g,''))}">${ico('phone')}${esc(p.phone)}</a>`);
+ if(p.email)items.push(`<a href="mailto:${esc(p.email)}">${ico('mail')}${esc(p.email)}</a>`);
+ return items.length?`<div class="person-contacts">${items.join('')}</div>`:'';}
+function personEditModal(id){const p=people().find(x=>x.id===id);if(!p)return;const h=$('#modal-holder');modal={type:'person-edit'};
+ h.innerHTML=`<div class="overlay" data-action="overlay"><div class="modal quick-modal" role="dialog" aria-modal="true" aria-labelledby="pe-title"><div class="modal-head"><div><h2 id="pe-title">Editar ${esc(p.name.split(' ')[0])}</h2><p class="modal-sub">Nome, utilizador de entrada e contactos.</p></div><button type="button" class="close" data-action="close" aria-label="Fechar">×</button></div><div class="modal-body"><form id="person-edit-form" novalidate><div class="field"><label>Nome</label><input name="name" required minlength="2" maxlength="80" value="${esc(p.name)}"/></div><div class="field"><label>Nome de utilizador</label><input name="username" autocapitalize="none" spellcheck="false" maxlength="40" value="${esc(p.username||'')}"/><small class="field-help">Se mudares, avisa a pessoa: passa a entrar com o novo nome. A palavra-passe mantém-se.</small></div><div class="form-row"><div class="field"><label>Data de nascimento</label><input type="date" name="birthDate" max="${today()}" value="${esc(p.birthDate||'')}"/></div><div class="field"><label>Telefone</label><input type="tel" name="phone" maxlength="30" value="${esc(p.phone||'')}"/></div></div><div class="field"><label>Email</label><input type="email" name="email" maxlength="120" value="${esc(p.email||'')}"/></div><div class="modal-actions"><span class="spacer"></span><button type="button" class="button" data-action="close">Cancelar</button><button type="submit" class="button primary">${ico('check')} Guardar</button></div></form></div></div></div>`;
+ associateLabels(h);$('#person-edit-form').addEventListener('submit',async e=>{e.preventDefault();const v=Object.fromEntries(new FormData(e.target));const body={};for(const k of ['name','username','birthDate','email','phone']){const val=String(v[k]??'').trim();if(val!==String(p[k]||''))body[k]=k==='username'?val.toLowerCase():val;}
+  if(!Object.keys(body).length){closeModal();return;}
+  try{const r=await api('/api/people/'+p.id,'PATCH',body);if(r.people)store.people=r.people;modal=null;h.innerHTML='';await reload();toast(body.username?`Dados guardados. ${p.name.split(' ')[0]} passa a entrar como «${body.username}».`:'Dados guardados.');}catch(err){toast(err.message);}});}
+
+/* ───────────── Notificações (sino) ───────────── */
+let notifOpen=false;
+const notifications=()=>Array.isArray(store.notifications)?store.notifications:[];
+const NOTIF_ICON={assigned:'list',rotation:'repeat',done:'check-square',birthday:'cake',due:'clock',season:'calendar'};
+function relTime(iso){const d=(Date.now()-Date.parse(iso))/1000;if(d<60)return 'agora';if(d<3600)return `há ${Math.floor(d/60)} min`;if(d<86400)return `há ${Math.floor(d/3600)} h`;if(d<172800)return 'ontem';if(d<7*86400)return `há ${Math.floor(d/86400)} dias`;return new Date(iso).toLocaleDateString('pt-PT',{day:'numeric',month:'short'});}
+function bellButton(){const n=notifications().filter(x=>!x.read).length;return `<button type="button" class="icon-btn bell-btn ${notifOpen?'is-open':''}" data-action="notif-toggle" aria-haspopup="dialog" aria-expanded="${notifOpen}" aria-label="Notificações${n?`: ${n} por ler`:''}">${ico('bell')}${n?`<span class="bell-badge" aria-hidden="true">${n>9?'9+':n}</span>`:''}</button>`;}
+function notifPanel(){if(!notifOpen)return '';const list=notifications();const unread=list.filter(x=>!x.read).length;
+ return `<button class="notif-dismiss" type="button" data-action="notif-close" tabindex="-1" aria-label="Fechar notificações"></button><section class="notif-panel" role="dialog" aria-label="Notificações" tabindex="-1"><header class="notif-head"><strong>Notificações</strong><span>${unread?`<button type="button" class="link-btn" data-action="notif-read-all">Marcar todas como lidas</button>`:''}${list.length?`<button type="button" class="link-btn" data-action="notif-clear">Limpar</button>`:''}</span></header><div class="notif-list">${list.map(n=>`<button type="button" class="notif-item ${n.read?'':'unread'}" data-action="notif-open" data-id="${esc(n.id)}"><span class="notif-ico t-${esc(n.type)}" aria-hidden="true">${ico(NOTIF_ICON[n.type]||'info')}</span><span class="notif-text"><b>${esc(n.title)}</b>${n.body?`<small>${esc(n.body)}</small>`:''}<em>${esc(relTime(n.at))}</em></span>${n.read?'':'<i class="notif-dot" aria-label="Por ler"></i>'}</button>`).join('')||`<div class="notif-empty">${ico('bell')}<p>Sem notificações.</p><small>Aqui aparecem tarefas atribuídas, conclusões, rotações, aniversários e lembretes.</small></div>`}</div></section>`;}
+async function notifRead(ids){try{const r=await api('/api/notifications/read','POST',{ids});if(r.notifications)store.notifications=r.notifications;}catch(e){toast(e.message);}}
+async function notifAction(name,el){
+ if(name==='notif-toggle'){notifOpen=!notifOpen;moreOpen=false;quickCreateOpen=false;render();if(notifOpen)(document.querySelector('.notif-panel .notif-item')||document.querySelector('.notif-panel'))?.focus();return true;}
+ if(name==='notif-close'){notifOpen=false;render();return true;}
+ if(name==='notif-read-all'){await notifRead('all');render();return true;}
+ if(name==='notif-clear'){try{await api('/api/notifications/clear','POST',{});store.notifications=[];}catch(e){toast(e.message);}render();return true;}
+ if(name==='notif-open'){const n=notifications().find(x=>x.id===el.dataset.id);if(!n)return true;if(!n.read)await notifRead([n.id]);notifOpen=false;const l=n.link||{};
+  if(l.page){page=l.page;query='';roomFilter='all';statusFilter='all';priorityFilter='all';personFilter=l.filter==='mine'?store.user.id:'all';tab='active';}
+  render();window.scrollTo(0,0);if(l.taskId&&tasks().some(t=>t.id===l.taskId))openTask(l.taskId);return true;}
+ return false;}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&notifOpen){notifOpen=false;render();document.querySelector('.bell-btn')?.focus();}});

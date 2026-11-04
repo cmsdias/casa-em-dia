@@ -1,4 +1,8 @@
-# 1.7.2 — Animações de carregamento, modo escuro e perfil simplificado
+# 1.8.0 — Notificações, perfil completo, modo escuro e animações
+
+- Sino de notificações junto ao avatar, com contador: tarefa atribuída a ti, tarefa que criaste concluída por outra pessoa, «é a tua vez» nas rotações, aniversários (no dia e na véspera), tarefas para hoje e atrasadas (uma vez por dia) e calendário da casa no início de cada mês. Tocar abre a tarefa ou a página; «Marcar todas como lidas» e «Limpar». As tarefas privadas nunca geram avisos para outras pessoas.
+- Perfil: nome de utilizador (para entrar) pode ser alterado, data de nascimento, email e telefone. Contactos visíveis só para o próprio, administrador e gestores; os restantes veem apenas o dia e o mês do aniversário. Colaboradores não veem aniversários.
+- Pessoas: o administrador pode editar nome, utilizador, nascimento e contactos de qualquer pessoa; os cartões mostram aniversário, telefone e email (para quem os pode ver).
 
 - Modo escuro: no perfil, «Aparência» com Automático (segue o telemóvel/computador), Claro ou Escuro. A escolha fica guardada em cada dispositivo. As cores escuras são geradas a partir do `style.css` por `build_dark.py` (voltar a correr depois de mudar estilos).
 - Perfil num só formulário: fotografia, nome e (opcional) nova palavra-passe, com um único «Cancelar / Guardar». A fotografia escolhida só é gravada ao guardar. Mudar a palavra-passe já não obriga a voltar a entrar.
