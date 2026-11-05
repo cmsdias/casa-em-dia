@@ -1,3 +1,9 @@
+# 2.3.3 — Barra de estado no iPhone (correção) e ecrã de entrada sem scroll
+
+- App instalada no iPhone: se o iOS indicar margem zero para a barra de estado com a app em ecrã inteiro, a app usa a altura da barra do modelo de iPhone — o conteúdo deixa de passar por baixo das horas e da bateria.
+- Sem o efeito elástico ao deslizar no topo e no fundo da página.
+- Ecrã de entrada cabe no ecrã sem scroll em todos os iPhones a partir do iPhone X/12 mini.
+
 # 2.3.2 — Categorias por ordem alfabética
 
 - As categorias de tarefas ficam sempre por ordem alfabética: ao guardar em Definições › A casa, ao importar e nas listas de escolha. As categorias que já existem são ordenadas ao atualizar.

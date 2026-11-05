@@ -855,7 +855,7 @@ select{padding-right:38px!important;background-image:url("data:image/svg+xml,%3C
 .mobile-header{min-height:44px}
 /* Puxar para atualizar */
 html,body{overscroll-behavior-y:contain}
-.ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:60;transform:translate(-50%,-56px);opacity:0;display:flex;align-items:center;gap:9px;padding:9px 16px 9px 12px;border-radius:999px;background:var(--brand-green);color:var(--brand-paper);font-size:13px;font-weight:600;box-shadow:0 8px 24px #0f1a1433;pointer-events:none;white-space:nowrap}
+.ptr{position:fixed;left:50%;top:calc(var(--sat) + 10px);z-index:60;transform:translate(-50%,-56px);opacity:0;display:flex;align-items:center;gap:9px;padding:9px 16px 9px 12px;border-radius:999px;background:var(--brand-green);color:var(--brand-paper);font-size:13px;font-weight:600;box-shadow:0 8px 24px #0f1a1433;pointer-events:none;white-space:nowrap}
 .ptr .ptr-icon{width:18px;height:18px;flex:0 0 auto}
 .ptr.ptr-ready .ptr-icon{color:var(--brand-gold)}
 .ptr.ptr-settle{transition:transform .25s ease,opacity .25s ease}
@@ -885,7 +885,7 @@ button.profile-pill{width:100%;border:0;background:transparent;text-align:left;c
 .profile-photo-actions{justify-content:center}}
 /* Ecrã de entrada no telemóvel: faixa verde com logótipo e mensagem, formulário em cartão por baixo */
 @media (max-width:650px){.auth-layout{display:flex;flex-direction:column;min-height:100dvh;background:var(--brand-green)}
-.auth-aside{display:flex;flex-direction:column;justify-content:flex-start;gap:26px;padding:calc(28px + env(safe-area-inset-top,0px)) 24px 46px;min-height:0;background:var(--brand-green)}
+.auth-aside{display:flex;flex-direction:column;justify-content:flex-start;gap:26px;padding:calc(28px + var(--sat)) 24px 46px;min-height:0;background:var(--brand-green)}
 .auth-aside::after{font-size:300px;right:-18%;bottom:-12%;color:#ffffff0a}
 .auth-aside .brand.brand-primary .brand-primary-logo{width:min(210px,62vw);max-height:none}
 .auth-aside h1{font-size:34px;letter-spacing:-1.4px;line-height:1.08;margin:0}
@@ -951,8 +951,8 @@ button.profile-pill{width:100%;border:0;background:transparent;text-align:left;c
 .perm-table thead th{font-size:10px;letter-spacing:.02em}
 .perm-table tbody th{font-size:12px;line-height:1.35}}
 /* Janelas no telemóvel: cartão flutuante com margem em volta (como o menu do «+»), cabeçalho sempre visível */
-@media (max-width:650px){.overlay{padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px));align-items:end}
-.modal{width:100%;border-radius:24px;max-height:calc(100dvh - 110px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));box-shadow:0 20px 58px #0e1b1440;animation:quickMenuIn .2s ease-out both}
+@media (max-width:650px){.overlay{padding:calc(16px + var(--sat)) 16px calc(24px + env(safe-area-inset-bottom,0px));align-items:end}
+.modal{width:100%;border-radius:24px;max-height:calc(100dvh - 110px - var(--sat) - env(safe-area-inset-bottom,0px));box-shadow:0 20px 58px #0e1b1440;animation:quickMenuIn .2s ease-out both}
 .modal-head{position:sticky;top:0;z-index:2;background:#fff}}
 @media (prefers-reduced-motion:reduce){.modal{animation:none}}
 /* Confirmação curta, centrada em todos os ecrãs */
@@ -992,7 +992,7 @@ button.profile-pill{width:100%;border:0;background:transparent;text-align:left;c
 .manager-item{display:flex;gap:8px;align-items:center}
 .manager-item input{flex:1;min-width:0}
 /* ═════════ 1.7 · Atualização automática, cópias, calendário, compras, rotação, fotografias, Home Assistant ═════════ */
-.sync-banner{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);z-index:70;display:flex;align-items:center;gap:12px;padding:8px 8px 8px 14px;border-radius:999px;background:var(--brand-green);color:var(--brand-paper);font-size:13px;font-weight:500;box-shadow:0 10px 30px -12px rgba(23,38,30,.6);max-width:calc(100vw - 32px)}
+.sync-banner{position:fixed;left:50%;top:calc(var(--sat) + 12px);transform:translateX(-50%);z-index:70;display:flex;align-items:center;gap:12px;padding:8px 8px 8px 14px;border-radius:999px;background:var(--brand-green);color:var(--brand-paper);font-size:13px;font-weight:500;box-shadow:0 10px 30px -12px rgba(23,38,30,.6);max-width:calc(100vw - 32px)}
 .sync-banner span{display:flex;align-items:center;gap:8px}
 .sync-banner svg{width:16px;height:16px}
 .sync-banner button{border:0;border-radius:999px;background:var(--brand-gold);color:var(--brand-green);font:600 13px inherit;font-family:inherit;padding:7px 14px;cursor:pointer}
@@ -1203,7 +1203,7 @@ button.shopping-qty:focus-visible{outline:2px solid var(--brand-gold);outline-of
 .rotation-tools .icon-btn[disabled]{opacity:.3}
 .rotation-pool{display:flex;flex-wrap:wrap;gap:6px}
 /* ═════════ Janelas flutuantes (todas): scroll dentro da janela, título fixo, × fora da janela ═════════ */
-.overlay{padding:calc(68px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.overlay{padding:calc(68px + var(--sat)) max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .modal{position:relative;flex-direction:column;border-radius:24px}
 .modal .modal-head{position:static;flex:none;background:transparent;padding:24px 26px 12px}
 .modal .modal-body{flex:1 1 auto;padding:0 20px 24px 26px;margin:0 6px 10px 0}
@@ -1214,10 +1214,10 @@ button.shopping-qty:focus-visible{outline:2px solid var(--brand-gold);outline-of
 .modal .close{position:relative;flex:none;width:44px;height:44px;border-radius:50%;background:#f1f2ef;color:var(--brand-green);font-size:22px;margin:-6px -8px 0 0}
 .modal .close:hover{background:#e6e9e3}
 .modal .close:focus-visible{outline:2px solid var(--brand-gold);outline-offset:2px}
-.overlay{align-items:center;padding-top:calc(20px + env(safe-area-inset-top,0px))}
-.modal{overflow:visible;display:flex;max-height:min(calc(100dvh - 44px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)),880px)}
-@media (max-width:700px){.overlay{align-items:end;padding-top:calc(16px + env(safe-area-inset-top,0px))}
-.modal{width:100%;max-height:calc(100dvh - 40px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+.overlay{align-items:center;padding-top:calc(20px + var(--sat))}
+.modal{overflow:visible;display:flex;max-height:min(calc(100dvh - 44px - var(--sat) - env(safe-area-inset-bottom,0px)),880px)}
+@media (max-width:700px){.overlay{align-items:end;padding-top:calc(16px + var(--sat))}
+.modal{width:100%;max-height:calc(100dvh - 40px - var(--sat) - env(safe-area-inset-bottom,0px))}
 .modal .modal-head{padding:22px 20px 10px}
 .modal .modal-body{padding:0 14px calc(18px + env(safe-area-inset-bottom,0px)) 20px}}
 /* Mostrar e ocultar secções: + quando fechada, − quando aberta (botões e <details>). */
@@ -1264,7 +1264,7 @@ details>summary:focus-visible,.task-more:focus-visible{outline:2px solid var(--b
 .button:not(.primary):not(.danger-solid) .busy-dots i{background:#A8843F}
 @keyframes busyDot{0%,80%,100%{transform:translateY(0);opacity:.45}40%{transform:translateY(-4px);opacity:1}}
 /* Barra dourada no topo (dados a chegar em segundo plano) */
-.topbar-load{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);height:3px;z-index:550;overflow:hidden;opacity:0;transition:opacity .2s;pointer-events:none}
+.topbar-load{position:fixed;left:0;right:0;top:var(--sat);height:3px;z-index:550;overflow:hidden;opacity:0;transition:opacity .2s;pointer-events:none}
 .topbar-load.on{opacity:1}
 .topbar-load::after{content:"";position:absolute;inset:0;width:40%;background:linear-gradient(90deg,transparent,var(--brand-gold),transparent);transform:translateX(-100%);animation:topSweep 1.4s cubic-bezier(.5,0,.3,1) infinite}
 @keyframes topSweep{to{transform:translateX(260%)}}
@@ -1304,7 +1304,7 @@ details>summary:focus-visible,.task-more:focus-visible{outline:2px solid var(--b
 .bell-btn.is-open{background:#eef1ec}
 .bell-badge{position:absolute;top:5px;right:4px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#B4483B;color:#fff;font-size:10.5px;font-weight:700;line-height:18px;text-align:center;box-shadow:0 0 0 2px var(--bg,#f7f8f4)}
 .notif-dismiss{position:fixed;inset:0;z-index:89;background:transparent;border:0;cursor:default}
-.notif-panel{position:fixed;z-index:90;top:calc(76px + env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));width:min(400px,calc(100vw - 32px));max-height:min(70dvh,560px);display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 24px 60px -18px #0b130e55;overflow:hidden;animation:quickMenuIn .18s ease-out both}
+.notif-panel{position:fixed;z-index:90;top:calc(76px + var(--sat));right:max(16px,env(safe-area-inset-right,0px));width:min(400px,calc(100vw - 32px));max-height:min(70dvh,560px);display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 24px 60px -18px #0b130e55;overflow:hidden;animation:quickMenuIn .18s ease-out both}
 .notif-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
 .notif-head strong{font-size:15px}
 .notif-head span{display:flex;gap:14px}
@@ -1327,7 +1327,7 @@ details>summary:focus-visible,.task-more:focus-visible{outline:2px solid var(--b
 .notif-empty svg{width:28px;height:28px}
 .notif-empty p{margin:0;font-weight:600;color:inherit}
 .notif-empty small{font-size:12.5px}
-@media (max-width:700px){.notif-panel{top:calc(78px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));width:calc(100vw - 24px);max-height:calc(100dvh - 200px)}}
+@media (max-width:700px){.notif-panel{top:calc(78px + var(--sat));right:max(12px,env(safe-area-inset-right,0px));width:calc(100vw - 24px);max-height:calc(100dvh - 200px)}}
 /* Pessoas: contactos */
 .person-contacts{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 2px;font-size:12.5px;color:var(--muted)}
 .person-contacts span,.person-contacts a{display:inline-flex;align-items:center;gap:5px;color:inherit;text-decoration:none;min-width:0;overflow-wrap:anywhere}
@@ -1617,7 +1617,7 @@ i.planned{background:var(--brand-gold);opacity:.55}
 /* Modo loja */
 .store-btn svg{width:17px;height:17px}
 .store-mode{position:fixed;inset:0;z-index:120;background:var(--brand-paper,#f8f7f2);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
-.store-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(14px + env(safe-area-inset-top)) 18px 14px;background:var(--brand-green);color:#fff}
+.store-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(14px + var(--sat)) 18px 14px;background:var(--brand-green);color:#fff}
 .store-head h2{margin:2px 0 0;font-size:24px;letter-spacing:-.6px}
 .store-head .eyebrow{color:#c7d0c8}
 .store-body{flex:1;overflow:auto;padding:6px 14px 20px;max-width:720px;width:100%;margin:0 auto}
@@ -1727,8 +1727,8 @@ select:not([multiple]):not([size]){background-image:url("data:image/svg+xml,%3Cs
 .profile-prefs .field.pref-row{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:14px;padding-left:0;padding-right:0}
 .profile-prefs .pref-row>div{min-width:0}
 /* 2.2.1 · app instalada no iPhone: o conteúdo começa abaixo da barra de estado e não passa por baixo dela ao deslizar */
-@media (max-width:650px){.mobile-header{padding-top:calc(17px + env(safe-area-inset-top,0px))}}
-body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:inherit;z-index:80;pointer-events:none}
+@media (max-width:650px){.mobile-header{padding-top:calc(17px + var(--sat))}}
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:var(--sat);background:inherit;z-index:80;pointer-events:none}
 .rules-list{display:grid;margin-top:6px}.rule-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-top:1px solid var(--line)}.rule-row:first-child{border-top:0}.rule-row .field-label{display:block;font-weight:650;line-height:1.35}
 /* 2.3 · ocorrências */
 .inc-list{display:grid;gap:8px}
@@ -1755,10 +1755,14 @@ body::before{background:var(--brand-green);z-index:2147483000}
 /* 2.3.1 · Entrada no telemóvel: margens de 24px, ritmo vertical mais curto e alinhamento à esquerda consistente (fundo mantém-se). */
 @media (max-width:650px){
  .auth-layout{min-height:100vh;min-height:100dvh}
- .auth-aside{gap:20px;padding:calc(22px + env(safe-area-inset-top,0px)) 24px 52px}
+ .auth-aside{gap:18px;padding:calc(20px + var(--sat)) 24px 44px}
  .auth-aside .brand.brand-primary{padding-bottom:6px}
  .auth-aside h1{font-size:36px}
- .auth-form{padding:30px 24px calc(30px + env(safe-area-inset-bottom,0px))}
+ .auth-form{padding:28px 24px calc(20px + env(safe-area-inset-bottom,0px))}
  .auth-inner{width:100%}
  .auth-inner h2{margin-top:0;line-height:1.12}
 }
+
+/* 2.3.3 · Margem da barra de estado numa variável: o CSS usa env(); se o iPhone a reportar a 0 com a app em ecrã inteiro, theme-init.js corrige. */
+:root{--sat:env(safe-area-inset-top,0px)}
+html,body{overscroll-behavior-y:none}
