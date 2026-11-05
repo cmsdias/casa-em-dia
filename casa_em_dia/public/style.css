@@ -1768,3 +1768,11 @@ body::before{background:var(--brand-green);z-index:2147483000}
 
 /* 2.3.6 · Ecrã de entrada: ao puxar (efeito elástico), o espaço que aparece em cima tem a cor da faixa verde e o de baixo a cor do cartão. */
 html:has(.auth-layout){background:linear-gradient(var(--brand-green) 50%,var(--brand-paper) 50%)}
+/* 2.3.7 · Olho nos campos de palavra-passe */
+.pw-wrap{position:relative;display:block;width:100%}
+.pw-wrap input{width:100%;padding-right:50px}
+.pw-eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:42px;height:42px;display:grid;place-items:center;padding:0;border:0;border-radius:10px;background:transparent;color:var(--muted);cursor:pointer}
+.pw-eye:hover{color:var(--ink)}
+.pw-eye:focus-visible{outline:2px solid var(--brand-gold);outline-offset:-2px}
+.pw-eye svg{width:20px;height:20px}
+input::-ms-reveal{display:none}

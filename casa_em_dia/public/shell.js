@@ -17,7 +17,9 @@ Object.assign(paths,{
  phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
  upload:'<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>',
- copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>'
+ copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',
+ eye:'<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
+ 'eye-off':'<path d="M3 3l18 18M10.6 6.1A9.6 9.6 0 0 1 12 6c6 0 9.5 6 9.5 6a16 16 0 0 1-3 3.6M6.5 7.6A15.5 15.5 0 0 0 2.5 12S6 18 12 18a9.3 9.3 0 0 0 4.2-1M9.9 9.9a3 3 0 0 0 4.2 4.2"/>'
 });
 // Janela flutuante com o mesmo aspeto das restantes (cabeçalho fixo, × sempre visível, fecha ao tocar fora).
 function modalShell({title,sub='',body='',cls='',label}){return `<div class="overlay" data-action="overlay"><div class="modal ${cls}" role="dialog" aria-modal="true" aria-label="${esc(label||title)}"><div class="modal-head"><div><h2>${title}</h2>${sub?`<p class="modal-sub">${sub}</p>`:''}</div><button type="button" class="close" data-action="close" aria-label="Fechar">×</button></div><div class="modal-body">${body}</div></div></div>`;}
@@ -137,3 +139,19 @@ function renderForgot(step,email='',msg=''){
    else{await api('/api/password/reset','POST',v);await load();render();toast('Palavra-passe alterada. Bem-vindo de volta.');}}
   catch(err){const m=box.querySelector('#auth-error');m.classList.remove('ok');m.textContent=err.message;b.disabled=false;}});
 }
+
+/* 2.3.7 · Olho nos campos de palavra-passe (entrada, recuperação, perfil, pessoas): mostra ou esconde o que se escreveu. */
+function enhancePasswords(root){
+ (root.querySelectorAll?root:document).querySelectorAll('input[type="password"]:not([data-eye])').forEach(inp=>{
+  inp.dataset.eye='1';const w=document.createElement('span');w.className='pw-wrap';inp.parentNode.insertBefore(w,inp);w.appendChild(inp);
+  const b=document.createElement('button');b.type='button';b.className='pw-eye';b.setAttribute('aria-label','Mostrar palavra-passe');b.setAttribute('aria-pressed','false');b.innerHTML=ico('eye');w.appendChild(b);});
+}
+document.addEventListener('pointerdown',e=>{if(e.target.closest('.pw-eye'))e.preventDefault();},true);
+document.addEventListener('click',e=>{const b=e.target.closest('.pw-eye');if(!b)return;e.preventDefault();e.stopPropagation();
+ const inp=b.parentNode.querySelector('input');if(!inp)return;const show=inp.type==='password';const pos=inp.selectionStart;
+ inp.type=show?'text':'password';b.setAttribute('aria-pressed',String(show));b.setAttribute('aria-label',show?'Esconder palavra-passe':'Mostrar palavra-passe');b.innerHTML=ico(show?'eye-off':'eye');
+ if(document.activeElement===inp&&pos!=null)try{inp.setSelectionRange(pos,pos);}catch{}},true);
+// Ao submeter, volta a esconder (para o gestor de palavras-passe do iPhone reconhecer o campo).
+document.addEventListener('submit',e=>{e.target.querySelectorAll?.('.pw-wrap input[data-eye]').forEach(i=>{i.type='password';const b=i.parentNode.querySelector('.pw-eye');if(b){b.setAttribute('aria-pressed','false');b.innerHTML=ico('eye');}});},true);
+new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes)if(n.nodeType===1)enhancePasswords(n);}).observe(document.body,{childList:true,subtree:true});
+enhancePasswords(document);
