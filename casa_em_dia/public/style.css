@@ -1776,8 +1776,10 @@ html:has(.auth-layout){background:linear-gradient(var(--brand-green) 50%,var(--b
 .pw-eye:focus-visible{outline:2px solid var(--brand-gold);outline-offset:-2px}
 .pw-eye svg{width:20px;height:20px}
 input::-ms-reveal{display:none}
-/* 2.3.8 · Barra de estado: em vez de uma faixa sólida, o conteúdo desvanece por trás das horas e da bateria.
-   A cor é a do fundo da página (no modo claro, verde-escuro, porque o texto da barra do iPhone é branco). */
-:root{--sbg:var(--brand-green)}
-html:has(.auth-layout){--sbg:var(--brand-green)}
-body::before{height:calc(var(--sat) * 1.45);background:linear-gradient(to bottom,var(--sbg) 0%,var(--sbg) 62%,transparent 100%)}
+/* 2.3.9 · Barra de estado como nas apps nativas: o conteúdo passa por trás das horas e da bateria e fica esbatido
+   por um véu suave na cor do fundo (mais claro no modo claro, mais escuro no escuro). O véu só aparece depois de deslizar.
+   As horas ficam pretas ou brancas conforme o modo do iPhone (apple-mobile-web-app-status-bar-style: default). */
+:root{--sb-rgb:247 248 245}
+html:has(.auth-layout){--sb-rgb:23 38 30}
+body::before{height:calc(var(--sat) * 2.3);opacity:0;transition:opacity .25s ease;background:linear-gradient(to bottom,rgb(var(--sb-rgb)/.9) 0%,rgb(var(--sb-rgb)/.82) 25%,rgb(var(--sb-rgb)/.62) 45%,rgb(var(--sb-rgb)/.36) 65%,rgb(var(--sb-rgb)/.14) 82%,rgb(var(--sb-rgb)/0) 100%)}
+html.is-scrolled body::before{opacity:1}

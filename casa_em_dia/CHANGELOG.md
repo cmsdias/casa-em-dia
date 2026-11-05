@@ -1,3 +1,8 @@
+# 2.3.9 — Barra de estado como nas apps nativas
+
+- Ao deslizar, o conteúdo passa por trás das horas e da bateria e fica esbatido por um véu suave na cor do fundo (mais claro no modo claro, mais escuro no escuro). Sem faixas nem desfoque; parado no topo, o cabeçalho fica nítido.
+- As horas e a bateria passam a ficar pretas ou brancas conforme o modo do iPhone. **É preciso remover o atalho do ecrã principal e voltar a adicioná-lo.** Com a app em modo «Automático», as horas acompanham sempre o modo do telemóvel.
+
 # 2.3.8 — Barra de estado discreta e cor do ponto
 
 - Barra de estado no iPhone: deixa de haver uma faixa verde sólida; ao deslizar, o conteúdo desvanece por trás das horas e da bateria, na cor do fundo da página (no modo claro mantém-se verde-escuro para as horas, que são brancas, continuarem legíveis).
