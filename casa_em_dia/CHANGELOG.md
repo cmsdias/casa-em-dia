@@ -1,3 +1,8 @@
+# 2.3.8 — Barra de estado discreta e cor do ponto
+
+- Barra de estado no iPhone: deixa de haver uma faixa verde sólida; ao deslizar, o conteúdo desvanece por trás das horas e da bateria, na cor do fundo da página (no modo claro mantém-se verde-escuro para as horas, que são brancas, continuarem legíveis).
+- Modo escuro: o logótipo do cabeçalho e do ecrã de entrada usa a versão clara própria, em vez de um filtro de cor; o ponto fica no mesmo dourado do resto da app.
+
 # 2.3.7 — Ver a palavra-passe
 
 - Todos os campos de palavra-passe (entrada, primeira conta, recuperação, perfil, troca obrigatória e nova pessoa) têm um olho para mostrar ou esconder o que se escreveu. Ao submeter, o campo volta a ficar escondido.

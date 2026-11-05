@@ -330,7 +330,9 @@ html[data-theme="dark"] .rotation-item:first-child{background:#1d2a23;border-col
 html[data-theme="dark"] .rotation-pos{background:var(--brand-gold);color:#17261E}
 html[data-theme="dark"] .fin-progress>span{background:var(--brand-gold)}
 html[data-theme="dark"] .room-art,html[data-theme="dark"] .season-art,html[data-theme="dark"] .photo-thumb img{filter:brightness(.88) saturate(.9)}
-html[data-theme="dark"] .brand-primary-logo[src*="logo-primary-dark"],html[data-theme="dark"] .auth-mobile-logo{filter:invert(1) hue-rotate(180deg) brightness(1.4)}
+html[data-theme="dark"] .brand-primary-logo[src*="logo-primary-dark"],html[data-theme="dark"] .auth-mobile-logo{filter:none;content:url(logo-primary-light.svg)}
+html[data-theme="dark"]{--sbg:var(--dk-page)}
+html[data-theme="dark"]:has(.auth-layout){--sbg:var(--brand-green)}
 html[data-theme="dark"] .sk{background:#1f2a24}
 html[data-theme="dark"] .sk::after{background:linear-gradient(90deg,transparent,#2a372f,transparent)}
 html[data-theme="dark"] .modal,html[data-theme="dark"] .confirm-box,html[data-theme="dark"] .more-sheet,html[data-theme="dark"] .quick-create-menu{background:var(--dk-surface);color:var(--dk-ink)}
