@@ -23,3 +23,7 @@
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fix);else fix();
  window.addEventListener('resize',fix);window.addEventListener('orientationchange',function(){setTimeout(fix,300);});
 })();
+
+// 2.3.9 · Véu da barra de estado: só aparece depois de deslizar.
+(function(){var on=false;function f(){var v=(window.scrollY||document.documentElement.scrollTop)>6;if(v!==on){on=v;document.documentElement.classList.toggle('is-scrolled',v);}}
+ window.addEventListener('scroll',f,{passive:true});document.addEventListener('DOMContentLoaded',f);})();
