@@ -314,6 +314,9 @@ html[data-theme="dark"] .theme-toggle::before{background:#1c2520}
 html[data-theme="dark"] .theme-toggle button{color:#a3aba5}
 html[data-theme="dark"] .switch{background:#323935}
 html[data-theme="dark"] .switch span{background:#1c2520}
+html[data-theme="dark"] .approval-banner.ok{border-color:#3e4c44}
+html[data-theme="dark"] .approval-banner.ok small{color:#b8cfbf}
+html[data-theme="dark"] .inc-ph-del{background:#000000aa;color:#ffffff}
 html[data-theme="dark"]{color-scheme:dark;--dk-page:#131916;--dk-surface:#1c2520;--dk-raised:#26302b;--dk-ink:#E7ECE8;--dk-muted:#A3AFA7;--dk-line:#2C3A32}
 html[data-theme="dark"] body{background:var(--dk-page);color:var(--dk-ink)}
 html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background:var(--dk-raised);color:var(--dk-ink);border-color:#34443a}

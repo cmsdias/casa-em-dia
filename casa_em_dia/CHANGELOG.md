@@ -1,3 +1,9 @@
+# 2.3.0 — Ocorrências
+
+- Nova secção **Ocorrências** (Casa › Ocorrências e «+» › Reportar ocorrência): qualquer pessoa, incluindo colaboradores, regista algo que partiu, avariou, verteu ou falta, com tipo, gravidade, divisão, equipamento (opcional), descrição e até 6 fotografias.
+- O administrador e o gestor são avisados no sino (e no telemóvel, se a gravidade for alta). Podem criar a **tarefa de reparação** (a prioridade segue a gravidade) — quando a tarefa é concluída, a ocorrência fica resolvida — ou marcá-la como resolvida com uma nota (ex.: «substituído por um igual»). Quem reportou é avisado.
+- Colaboradores veem só as ocorrências que reportaram; os moradores veem todas. Em «Hoje», o administrador e o gestor têm um cartão com as ocorrências por resolver.
+
 # 2.2.2 — Regras da casa e acesso direto
 
 - Regras da casa (Definições › A casa) com interruptores, alinhadas e com a explicação por baixo de cada regra.
