@@ -1,3 +1,7 @@
+# 2.3.6 — Ecrã de entrada ao puxar
+
+- Ao puxar o ecrã de entrada para cima ou para baixo, o espaço que aparece mantém a cor da faixa verde (em cima) e do cartão (em baixo), em modo claro e escuro.
+
 # 2.3.5 — Marca: mais espaço para o ponto
 
 - A parede direita da casa encurta e o ponto dourado ganha folga (versão B). Atualizados o símbolo, o logótipo, o arranque, o favicon, os ícones da app e a imagem do add-on no Home Assistant.

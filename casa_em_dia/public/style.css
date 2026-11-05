@@ -1766,3 +1766,5 @@ body::before{background:var(--brand-green);z-index:2147483000}
 /* 2.3.3 · Margem da barra de estado numa variável: o CSS usa env(); se o iPhone a reportar a 0 com a app em ecrã inteiro, theme-init.js corrige. */
 :root{--sat:env(safe-area-inset-top,0px)}
 
+/* 2.3.6 · Ecrã de entrada: ao puxar (efeito elástico), o espaço que aparece em cima tem a cor da faixa verde e o de baixo a cor do cartão. */
+html:has(.auth-layout){background:linear-gradient(var(--brand-green) 50%,var(--brand-paper) 50%)}

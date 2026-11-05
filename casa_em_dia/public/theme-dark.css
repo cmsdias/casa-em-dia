@@ -384,5 +384,6 @@ html[data-theme="dark"] .switch{background:#3a4a40}
 html[data-theme="dark"] .switch[aria-checked="true"]{background:var(--brand-gold)}
 html[data-theme="dark"] .switch[aria-checked="true"] span{background:#17261E}
 html[data-theme="dark"] .auth-message.ok{color:#8fd0a5}
+html[data-theme="dark"]:has(.auth-layout){background:linear-gradient(var(--brand-green) 50%,#222b26 50%)}
 html[data-theme="dark"] .room-group-head span{background:#22302a;color:var(--brand-gold)}
 html[data-theme="dark"] .muted,html[data-theme="dark"] .field-help,html[data-theme="dark"] .page-subtitle,html[data-theme="dark"] .section-sub,html[data-theme="dark"] .modal-sub{color:var(--dk-muted)}
