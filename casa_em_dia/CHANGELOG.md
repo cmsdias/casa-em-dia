@@ -1,3 +1,7 @@
+# 2.3.4 — Efeito elástico de volta
+
+- Volta o efeito elástico ao puxar no topo e no fundo das páginas (retirado na 2.3.3). A faixa da barra de estado continua por cima, por isso o conteúdo não aparece por baixo das horas.
+
 # 2.3.3 — Barra de estado no iPhone (correção) e ecrã de entrada sem scroll
 
 - App instalada no iPhone: se o iOS indicar margem zero para a barra de estado com a app em ecrã inteiro, a app usa a altura da barra do modelo de iPhone — o conteúdo deixa de passar por baixo das horas e da bateria.
