@@ -8,7 +8,7 @@ Aplicação para organizar a casa em conjunto: tarefas pontuais, rotinas recorre
 - **Tarefas**: lista agrupada por quando, rotinas, calendário do mês e estado de cada divisão.
 - **+**: criar uma tarefa numa linha (ex.: «Trocar lâmpada amanhã @Ana #Hall !urgente 20 min»), uma rotina, um produto, um registo de horas, uma despesa ou um equipamento.
 - **Compras**: lista partilhada e modo «na loja».
-- **Casa**: calendário, equilíbrio da casa, equipamentos, finanças, pessoas, registo de horas e definições.
+- **Casa**: calendário, ocorrências (algo partiu, avariou ou falta, com fotografias), equilíbrio da casa, equipamentos, finanças, pessoas, registo de horas e definições.
 
 ## Primeiro acesso
 

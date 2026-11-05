@@ -366,7 +366,7 @@ async function notifAction(name,el){
  if(name==='notif-all'){notifOpen=false;page='notifications';render();window.scrollTo(0,0);return true;}
  if(name==='notif-open'){const n=notifications().find(x=>x.id===el.dataset.id);if(!n)return true;if(!n.read)await notifRead([n.id]);notifOpen=false;const l=n.link||{};
   if(l.page){page=l.page;taskView='list';normalizePage();query='';roomFilter='all';statusFilter='all';priorityFilter='all';personFilter=l.filter==='mine'?store.user.id:'all';tab='active';}
-  render();window.scrollTo(0,0);if(l.taskId&&tasks().some(t=>t.id===l.taskId))openTask(l.taskId);if(l.equipmentId)openEquipmentView(l.equipmentId);return true;}
+  render();window.scrollTo(0,0);if(l.taskId&&tasks().some(t=>t.id===l.taskId))openTask(l.taskId);if(l.equipmentId)openEquipmentView(l.equipmentId);if(l.incidentId)openIncidentView(l.incidentId);return true;}
  return false;}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&notifOpen){notifOpen=false;render();document.querySelector('.bell-btn')?.focus();}});
 

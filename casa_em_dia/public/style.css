@@ -1730,3 +1730,16 @@ select:not([multiple]):not([size]){background-image:url("data:image/svg+xml,%3Cs
 @media (max-width:650px){.mobile-header{padding-top:calc(17px + env(safe-area-inset-top,0px))}}
 body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:inherit;z-index:80;pointer-events:none}
 .rules-list{display:grid;margin-top:6px}.rule-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-top:1px solid var(--line)}.rule-row:first-child{border-top:0}.rule-row .field-label{display:block;font-weight:650;line-height:1.35}
+/* 2.3 · ocorrências */
+.inc-list{display:grid;gap:8px}
+.inc-card{display:flex;align-items:center;gap:12px;text-align:left;border:1px solid var(--line);border-left:4px solid var(--line);background:var(--card);border-radius:var(--r-card);padding:10px 14px 10px 10px;color:var(--ink);font:inherit;cursor:pointer;min-width:0}
+.inc-card.sev-alta{border-left-color:var(--bad)}.inc-card.sev-media{border-left-color:#c99a3a}.inc-card.sev-baixa{border-left-color:#9fb4a4}
+.inc-thumb{width:54px;height:54px;border-radius:10px;object-fit:cover;flex:none}
+.inc-ico{width:54px;height:54px;border-radius:10px;background:var(--soft);color:var(--brand-green);display:grid;place-items:center;flex:none}.inc-ico svg{width:22px;height:22px}
+.inc-text{display:grid;gap:4px;min-width:0;flex:1}.inc-text strong{font-size:14.5px}.inc-text small{color:var(--muted);font-size:12.5px}
+.sev-tag.sev-alta{background:var(--bad-bg);color:var(--bad)}.sev-tag.sev-media{background:var(--warn-bg);color:var(--warn)}
+.inc-report-mobile{display:none;width:100%;justify-content:center;margin-bottom:10px}
+@media (max-width:650px){.inc-report-mobile{display:flex}}
+.inc-photos{margin:6px 0 10px}
+.approval-banner.ok{background:var(--ok-bg);border-color:#cfe3d4}.approval-banner.ok>svg{color:var(--ok)}.approval-banner.ok small{color:#3d5a46}
+.photo-thumb{position:relative}.inc-ph-del{position:absolute;top:2px;right:2px;width:24px;height:24px;background:#000a;color:#fff}

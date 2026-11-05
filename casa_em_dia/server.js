@@ -8,6 +8,7 @@ const {createBackups}=require('./lib/backups');
 const {createHa}=require('./lib/ha');
 const {createNotifications}=require('./lib/notifications');
 const {createEquipment}=require('./lib/equipment');
+const {createIncidents}=require('./lib/incidents');
 const CORE=require('./public/house-core.js');
 const SEASONAL=require('./public/seasonal-defaults.js');
 const FIN=require('./public/finance-core.js');
@@ -55,6 +56,7 @@ function migrate(){
  if(typeof db.ha.token!=='string'||db.ha.token.length<32)db.ha.token=crypto.randomBytes(24).toString('base64url');
  // 2.0: equipamentos e documentos; assistente de início (as casas que já têm pessoas não o voltam a ver).
  if(!Array.isArray(db.equipment))db.equipment=[];
+ if(!Array.isArray(db.incidents))db.incidents=[];
  if(db.settings&&typeof db.settings==='object'&&db.settings.onboarded===undefined)db.settings.onboarded=db.people.length>0;
  db.appVersion=APP_VERSION;
 }
@@ -66,6 +68,8 @@ rawDb=null;
 migrate();save();
 const notif=createNotifications({getDb:()=>db,save,newId:()=>id(),todayISO:()=>dateInTz(new Date()),canSeeTask:(u,t)=>canSeeTask(u,t),isActive:u=>isActive(u),roleOf:u=>roleOf(u)});
 const equip=createEquipment({getDb:()=>db,save,newId:()=>id(),todayISO:()=>dateInTz(new Date()),dataDir:DATA_DIR,roleOf:u=>roleOf(u),notify:(...a)=>notif.add(...a)});
+const incid=createIncidents({getDb:()=>db,save,newId:()=>id(),photoDir:PHOTO_DIR,roleOf:u=>roleOf(u),notify:(...a)=>notif.add(...a),pushHa:(pid,title,msg)=>{Promise.resolve(ha?.notify(pid,title,msg,{tag:'casa-ocorrencia'})).catch(()=>{});},
+  makeTask:(f,user)=>{const t={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P2',estimatedMinutes:null,category:'Manutenção',thisWeek:false,subtasks:[],status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString(),createdBy:user.id,visibility:'shared'};patchTask(t,f);db.tasks.push(t);logAction(user,'task.create',t.id);notif.taskAssigned(t,user);Promise.resolve(ha?.taskAssigned(t,user)).catch(()=>{});return t;}});
 function roleOf(u){return u.role==='member'?'resident':u.role;}
 const isActive=u=>u.active!==false;
 // Dias de acesso de colaboradores (0 = domingo … 6 = sábado), no fuso horário da casa.
@@ -87,6 +91,7 @@ function completeTask(t,actor,byId){
   if(db.history.length>2000)db.history=db.history.slice(-2000);
   delete t.review;let rotated=false;if(t.kind==='routine'&&t.repeat!=='none'){t.status='todo';t.dueDate=nextDate(t.dueDate,t.repeat);t.suggested=false;rotated=rotate(t);}else t.status='done';
   if(t.status==='done'&&t.equipmentId)equip.onTaskCompleted(t,actor);
+  if(t.status==='done')incid.onTaskCompleted(t,actor);
   const doer=db.people.find(p=>p.id===byId)||actor;
   t.updatedAt=time;logAction(actor,'task.complete',t.id);if(rotated)notif.taskRotated(t,doer);else if(t.status==='done')notif.taskCompleted(t,doer);
   return {rotated};
@@ -102,7 +107,7 @@ function assignRequest(u,t,target){
 function allowedTaskPatch(u,t,b){if(canEditTask(u,t))return true;
  return canCompleteTask(u,t)&&Object.keys(b).every(k=>['status','subtasks'].includes(k));}
 function logAction(u,action,entityId){db.audit.push({id:id(),actor:u.id,action,entityId,at:new Date().toISOString()});if(db.audit.length>3000)db.audit=db.audit.slice(-3000);}
-function visibleState(u){const allowed=db.tasks.filter(t=>canSeeTask(u,t));const ids=new Set(allowed.map(t=>t.id));const users=roleOf(u)==='collaborator'?db.people.filter(p=>p.id===u.id||allowed.some(t=>t.assignedTo===p.id||t.createdBy===p.id)):db.people;const people=users.map(p=>personView(u,p));return {...state(),people,tasks:allowed,history:db.history.filter(h=>h.taskId?ids.has(h.taskId):h.by===u.id).slice(-200),shopping:db.shopping,workLogs:db.workLogs.filter(l=>elevated(u)?(!l.taskId||ids.has(l.taskId)):l.userId===u.id||l.actor===u.id),audit:elevated(u)?db.audit.filter(a=>!a.action.startsWith('task.')||ids.has(a.entityId)).slice(-300):[],permissions:{manageUsers:roleOf(u)==='admin',manageSettings:elevated(u),manageAllShared:elevated(u)},notifications:notif.forUser(u),rev:rev(),seasonal:roleOf(u)==='collaborator'?[]:db.seasonal,shoppingFrequent:frequentShopping(),haAvailable:!!ha?.available(),equipment:equip.canView(u)?equip.view():[]};}
+function visibleState(u){const allowed=db.tasks.filter(t=>canSeeTask(u,t));const ids=new Set(allowed.map(t=>t.id));const users=roleOf(u)==='collaborator'?db.people.filter(p=>p.id===u.id||allowed.some(t=>t.assignedTo===p.id||t.createdBy===p.id)):db.people;const people=users.map(p=>personView(u,p));return {...state(),people,tasks:allowed,history:db.history.filter(h=>h.taskId?ids.has(h.taskId):h.by===u.id).slice(-200),shopping:db.shopping,workLogs:db.workLogs.filter(l=>elevated(u)?(!l.taskId||ids.has(l.taskId)):l.userId===u.id||l.actor===u.id),audit:elevated(u)?db.audit.filter(a=>!a.action.startsWith('task.')||ids.has(a.entityId)).slice(-300):[],permissions:{manageUsers:roleOf(u)==='admin',manageSettings:elevated(u),manageAllShared:elevated(u)},notifications:notif.forUser(u),rev:rev(),seasonal:roleOf(u)==='collaborator'?[]:db.seasonal,shoppingFrequent:frequentShopping(),haAvailable:!!ha?.available(),equipment:equip.canView(u)?equip.view():[],incidents:incid.viewFor(u)};}
 function frequentShopping(){return Object.values(db.shoppingFreq).sort((a,b)=>b.count-a.count||String(b.last).localeCompare(String(a.last))).slice(0,16).map(({title,category,quantity,unit})=>({title,category,quantity,unit:unit||''}));}
 
 
@@ -211,7 +216,7 @@ const server=http.createServer(async (req,res)=>{
     // Avoid comparing Origin/Host: HA Ingress may legitimately rewrite the Host header.
     if(req.headers['x-casa-request']!=='1'&&!p.startsWith('/api/integracao/'))return fail(res,403,'Pedido não autorizado.');
   }
-  const bodyLimit=p==='/api/backups/upload'?30_000_000:/^\/api\/equipment\/[^/]+\/docs$/.test(p)?12_000_000:/^\/api\/tasks\/[^/]+\/photos$/.test(p)?3_000_000:256_000;
+  const bodyLimit=p==='/api/backups/upload'?30_000_000:/^\/api\/incidents\/[^/]+\/photos$/.test(p)?3_000_000:/^\/api\/equipment\/[^/]+\/docs$/.test(p)?12_000_000:/^\/api\/tasks\/[^/]+\/photos$/.test(p)?3_000_000:256_000;
   let b={};if(req.method!=='GET')try{b=await parseBody(req,bodyLimit);}catch(e){return fail(res,400,e.message);}
   try{
     if(p==='/api/bootstrap'&&req.method==='GET')return send(res,200,{setup:db.people.length===0,user:(()=>{const u=readUser(req);return u?{id:u.id,name:u.name,role:u.role,mustChangePassword:!!u.mustChangePassword}:null;})()});
@@ -339,6 +344,14 @@ const server=http.createServer(async (req,res)=>{
       if(out===undefined)return fail(res,404,'Rota não encontrada.');
       if(req.method!=='GET')logAction(user,'finance.'+(p.split('/')[3]||'view')+'.'+req.method.toLowerCase(),'');
       if(changed)save();return send(res,req.method==='POST'?201:200,out);
+    }
+    // Ocorrências (lib/incidents.js).
+    if(p==='/api/incidents'||p.startsWith('/api/incidents/')){
+      let out;try{out=incid.handle(user,req.method,p,b);}catch(e){return fail(res,e.status||400,e.message);}
+      if(out===undefined)return fail(res,404,'Rota não encontrada.');
+      if(out.file){let buf;try{buf=fs.readFileSync(out.file.path);}catch{return fail(res,404,'Fotografia não encontrada.');}res.writeHead(200,{'Content-Type':out.file.mime,'Content-Length':buf.length,'Cache-Control':'private, max-age=604800, immutable','X-Content-Type-Options':'nosniff'});return res.end(buf);}
+      if(req.method!=='GET')logAction(user,'incident.'+(p.split('/')[4]||'item')+'.'+req.method.toLowerCase(),p.split('/')[3]||'');
+      return send(res,req.method==='POST'?201:200,out);
     }
     // Equipamentos e documentos da casa (lib/equipment.js).
     if(p==='/api/equipment'||p.startsWith('/api/equipment/')){

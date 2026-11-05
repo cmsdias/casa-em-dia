@@ -33,6 +33,7 @@ function houseStatusLine(id){
   case 'calendar':{const h=nextHoliday();return h?`Próximo feriado: ${dateShortPT(h.date)} · ${h.name}`:'Mês, feriados e aniversários';}
   case 'balance':{const b=CasaCore.balance(tasks(),store.history,people(),{today:today()});const top=b.rows[0];return top&&top.total?`Esta semana: ${b.rows.map(r=>`${shortName(who(r.id)||{name:r.name})} ${fmtMin(r.total)}`).slice(0,3).join(' · ')}`:'Ainda sem tarefas esta semana';}
   case 'equipment':{const eq=store.equipment||[];if(!eq.length)return 'Caldeira, AC, eletrodomésticos: tudo num só sítio';const next=eq.filter(x=>x.nextService).sort((a,b)=>a.nextService.localeCompare(b.nextService))[0];return `${plural(eq.length,'equipamento','equipamentos')}${next?` · próxima revisão ${dateShortPT(next.nextService)}`:''}`;}
+  case 'incidents':{const open=(store.incidents||[]).filter(x=>x.status!=='resolved');const hi=open.filter(x=>x.severity==='alta').length;return open.length?`${plural(open.length,'por resolver','por resolver')}${hi?` · ${plural(hi,'urgente','urgentes')}`:''}`:'Nada por resolver · algo partiu, avariou ou falta?';}
   case 'people':{const n=people().filter(p=>p.active!==false).length;return `${plural(n,'pessoa','pessoas')} com conta`;}
   case 'worklogs':{const m=today().slice(0,7);const mins=workLogs().filter(x=>(x.date||'').startsWith(m)).reduce((n,x)=>n+Number(x.minutes||0),0);return mins?`${fmtMin(mins)} registadas este mês`:'Trabalhos e tempo de cada pessoa';}
   default:return (HOUSE_PAGES.find(x=>x[0]===id)||[])[3]||'';
