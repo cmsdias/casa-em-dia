@@ -1765,4 +1765,4 @@ body::before{background:var(--brand-green);z-index:2147483000}
 
 /* 2.3.3 · Margem da barra de estado numa variável: o CSS usa env(); se o iPhone a reportar a 0 com a app em ecrã inteiro, theme-init.js corrige. */
 :root{--sat:env(safe-area-inset-top,0px)}
-html,body{overscroll-behavior-y:none}
+
