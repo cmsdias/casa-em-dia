@@ -1,3 +1,11 @@
+# 2.3.1 — Barra de estado, divisões por piso, copiar código
+
+- **iPhone (app instalada):** a barra de estado passa a ter uma faixa verde opaca por baixo das horas e da bateria; o conteúdo deixa de passar por baixo dela ao deslizar. *É preciso remover o ícone do ecrã principal e voltar a adicioná-lo*, porque o iPhone só lê esta definição na instalação.
+- **Divisões organizadas por piso** e, dentro de cada piso, por ordem alfabética (Definições › A casa e seletores de divisão), com botão para acrescentar uma divisão em cada piso.
+- **Assistente de início** no topo de Definições › A casa.
+- **Copiar código** (cartão para o painel e configuração do Home Assistant) funciona também pelo endereço IP e dentro do Home Assistant; se o telemóvel bloquear a cópia, o código fica selecionado para copiar com toque longo. Botões com ícone de copiar.
+- **Ecrã de entrada no telemóvel:** margens, espaçamentos e alinhamentos acertados; o fundo mantém-se.
+
 # 2.3.0 — Ocorrências
 
 - Nova secção **Ocorrências** (Casa › Ocorrências e «+» › Reportar ocorrência): qualquer pessoa, incluindo colaboradores, regista algo que partiu, avariou, verteu ou falta, com tipo, gravidade, divisão, equipamento (opcional), descrição e até 6 fotografias.
