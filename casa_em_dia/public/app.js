@@ -68,7 +68,7 @@ const isAdmin=()=>store.user?.role==='admin';
 const canManage=()=>['admin','manager'].includes(store.user?.role);
 const canEditVisible=t=>isAdmin()||(store.user?.role==='manager'&&t.visibility!=='private')||t.createdBy===store.user?.id;
 const canCompleteVisible=t=>canEditVisible(t)||t.assignedTo===store.user?.id;
-const config=()=>({floors:Array.isArray(store.settings?.floors)?store.settings.floors:[],roomFloors:store.settings?.roomFloors&&typeof store.settings.roomFloors==='object'?store.settings.roomFloors:{},rooms:Array.isArray(store.settings?.rooms)?store.settings.rooms:['Cozinha','Lavandaria','Sala','Escritório','WC completo','WC serviço','WC suite','Exterior','Organização geral'],categories:Array.isArray(store.settings?.categories)?store.settings.categories:['Manutenção','Arrumação','Limpeza','Compras','Obras','Geral']});
+const config=()=>({floors:Array.isArray(store.settings?.floors)?store.settings.floors:[],roomFloors:store.settings?.roomFloors&&typeof store.settings.roomFloors==='object'?store.settings.roomFloors:{},rooms:Array.isArray(store.settings?.rooms)?store.settings.rooms:['Cozinha','Lavandaria','Sala','Escritório','WC completo','WC serviço','WC suite','Exterior','Organização geral'],categories:(Array.isArray(store.settings?.categories)?store.settings.categories:['Manutenção','Arrumação','Limpeza','Compras','Obras','Geral']).slice().sort((x,y)=>x.localeCompare(y,'pt',{sensitivity:'base'}))});
 let durationLimit=15;let timeMode=false;let advancedTask=false;let taskFiltersOpen=false;let shoppingView='open';let mobileMore=false;try{mobileMore=localStorage.getItem('casa-nav-expanded')==='true';}catch{}
 const who=id=>people().find(p=>p.id===id);
 const owner=id=>id?who(id)?.name||'Pessoa removida':'Por atribuir';
