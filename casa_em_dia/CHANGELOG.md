@@ -1,3 +1,8 @@
+# 2.3.5 — Marca: mais espaço para o ponto
+
+- A parede direita da casa encurta e o ponto dourado ganha folga (versão B). Atualizados o símbolo, o logótipo, o arranque, o favicon, os ícones da app e a imagem do add-on no Home Assistant.
+- No iPhone, o novo ícone aparece depois de remover o atalho do ecrã principal e voltar a adicioná-lo.
+
 # 2.3.4 — Efeito elástico de volta
 
 - Volta o efeito elástico ao puxar no topo e no fundo das páginas (retirado na 2.3.3). A faixa da barra de estado continua por cima, por isso o conteúdo não aparece por baixo das horas.
