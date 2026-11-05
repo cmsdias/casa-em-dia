@@ -12,7 +12,7 @@ function parseStamp(s){const m=/^(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})(?:-
 
 // Valida um ficheiro de dados antes de o aceitar como cópia ou de o restaurar.
 function validate(data){
-  if(!data||typeof data!=='object'||Array.isArray(data))throw Error('O ficheiro não é uma cópia de segurança da Casa em Dia.');
+  if(!data||typeof data!=='object'||Array.isArray(data))throw Error('O ficheiro não é uma cópia de segurança da Daily Casa.');
   if(!Array.isArray(data.people)||!Array.isArray(data.tasks))throw Error('O ficheiro não tem pessoas e tarefas: não é uma cópia de segurança completa.');
   const admins=data.people.filter(p=>p&&p.role==='admin'&&typeof p.passwordHash==='string'&&p.active!==false);
   if(!admins.length)throw Error('A cópia não tem nenhum administrador ativo; restaurá-la deixaria a casa sem acesso.');

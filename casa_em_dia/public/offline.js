@@ -1,4 +1,4 @@
-/* Casa em Dia — trabalhar sem rede (2.0)
+/* Daily Casa — trabalhar sem rede (2.0)
  * - Guarda no dispositivo a última versão dos dados (para abrir a app sem ligação).
  * - Concluir tarefas e mexer nas compras sem rede: a alteração aplica-se logo no ecrã e fica numa fila,
  *   enviada pela ordem certa quando a ligação voltar. As restantes edições pedem ligação.

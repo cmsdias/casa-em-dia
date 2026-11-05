@@ -248,7 +248,7 @@ const server=http.createServer(async (req,res)=>{
       const key='reset:'+cleanStr(b.email,120).toLowerCase();if(loginBlocked(key))return fail(res,429,'Demasiados pedidos. Tenta novamente dentro de alguns minutos.');loginFailed(key);
       const u=findByLogin(b.email);let sent=false;
       if(u&&isActive(u)&&u.email){const code=String(crypto.randomInt(0,1e6)).padStart(6,'0');resetCodes.set(u.id,{hash:crypto.createHash('sha256').update(u.id+':'+code).digest('hex'),exp:Date.now()+15*60_000,tries:0});
-        try{sent=!!(await ha?.notify(u.id,'Casa em Dia · código de recuperação',`O teu código é ${code}. É válido durante 15 minutos. Se não pediste, ignora esta mensagem.`,{tag:'casa-reset'}));}catch{}
+        try{sent=!!(await ha?.notify(u.id,'Daily Casa · código de recuperação',`O teu código é ${code}. É válido durante 15 minutos. Se não pediste, ignora esta mensagem.`,{tag:'casa-reset'}));}catch{}
         for(const a of db.people.filter(x=>roleOf(x)==='admin'&&isActive(x)&&x.id!==u.id))notif.add(a.id,'security',`${u.name.split(' ')[0]} pediu para recuperar a palavra-passe`,sent?'Recebeu um código no telemóvel.':'Se for preciso, repõe-lhe a palavra-passe em Pessoas.',{page:'people'});
         logAction(u,'password.forgot',u.id);save();}
       return send(res,200,{ok:true});
@@ -333,7 +333,7 @@ const server=http.createServer(async (req,res)=>{
         if('dailyTime'in b){if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(b.dailyTime))return fail(res,400,'Hora inválida.');db.ha.dailyTime=b.dailyTime;}
         if('sensors'in b){db.ha.sensors=!!b.sensors;}
         logAction(user,'ha.update','global');save();if(db.ha.sensors)ha.pushSensors(true).catch(()=>{});return send(res,200,{ok:true});}
-      if(p==='/api/ha/test'&&req.method==='POST'){if(!db.ha.notify[b.personId])return fail(res,400,'Escolhe primeiro o telemóvel desta pessoa e guarda.');try{await ha.notify(b.personId,'Casa em Dia','As notificações estão a funcionar.',{tag:'teste'});}catch(e){return fail(res,502,e.message);}return send(res,200,{ok:true});}
+      if(p==='/api/ha/test'&&req.method==='POST'){if(!db.ha.notify[b.personId])return fail(res,400,'Escolhe primeiro o telemóvel desta pessoa e guarda.');try{await ha.notify(b.personId,'Daily Casa','As notificações estão a funcionar.',{tag:'teste'});}catch(e){return fail(res,502,e.message);}return send(res,200,{ok:true});}
       if(p==='/api/ha/token'&&req.method==='POST'){db.ha.token=crypto.randomBytes(24).toString('base64url');logAction(user,'ha.token','global');save();return send(res,200,{token:db.ha.token});}
       return fail(res,404,'Rota não encontrada.');
     }
@@ -562,4 +562,4 @@ try{notif.daily();}catch(e){console.error('Notificações diárias:',e.message);
 try{if(FIN.generateRecurring(db.finance,dateInTz(new Date()),id))save();}catch(e){console.error('Despesas fixas:',e.message);}
 const hhmm=()=>new Intl.DateTimeFormat('en-GB',{timeZone:HOUSE_TZ,hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date());
 ha=createHa({getDb:()=>db,todayISO:()=>dateInTz(new Date()),nowHM:hhmm,save});ha.start();
-server.listen(PORT,HOST,()=>console.log(`Casa em Dia ${APP_VERSION} online: http://${HOST}:${PORT} • dados: ${DB_FILE}${ha.available()?' • Home Assistant ligado':''}`));
+server.listen(PORT,HOST,()=>console.log(`Daily Casa ${APP_VERSION} online: http://${HOST}:${PORT} • dados: ${DB_FILE}${ha.available()?' • Home Assistant ligado':''}`));

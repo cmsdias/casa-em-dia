@@ -1,4 +1,4 @@
-/* Casa em Dia — Compras: modo «na loja» (2.0)
+/* Daily Casa — Compras: modo «na loja» (2.0)
  * Lista em letra grande, ordenada pela ordem habitual dos corredores, com o ecrã sempre ligado.
  * Tocar num produto põe-no no carrinho (e tira-o da lista de quem está em casa, em poucos segundos).
  */

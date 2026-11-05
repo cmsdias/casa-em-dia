@@ -1,4 +1,4 @@
-# Casa em Dia
+# Daily Casa
 
 Aplicação para organizar a casa em conjunto: tarefas pontuais, rotinas recorrentes, lista de compras, equipamentos e documentos da casa, registo de horas e finanças domésticas.
 
@@ -12,7 +12,7 @@ Aplicação para organizar a casa em conjunto: tarefas pontuais, rotinas recorre
 
 ## Primeiro acesso
 
-1. Inicie a aplicação e abra **Abrir interface Web** (ou o item **Casa em Dia** na barra lateral).
+1. Inicie a aplicação e abra **Abrir interface Web** (ou o item **Daily Casa** na barra lateral).
 2. Crie a conta de administrador com o seu nome e email. Use uma palavra-passe longa (mínimo 10 caracteres) e diferente da do Home Assistant.
 3. O **assistente de início** propõe divisões e rotinas para o tipo de casa (pode voltar a abri-lo em **Definições → A casa**).
 4. Em **Casa → Pessoas**, crie (com nome, email e palavra-passe temporária) as contas das restantes pessoas da casa e atribua o perfil adequado.
@@ -44,16 +44,16 @@ As permissões são verificadas no servidor em cada pedido, não apenas escondid
 
 - A aplicação é aberta através do **Ingress** do Home Assistant (barra lateral ou app Companion). Não expõe nenhuma porta na rede.
 - Fora de casa, funciona através do acesso remoto que já usa para o Home Assistant.
-- A conta do Casa em Dia é independente da conta do Home Assistant.
+- A conta do Daily Casa é independente da conta do Home Assistant.
 
 ## Instalar no ecrã principal do telemóvel (sem o cabeçalho do Home Assistant)
 
 Por omissão a app abre dentro do Home Assistant. Para a ter como app própria no iPhone ou no Android, na rede de casa:
 
-1. Em **Definições → Aplicações → Casa em Dia → Configuração**, na secção **Rede**, escreva `3000` no campo do acesso direto e guarde. A aplicação reinicia.
+1. Em **Definições → Aplicações → Daily Casa → Configuração**, na secção **Rede**, escreva `3000` no campo do acesso direto e guarde. A aplicação reinicia.
 2. No telemóvel, ligado ao Wi-Fi de casa, abra no Safari (ou no Chrome) o endereço IP do Home Assistant com a porta, por exemplo `http://192.168.1.50:3000` (o IP está em Definições → Sistema → Rede). O nome `homeassistant.local` nem sempre funciona no iPhone.
    Convém reservar esse IP no router (reserva DHCP), para não mudar e a app instalada continuar a abrir.
-3. Entre com o utilizador e a palavra-passe da Casa em Dia.
+3. Entre com o utilizador e a palavra-passe da Daily Casa.
 4. iPhone: **Partilhar → Adicionar ao ecrã principal**. Android: **menu → Instalar aplicação**.
 
 A app fica com ícone próprio e em ecrã inteiro. Só funciona na rede de casa; fora de casa continue a usar a app Home Assistant. Para desligar, apague o número no campo do acesso direto.
@@ -69,7 +69,7 @@ A app fica com ícone próprio e em ecrã inteiro. Só funciona na rede de casa;
 ## Atualizar
 
 1. Crie uma cópia de segurança do Home Assistant (a aplicação também guarda uma cópia própria antes de mudar de versão).
-2. Em **Definições → Aplicações**, verifique se há atualizações e selecione **Atualizar** no Casa em Dia.
+2. Em **Definições → Aplicações**, verifique se há atualizações e selecione **Atualizar** no Daily Casa.
 3. Abra a aplicação, confirme a versão em **Definições** e verifique que os dados continuam presentes.
 
 ## Home Assistant (opcional)

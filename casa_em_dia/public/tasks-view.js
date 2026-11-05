@@ -1,4 +1,4 @@
-/* Casa em Dia — Tarefas (2.0)
+/* Daily Casa — Tarefas (2.0)
  * Uma só página com quatro vistas: Lista (agrupada por quando), Rotinas, Calendário e Divisões (estado de cada uma).
  * Criação rápida por escrita natural (CasaCore.parseTask), com etiquetas que se podem corrigir.
  */

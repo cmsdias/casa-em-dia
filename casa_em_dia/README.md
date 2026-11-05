@@ -1,4 +1,4 @@
-# Casa em Dia
+# Daily Casa
 
 Tarefas, rotinas, compras, trabalhos realizados e finanças da casa, partilhados entre as pessoas que lá vivem. Cada pessoa tem conta própria e um perfil de acesso (administrador, gestor, morador ou colaborador).
 
