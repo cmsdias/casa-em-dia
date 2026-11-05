@@ -1,3 +1,7 @@
+# 2.3.7 — Ver a palavra-passe
+
+- Todos os campos de palavra-passe (entrada, primeira conta, recuperação, perfil, troca obrigatória e nova pessoa) têm um olho para mostrar ou esconder o que se escreveu. Ao submeter, o campo volta a ficar escondido.
+
 # 2.3.6 — Ecrã de entrada ao puxar
 
 - Ao puxar o ecrã de entrada para cima ou para baixo, o espaço que aparece mantém a cor da faixa verde (em cima) e do cartão (em baixo), em modo claro e escuro.
