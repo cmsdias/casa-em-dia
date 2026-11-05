@@ -1,4 +1,4 @@
-name: Publicar demonstração Casa em Dia
+name: Publicar demonstração Daily Casa
 # Demonstração pública com dados fictícios (localStorage). Nunca contém dados reais.
 #   /       → versão estável (branch main)
 #   /next/  → pré-visualização (branch next, quando existe)

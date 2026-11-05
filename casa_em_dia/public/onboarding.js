@@ -1,4 +1,4 @@
-/* Casa em Dia — Assistente de início (2.0)
+/* Daily Casa — Assistente de início (2.0)
  * Numa instalação nova, o administrador escolhe o tipo de casa e recebe divisões e rotinas sugeridas.
  * Pode voltar a ser aberto em Definições › A casa; só acrescenta, nunca apaga o que já existe
  * (exceto as tarefas de exemplo, se o administrador o pedir).
@@ -28,7 +28,7 @@ function obRoutinesFor(rooms){const out=[];const kitchen=rooms.find(r=>/cozinha/
 const obKey=r=>r.title+'|'+r.room;
 modalRenderers.onboarding=holder=>{
  const o=modal.ob;let body='',title='',sub='';
- if(o.step===1){title='Bem-vindo à Casa em Dia';sub='Três passos para pôr a casa a funcionar. Podes mudar tudo depois.';
+ if(o.step===1){title='Bem-vindo à Daily Casa';sub='Três passos para pôr a casa a funcionar. Podes mudar tudo depois.';
   body=`<p class="ob-q">Que tipo de casa é?</p><div class="ob-types">${Object.entries(OB_TYPES).map(([k,t])=>`<button type="button" class="ob-type ${o.type===k?'on':''}" data-action="ob-type" data-type="${k}" aria-pressed="${o.type===k}"><strong>${esc(t.label)}</strong><small>${esc(t.desc)}</small></button>`).join('')}</div>
   <div class="modal-actions"><button type="button" class="button" data-action="ob-skip">Configurar à mão</button><span class="spacer"></span><button type="button" class="button primary" data-action="ob-next" ${o.type?'':'disabled'}>Continuar</button></div>`;}
  if(o.step===2){const t=OB_TYPES[o.type];title='As divisões';sub='Desmarca as que não existem. As que já tens ficam como estão.';const have=new Set(config().rooms);

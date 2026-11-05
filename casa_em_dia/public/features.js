@@ -5,7 +5,7 @@
 (function splashControl(){
  const el=document.getElementById('splash');if(!el)return;
  if(window.__CASA_DEMO__){try{if(!sessionStorage.getItem('casa-splash')){sessionStorage.setItem('casa-splash','1');el.classList.add('instant');}else{el.remove();return;}}catch{el.remove();return;}}
- // Se a app abrir em menos de 0,3 s, a animação nem aparece. Se aparecer, corre até ao fim (o nome «Casa em Dia»
+ // Se a app abrir em menos de 0,3 s, a animação nem aparece. Se aparecer, corre até ao fim (o nome «Daily Casa»
  // termina por volta de 1,9 s) e só depois desvanece: nunca é cortada a meio.
  const shownAt=el.classList.contains('instant')?0:300;let drawn=matchMedia('(prefers-reduced-motion: reduce)').matches,waiting=false;
  const word=el.querySelector('.splash-word');
@@ -37,7 +37,7 @@ api=async function(endpoint,method='GET',data){const write=method!=='GET';const 
  try{if(demo&&write)await new Promise(r=>setTimeout(r,450));return await apiCore(endpoint,method,data);}finally{if(write)busyEnd(b);else loadEnd();}};
 const skeletonLines=(n=3)=>`<div class="sk-group" aria-hidden="true">${Array.from({length:n},(_,i)=>`<div class="sk sk-line" style="width:${[92,74,83,66][i%4]}%"></div>`).join('')}</div>`;
 
-// Casa em Dia 1.7 — funcionalidades acrescentadas ao núcleo (app.js):
+// Daily Casa 1.7 — funcionalidades acrescentadas ao núcleo (app.js):
 // atualização automática, cópias de segurança, calendário sazonal, compras rápidas,
 // rotação de rotinas, fotografias nas tarefas e Home Assistant.
 // Partilha o estado global de app.js (store, page, modal, render, api…), carregado antes deste ficheiro.

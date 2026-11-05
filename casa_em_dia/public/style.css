@@ -1,4 +1,4 @@
-/* Casa em Dia — estilos. Arrumado por tidy_css.py (declarações sobrepostas retiradas; tokens num só bloco). */
+/* Daily Casa — estilos. Arrumado por tidy_css.py (declarações sobrepostas retiradas; tokens num só bloco). */
 /* Tokens (cores, raios, espaçamentos). O modo escuro é gerado a partir destes valores por build_dark.py. */
 :root{
   color-scheme:light;
@@ -42,10 +42,10 @@
   --warn-bg:#f6ecd6;
   --white:#fff;
 }
-/* Casa em Dia — estilos. Arrumado por tidy_css.py (declarações sobrepostas retiradas; tokens num só bloco). */
+/* Daily Casa — estilos. Arrumado por tidy_css.py (declarações sobrepostas retiradas; tokens num só bloco). */
 /* Tokens (cores, raios, espaçamentos). O modo escuro é gerado a partir destes valores por build_dark.py. */
-/* Casa em Dia — estilos. Arrumado por tidy_css.py (declarações sobrepostas retiradas; tokens num só bloco). */
-/* Casa em Dia — estilos. Arrumado por tidy_css.py (declarações sobrepostas retiradas; tokens num só bloco). */
+/* Daily Casa — estilos. Arrumado por tidy_css.py (declarações sobrepostas retiradas; tokens num só bloco). */
+/* Daily Casa — estilos. Arrumado por tidy_css.py (declarações sobrepostas retiradas; tokens num só bloco). */
 /* Instrument Sans (SIL OFL 1.1, ver fonts/OFL.txt), alojada localmente: sem pedidos ao Google e funciona sem Internet. */
 @font-face{font-family:"Instrument Sans";font-style:normal;font-display:swap;font-weight:400 700;src:url(fonts/instrument-sans-latin-ext-wght-normal.woff2) format("woff2");unicode-range:U+100-2BA,U+2BD-2C5,U+2C7-2CC,U+2CE-2D7,U+2DD-2FF,U+304,U+308,U+329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:"Instrument Sans";font-style:normal;font-display:swap;font-weight:400 700;src:url(fonts/instrument-sans-latin-wght-normal.woff2) format("woff2");unicode-range:U+0-FF,U+131,U+152-153,U+2BB-2BC,U+2C6,U+2DA,U+2DC,U+304,U+308,U+329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -209,7 +209,7 @@ svg{display:block}
 .auth-inner h2{font-size:30px}
 .demo-banner{align-items:start}
 .demo-banner button{white-space:nowrap}}
-/* — CASA EM DIA / EDITORIAL EDITION · v2 — */
+/* — DAILY CASA / EDITORIAL EDITION · v2 — */
 body{background:var(--bg)}
 button{transition:background-color .16s,color .16s,border-color .16s,transform .16s}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #7d8b7a;outline-offset:3px}
@@ -420,7 +420,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .demo-banner{font-size:11px;line-height:1.4;padding:10px 12px;border-radius:12px}
 .auth-inner .button{border-radius:99px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
-/* --- Casa em Dia v2.1 · Instrument Sans typography system --- */
+/* --- Daily Casa v2.1 · Instrument Sans typography system --- */
 body{font-weight:400;letter-spacing:-.008em}
 button,input,select,textarea{font-family:inherit}
 .page-title{font-weight:700}
@@ -435,7 +435,7 @@ button,input,select,textarea{font-family:inherit}
 .modal h2,.auth-inner h2{font-weight:700;letter-spacing:-.045em}
 @media (max-width:650px){.page-title{letter-spacing:-.045em}
 .editorial-title{letter-spacing:-.035em}}
-/* Casa em Dia 2.2 — still-lifes vectoriais originais, explorador visual de divisões */
+/* Daily Casa 2.2 — still-lifes vectoriais originais, explorador visual de divisões */
 .rooms-section{margin:8px 0 35px}
 .rooms-header{display:flex;align-items:end;justify-content:space-between;gap:15px;margin-bottom:17px}
 .rooms-header .editorial-title{font-size:25px;margin-top:8px}
@@ -514,7 +514,7 @@ button,input,select,textarea{font-family:inherit}
 .week-pin{font-size:19px;padding:5px 9px}
 .settings-card textarea{display:block;width:100%;padding:12px;margin:8px 0 16px;border:1px solid #ddd;border-radius:10px;font-family:inherit}
 @media (max-width:700px){.daily-planner{grid-template-columns:1fr;padding:18px}}
-/* Preview Casa em Dia 1.1.0 */
+/* Preview Daily Casa 1.1.0 */
 .inline-add,.worklog-form{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:20px 0}
 .inline-add input,.worklog-form input,.worklog-form textarea{border:1px solid #deded8;border-radius:12px;padding:12px;font:inherit;max-width:100%}
 .inline-add input:first-child{flex:1;min-width:180px}
@@ -524,7 +524,7 @@ button,input,select,textarea{font-family:inherit}
 .shopping-line label{display:flex;gap:12px;align-items:center}
 .shopping-line .done{text-decoration:line-through;opacity:.6}
 .worklog-line{display:block;line-height:1.8}
-/* Casa em Dia — UX Refresh 2026 (não destrutivo) */
+/* Daily Casa — UX Refresh 2026 (não destrutivo) */
 body{-webkit-tap-highlight-color:transparent;font-size:15px;line-height:1.55;-webkit-text-size-adjust:100%}
 .page-subtitle,.task-meta,.section-sub,.stat-bottom,.settings-card p{color:var(--muted)}
 button,input,textarea,select{font-size:inherit}
@@ -631,7 +631,7 @@ input,select,textarea{outline:0}
 .stat-grid>.settings-card strong{white-space:normal;overflow-wrap:anywhere}}
 @media screen and (max-width:390px){.layout>.main,.main{padding-left:15px;padding-right:15px}}
 /* Navegação iPhone — expansão integrada na mesma barra preta, sem painel destacado */
-/* Casa em Dia UX 1.3.3 — swipe navigation & polished forms */
+/* Daily Casa UX 1.3.3 — swipe navigation & polished forms */
 .weekly-list>.weekly-list-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:15px}
 .weekly-list-heading strong{display:block;font-size:15px;line-height:1.4}
 .weekly-list-heading span{display:block;font-size:12px;line-height:1.5;color:var(--muted)}
@@ -700,7 +700,7 @@ select{padding-right:38px!important;background-image:url("data:image/svg+xml,%3C
 .filters>.select-control:last-child{grid-column:1/-1}
 .form-row{grid-template-columns:minmax(0,1fr)}
 .form-row>*{min-width:0}}
-/* Casa em Dia 1.5 — produto orientado à ação */
+/* Daily Casa 1.5 — produto orientado à ação */
 .action-hub{border:1px solid #d9e3d5;border-radius:24px;padding:clamp(18px,3vw,32px);margin:0 0 28px}
 .action-hub-header{display:flex;align-items:center;justify-content:space-between;gap:18px}
 .action-hub h2{font-size:clamp(23px,2.7vw,33px);line-height:1.17;letter-spacing:-.045em;margin:10px 0}
@@ -757,13 +757,13 @@ select{padding-right:38px!important;background-image:url("data:image/svg+xml,%3C
 @media (max-width:650px){.person-card{flex-wrap:wrap;gap:10px}
 .person-tasks{flex-basis:100%;order:5}
 .worklog-summary>div{padding:14px}}
-/* Identidade Casa em Dia — símbolo de traço contínuo, sem tagline */
+/* Identidade Daily Casa — símbolo de traço contínuo, sem tagline */
 .boot .logo-mark{width:56px;height:56px;background:transparent;box-shadow:none;border-radius:0}
 .boot .logo-mark img{height:56px;width:56px;object-fit:contain;display:block}
 /* Logótipo horizontal completo — arte vetorial única na sidebar. */
 .sidebar .brand.brand-primary{padding:2px 6px 30px;display:flex;align-items:center;min-width:0}
 .sidebar .brand-primary-logo{display:block;width:100%;max-width:222px;height:auto;max-height:76px;object-fit:contain;object-position:left center}
-/* Casa em Dia 1.5.1 — marca vetorial única e navegação mobile fixa */
+/* Daily Casa 1.5.1 — marca vetorial única e navegação mobile fixa */
 .mobile-header .brand.mobile-primary{flex:1;min-width:0;padding:0;display:flex;align-items:center}
 .mobile-header .brand.mobile-primary .brand-primary-logo{width:min(75vw,250px);max-width:100%;height:auto;max-height:64px;object-fit:contain;object-position:left center}
 .auth-aside .brand.brand-primary .brand-primary-logo{width:min(100%,300px);height:auto;max-height:86px}

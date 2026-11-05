@@ -1,4 +1,4 @@
-/* Casa em Dia — Aprovações (2.1)
+/* Daily Casa — Aprovações (2.1)
  * - Moradores podem pedir para atribuir uma tarefa sua a um colaborador; um administrador ou gestor aprova.
  * - Opcional: o trabalho dos colaboradores fica «Por aprovar» até um administrador ou gestor confirmar.
  * As duas regras ligam-se e desligam-se em Definições › A casa › Regras da casa.

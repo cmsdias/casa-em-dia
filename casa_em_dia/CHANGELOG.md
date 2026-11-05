@@ -1,3 +1,10 @@
+# 2.4.0 — Daily Casa
+
+- **Nova marca: Daily Casa.** O símbolo da casa mantém-se; o nome passa a «daily casa» em minúsculas, na mesma letra da app (Instrument Sans), com o ponto dourado no «i».
+- Novo logótipo no arranque, no ecrã de entrada, no cabeçalho e na barra lateral; nova assinatura no ecrã de entrada: «A casa em dia, todos os dias.»
+- Nome atualizado no Home Assistant (loja de add-ons e barra lateral), nas notificações, nos nomes dos sensores e na app instalada no iPhone (reinstalar o atalho para ver o novo nome).
+- Sem alterações de dados: o identificador do add-on e os identificadores dos sensores (`sensor.casa_em_dia_…`) mantêm-se, para não estragar painéis nem automações.
+
 # 2.3.9 — Barra de estado como nas apps nativas
 
 - Ao deslizar, o conteúdo passa por trás das horas e da bateria e fica esbatido por um véu suave na cor do fundo (mais claro no modo claro, mais escuro no escuro). Sem faixas nem desfoque; parado no topo, o cabeçalho fica nítido.

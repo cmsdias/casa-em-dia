@@ -1,6 +1,6 @@
 {
-  "name": "Casa em Dia — Tarefas e Rotinas",
-  "short_name": "Casa em Dia",
+  "name": "Daily Casa — Tarefas e Rotinas",
+  "short_name": "Daily Casa",
   "description": "Tarefas da casa, rotinas e responsáveis num só lugar.",
   "start_url": "./",
   "scope": "./",

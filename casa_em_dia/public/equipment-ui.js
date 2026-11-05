@@ -1,4 +1,4 @@
-/* Casa em Dia — Equipamentos e documentos da casa (2.0)
+/* Daily Casa — Equipamentos e documentos da casa (2.0)
  * Caldeira, ar condicionado, eletrodomésticos, rega…: manual, fatura, garantia, técnico e revisões.
  * As revisões geram uma tarefa 30 dias antes (no servidor) e são marcadas como feitas aqui ou ao concluir a tarefa.
  */

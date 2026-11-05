@@ -1,4 +1,4 @@
-/* Casa em Dia — Ocorrências (2.3)
+/* Daily Casa — Ocorrências (2.3)
  * Reportar algo que partiu, avariou, verteu ou falta, com fotografias. O administrador e o gestor são avisados,
  * podem criar a tarefa de reparação (a ocorrência fica resolvida quando a tarefa é concluída) ou resolvê-la diretamente.
  */

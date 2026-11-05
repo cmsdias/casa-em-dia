@@ -1,4 +1,4 @@
-/* Casa em Dia — «Hoje», plano do dia e equilíbrio da casa (2.0)
+/* Daily Casa — «Hoje», plano do dia e equilíbrio da casa (2.0)
  * «Hoje» responde a «o que faço agora?»: progresso do dia, a semana, atrasadas e para hoje, compras.
  * O plano do dia escolhe as tarefas que cabem no tempo disponível (CasaCore.planDay).
  */

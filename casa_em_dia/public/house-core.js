@@ -1,4 +1,4 @@
-/* Casa em Dia — lógica partilhada pela app e pelo servidor (sem dependências).
+/* Daily Casa — lógica partilhada pela app e pelo servidor (sem dependências).
  * - parseTask: lê uma frase em português («Trocar lâmpada amanhã @Ana #Hall !urgente») e devolve os campos da tarefa.
  * - roomStatus: estado «em dia» de cada divisão, calculado a partir das rotinas e das tarefas atrasadas.
  * - planDay: escolhe as tarefas que cabem no tempo disponível, das mais urgentes para as menos.

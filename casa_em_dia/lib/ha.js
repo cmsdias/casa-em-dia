@@ -37,7 +37,7 @@ function createHa({getDb,todayISO,nowHM,save=()=>{},onError=console.error,fetchI
     if(db().people.find(x=>x.id===personId)?.pushOff&&extra.tag!=='casa-reset')return false; // a pessoa desligou as notificações no perfil (o código de recuperação passa sempre)
     if(!/^[a-z0-9_]+$/.test(service))return false;
     const i=await info();const url=i.panelUrl||'';
-    // url (iOS) e clickAction (Android) abrem a app Casa em Dia ao tocar na notificação.
+    // url (iOS) e clickAction (Android) abrem a app Daily Casa ao tocar na notificação.
     await call('POST',`/core/api/services/notify/${service}`,{title,message,data:{url,clickAction:url,group:'casa-em-dia',tag:extra.tag||undefined}});
     return true;
   }
@@ -75,14 +75,14 @@ function createHa({getDb,todayISO,nowHM,save=()=>{},onError=console.error,fetchI
     const titles=a=>a.slice(0,20).map(t=>t.title);
     const icon='mdi:home-outline';
     return {
-      'sensor.casa_em_dia_tarefas_por_fazer':{state:shared.filter(t=>t.kind==='project').length,attributes:{friendly_name:'Casa em Dia · Tarefas por fazer',unit_of_measurement:'tarefas',icon:'mdi:format-list-checks'}},
-      'sensor.casa_em_dia_tarefas_atrasadas':{state:overdue.length,attributes:{friendly_name:'Casa em Dia · Tarefas atrasadas',unit_of_measurement:'tarefas',icon:'mdi:alert-circle-outline',tarefas:titles(overdue)}},
-      'sensor.casa_em_dia_para_hoje':{state:dueToday.length,attributes:{friendly_name:'Casa em Dia · Para hoje',unit_of_measurement:'tarefas',icon:'mdi:calendar-today',tarefas:titles(dueToday)}},
-      'sensor.casa_em_dia_compras':{state:shopping.length,attributes:{friendly_name:'Casa em Dia · Compras por fazer',unit_of_measurement:'produtos',icon:'mdi:cart-outline',produtos:shopping.slice(0,40).map(x=>(x.quantity&&x.quantity!=='1')||x.unit?`${x.title} (${UNITS.format(x.quantity,x.unit)})`:x.title)}},
+      'sensor.casa_em_dia_tarefas_por_fazer':{state:shared.filter(t=>t.kind==='project').length,attributes:{friendly_name:'Daily Casa · Tarefas por fazer',unit_of_measurement:'tarefas',icon:'mdi:format-list-checks'}},
+      'sensor.casa_em_dia_tarefas_atrasadas':{state:overdue.length,attributes:{friendly_name:'Daily Casa · Tarefas atrasadas',unit_of_measurement:'tarefas',icon:'mdi:alert-circle-outline',tarefas:titles(overdue)}},
+      'sensor.casa_em_dia_para_hoje':{state:dueToday.length,attributes:{friendly_name:'Daily Casa · Para hoje',unit_of_measurement:'tarefas',icon:'mdi:calendar-today',tarefas:titles(dueToday)}},
+      'sensor.casa_em_dia_compras':{state:shopping.length,attributes:{friendly_name:'Daily Casa · Compras por fazer',unit_of_measurement:'produtos',icon:'mdi:cart-outline',produtos:shopping.slice(0,40).map(x=>(x.quantity&&x.quantity!=='1')||x.unit?`${x.title} (${UNITS.format(x.quantity,x.unit)})`:x.title)}},
       // Para o cartão no painel do Home Assistant: o que há para hoje (atrasadas incluídas) e o estado da casa.
-      'sensor.casa_em_dia_hoje':{state:overdue.length+dueToday.length,attributes:{friendly_name:'Casa em Dia · Hoje',unit_of_measurement:'tarefas',icon:'mdi:home-clock-outline',tarefas:[...overdue,...dueToday].slice(0,15).map(t=>({titulo:t.title,divisao:t.room||'',quem:(db().people.find(p=>p.id===t.assignedTo)?.name||'').split(' ')[0],atrasada:t.dueDate<today}))}},
-      'sensor.casa_em_dia_estado_da_casa':(()=>{const st=CORE.roomStatus(shared,today,db().settings?.rooms||[]);const score=CORE.houseScore(st);const rooms=Object.values(st).filter(x=>x.score!=null).sort((a,b)=>a.score-b.score);return {state:score==null?'unknown':score,attributes:{friendly_name:'Casa em Dia · Casa em ordem',unit_of_measurement:'%',icon:'mdi:home-heart',divisoes:rooms.slice(0,12).map(x=>({divisao:x.room,percentagem:x.score,estado:CORE.statusLabel(x)}))}};})(),
-      'sensor.casa_em_dia_ultima_conclusao':{state:(db().history||[]).slice(-1)[0]?.at||'unknown',attributes:{friendly_name:'Casa em Dia · Última tarefa concluída',device_class:'timestamp',icon,tarefa:(db().history||[]).slice(-1)[0]?.title||''}},
+      'sensor.casa_em_dia_hoje':{state:overdue.length+dueToday.length,attributes:{friendly_name:'Daily Casa · Hoje',unit_of_measurement:'tarefas',icon:'mdi:home-clock-outline',tarefas:[...overdue,...dueToday].slice(0,15).map(t=>({titulo:t.title,divisao:t.room||'',quem:(db().people.find(p=>p.id===t.assignedTo)?.name||'').split(' ')[0],atrasada:t.dueDate<today}))}},
+      'sensor.casa_em_dia_estado_da_casa':(()=>{const st=CORE.roomStatus(shared,today,db().settings?.rooms||[]);const score=CORE.houseScore(st);const rooms=Object.values(st).filter(x=>x.score!=null).sort((a,b)=>a.score-b.score);return {state:score==null?'unknown':score,attributes:{friendly_name:'Daily Casa · Casa em ordem',unit_of_measurement:'%',icon:'mdi:home-heart',divisoes:rooms.slice(0,12).map(x=>({divisao:x.room,percentagem:x.score,estado:CORE.statusLabel(x)}))}};})(),
+      'sensor.casa_em_dia_ultima_conclusao':{state:(db().history||[]).slice(-1)[0]?.at||'unknown',attributes:{friendly_name:'Daily Casa · Última tarefa concluída',device_class:'timestamp',icon,tarefa:(db().history||[]).slice(-1)[0]?.title||''}},
     };
   }
   async function pushSensors(force=false){
