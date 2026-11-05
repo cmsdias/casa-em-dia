@@ -358,7 +358,7 @@ if(name==='profile-open'){moreOpen=false;quickCreateOpen=false;profileDraft={};m
      }catch(e){toast(e.message||'Falha ao importar.');}
    };input.click();return;
  }
- if(name==='export'){try{const s=await api('/api/export');const blob=new Blob([JSON.stringify(s,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`casa-em-dia-${today()}.json`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Exportação iniciada.');}catch(e){toast(e.message);}return;}
+ if(name==='export'){try{const s=await api('/api/export');const blob=new Blob([JSON.stringify(s,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`daily-casa-${today()}.json`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Exportação iniciada.');}catch(e){toast(e.message);}return;}
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(!b)return;if(b.dataset.action==='overlay'&&e.target!==b)return;e.preventDefault();action(b.dataset.action,b).catch(err=>toast(err.message));});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(quickCreateOpen||moreOpen)){quickCreateOpen=false;moreOpen=false;render();}});document.addEventListener('change',e=>{if(!e.target.matches('[name=person-filter],[name=room-filter],[name=priority-filter]'))return;let n=e.target.name,v=e.target.value;if(n==='person-filter')personFilter=v;if(n==='room-filter')roomFilter=v;if(n==='priority-filter')priorityFilter=v;let s=window.scrollY;render();window.scrollTo(0,s);});

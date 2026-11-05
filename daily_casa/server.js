@@ -381,7 +381,7 @@ const server=http.createServer(async (req,res)=>{
       st.onboarded=true;logAction(user,'onboarding',`${rooms.length}/${created}`);save();return send(res,200,{settings:st,created,removed});
     }
     if(p==='/api/state'&&req.method==='GET')return send(res,200,{...visibleState(user),user:{id:user.id,name:user.name,role:roleOf(user)}});
-    if(p==='/api/export'&&req.method==='GET'){if(user.role!=='admin')return fail(res,403,'Apenas administradores.');const visible=new Set(db.tasks.filter(t=>canSeeTask(user,t)).map(t=>t.id));return send(res,200,{exportedAt:new Date().toISOString(),...state(),tasks:db.tasks.filter(t=>visible.has(t.id)),history:db.history.filter(h=>!h.taskId||visible.has(h.taskId)).slice(-200),audit:db.audit.filter(x=>!x.action.startsWith('task.')||visible.has(x.entityId)).slice(-300)},{'Content-Disposition':'attachment; filename="casa-em-dia-backup.json"'});}
+    if(p==='/api/export'&&req.method==='GET'){if(user.role!=='admin')return fail(res,403,'Apenas administradores.');const visible=new Set(db.tasks.filter(t=>canSeeTask(user,t)).map(t=>t.id));return send(res,200,{exportedAt:new Date().toISOString(),...state(),tasks:db.tasks.filter(t=>visible.has(t.id)),history:db.history.filter(h=>!h.taskId||visible.has(h.taskId)).slice(-200),audit:db.audit.filter(x=>!x.action.startsWith('task.')||visible.has(x.entityId)).slice(-300)},{'Content-Disposition':'attachment; filename="daily-casa-backup.json"'});}
     if(p==='/api/import'&&req.method==='POST'){
       if(user.role!=='admin')return fail(res,403,'Apenas administradores.');
       if(!Array.isArray(b.tasks)||b.tasks.length>500)return fail(res,400,'Ficheiro inválido ou demasiado grande (máximo 500 tarefas).');

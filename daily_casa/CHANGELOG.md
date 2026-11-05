@@ -1,3 +1,10 @@
+# 3.0.0 — Daily Casa em todo o lado
+
+- O add-on passa a chamar-se `daily_casa` e os repositórios `cmsdias/daily-casa` (instalação) e `cmsdias/daily-casa-dev` (desenvolvimento). **É um add-on novo para o Home Assistant:** os dados passam com uma cópia de segurança — ver «Vem da Casa em Dia?» na documentação e `documentacao/MIGRACAO_3.0.md`.
+- Sensores renomeados para `sensor.daily_casa_*`; comando para automações `daily_casa_tarefa`; notificações agrupadas como `daily-casa`.
+- A exportação descarrega `daily-casa-AAAA-MM-DD.json`.
+- Demonstração em `https://cmsdias.github.io/daily-casa/`.
+
 # 2.4.0 — Daily Casa
 
 - **Nova marca: Daily Casa.** O símbolo da casa mantém-se; o nome passa a «daily casa» em minúsculas, na mesma letra da app (Instrument Sans), com o ponto dourado no «i».

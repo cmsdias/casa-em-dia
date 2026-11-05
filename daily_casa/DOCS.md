@@ -2,6 +2,10 @@
 
 Aplicação para organizar a casa em conjunto: tarefas pontuais, rotinas recorrentes, lista de compras, equipamentos e documentos da casa, registo de horas e finanças domésticas.
 
+## Vem da «Casa em Dia»?
+
+A 3.0.0 é um add-on novo (`daily_casa`). Os dados passam com uma cópia de segurança: no add-on antigo, *Casa → Definições → Cópias de segurança* → criar e descarregar; parar o antigo; instalar o Daily Casa (repositório `https://github.com/cmsdias/daily-casa`); criar uma conta provisória; **Carregar ficheiro** → **Restaurar**; entrar com a conta de sempre; desinstalar o antigo. Os sensores passam a `sensor.daily_casa_*`.
+
 ## Como está organizada
 
 - **Hoje**: o que há para fazer hoje e o que está atrasado, a semana, as compras. «Tenho 15 min / 30 min / 1 hora» sugere as tarefas que cabem nesse tempo.
@@ -77,7 +81,7 @@ A app fica com ícone próprio e em ecrã inteiro. Só funciona na rede de casa;
 Em **Definições → Notificações e Home Assistant** (administrador):
 
 - **Notificações** para a app Home Assistant de cada pessoa: tarefa atribuída e resumo diário à hora escolhida.
-- **Sensores** `sensor.casa_em_dia_*`: tarefas por fazer, atrasadas, para hoje, compras por fazer, última conclusão, «hoje» (lista das tarefas de hoje e atrasadas) e estado da casa (%).
+- **Sensores** `sensor.daily_casa_*`: tarefas por fazer, atrasadas, para hoje, compras por fazer, última conclusão, «hoje» (lista das tarefas de hoje e atrasadas) e estado da casa (%).
 - **Cartão para o painel**: código pronto a colar num painel (por exemplo, num tablet na cozinha) com as tarefas de hoje, o estado da casa e as compras. As tarefas privadas e as finanças nunca são incluídas.
 - **Automações:** o Home Assistant pode criar tarefas e produtos de compras através de `rest_command`, com um token próprio (a configuração pronta a copiar está nessa secção).
 
