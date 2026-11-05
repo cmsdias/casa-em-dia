@@ -1,3 +1,7 @@
+# 2.3.2 — Categorias por ordem alfabética
+
+- As categorias de tarefas ficam sempre por ordem alfabética: ao guardar em Definições › A casa, ao importar e nas listas de escolha. As categorias que já existem são ordenadas ao atualizar.
+
 # 2.3.1 — Barra de estado, divisões por piso, copiar código
 
 - **iPhone (app instalada):** a barra de estado passa a ter uma faixa verde opaca por baixo das horas e da bateria; o conteúdo deixa de passar por baixo dela ao deslizar. *É preciso remover o ícone do ecrã principal e voltar a adicioná-lo*, porque o iPhone só lê esta definição na instalação.

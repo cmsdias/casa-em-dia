@@ -36,7 +36,10 @@ else {
 }
 
 // Migração conservadora e compatível com cópias de segurança anteriores (também usada ao restaurar uma cópia).
+// Categorias sempre por ordem alfabética (português, sem distinguir maiúsculas nem acentos).
+const sortPt=a=>[...a].sort((x,y)=>x.localeCompare(y,'pt',{sensitivity:'base'}));
 function migrate(){
+ if(db.settings&&Array.isArray(db.settings.categories))db.settings.categories=sortPt(db.settings.categories);
  if(typeof db.secret!=='string'||db.secret.length<32)db.secret=crypto.randomBytes(32).toString('hex');
  for(const k of ['people','tasks','history','shopping','workLogs','audit'])db[k]=Array.isArray(db[k])?db[k]:[];
  for(const p of db.people){if(p.role==='member')p.role='resident';}
@@ -391,7 +394,7 @@ const server=http.createServer(async (req,res)=>{
       }
       // Divisões e pisos do ficheiro (opcional): acrescentam-se às existentes.
       if(b.settings&&typeof b.settings==='object'){const st=db.settings=db.settings||{rooms:[],categories:[]};const list=(a,max)=>Array.isArray(a)?a.filter(x=>typeof x==='string').map(x=>cleanStr(x,max)).filter(Boolean).slice(0,100):[];
-        st.floors=[...new Set([...(st.floors||[]),...list(b.settings.floors,40)])].slice(0,20);st.rooms=[...new Set([...(st.rooms||[]),...list(b.settings.rooms,70)])];st.categories=[...new Set([...(st.categories||[]),...list(b.settings.categories,70)])];
+        st.floors=[...new Set([...(st.floors||[]),...list(b.settings.floors,40)])].slice(0,20);st.rooms=[...new Set([...(st.rooms||[]),...list(b.settings.rooms,70)])];st.categories=sortPt([...new Set([...(st.categories||[]),...list(b.settings.categories,70)])]);
         if(b.settings.roomFloors&&typeof b.settings.roomFloors==='object'){st.roomFloors=st.roomFloors||{};for(const [r,f] of Object.entries(b.settings.roomFloors))if(st.rooms.includes(r)&&st.floors.includes(f))st.roomFloors[r]=f;}}
       let imported=0,skipped=0;
       const key=t=>[t.title,t.room,t.kind].map(x=>String(x||'').trim().toLocaleLowerCase('pt-PT')).join('|');
@@ -415,7 +418,7 @@ const server=http.createServer(async (req,res)=>{
       if(!elevated(user))return fail(res,403,'Sem permissão para alterar definições.');
       const normalize=a=>{if(!Array.isArray(a)||a.length>100||a.some(x=>typeof x!=='string'))throw Error('Lista inválida.');return [...new Set(a.map(x=>cleanStr(x,70)).filter(Boolean))];};
       db.settings=db.settings||{rooms:[],categories:[]};
-      const incoming={...db.settings};if('rooms'in b)incoming.rooms=normalize(b.rooms);if('categories'in b)incoming.categories=normalize(b.categories);if('floors'in b){const f=normalize(b.floors);if(f.length>20)throw Error('No máximo 20 pisos.');incoming.floors=f.map(x=>cleanStr(x,40));}
+      const incoming={...db.settings};if('rooms'in b)incoming.rooms=normalize(b.rooms);if('categories'in b)incoming.categories=sortPt(normalize(b.categories));if('floors'in b){const f=normalize(b.floors);if(f.length>20)throw Error('No máximo 20 pisos.');incoming.floors=f.map(x=>cleanStr(x,40));}
       if('roomFloors'in b){if(!b.roomFloors||typeof b.roomFloors!=='object'||Array.isArray(b.roomFloors))throw Error('Pisos das divisões inválidos.');const rooms=new Set(incoming.rooms||[]),floors=new Set(incoming.floors||[]);incoming.roomFloors=Object.fromEntries(Object.entries(b.roomFloors).filter(([r,f])=>rooms.has(r)&&typeof f==='string'&&floors.has(f)));}
       else if(incoming.roomFloors){const rooms=new Set(incoming.rooms||[]),floors=new Set(incoming.floors||[]);incoming.roomFloors=Object.fromEntries(Object.entries(incoming.roomFloors).filter(([r,f])=>rooms.has(r)&&floors.has(f)));}if('rules'in b){if(!b.rules||typeof b.rules!=='object')return fail(res,400,'Regras inválidas.');incoming.rules={residentAssign:b.rules.residentAssign!==false,reviewCollaborators:b.rules.reviewCollaborators===true};if(!incoming.rules.reviewCollaborators)for(const t of db.tasks)if(t.status==='review'){t.status=t.review?.prev||'todo';delete t.review;}}db.settings=incoming;logAction(user,'settings.update','global');save();return send(res,200,{settings:db.settings});
     }
