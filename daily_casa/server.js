@@ -81,6 +81,12 @@ function tooMany(res,st){return send(res,429,{error:`Demasiadas tentativas. Tent
 const alertSent=new Map();
 function securityAlert(key,title,body){const t=Date.now();if(t-(alertSent.get(key)||0)<30*60_000)return;alertSent.set(key,t);
  for(const a of db.people.filter(x=>roleOf(x)==='admin'&&isActive(x)))notif.add(a.id,'security',title,body,{page:'settings',section:'security'});save();}
+let notesCache=null;
+function releaseNotes(){if(notesCache)return notesCache;let title='',items=[];
+ try{const md=fs.readFileSync(path.join(ROOT,'CHANGELOG.md'),'utf8');const sec=md.split(/^# /m).find(x=>x.trim());const lines=sec.split('\n');
+  title=(lines[0].split('—')[1]||'').trim();
+  items=lines.filter(l=>/^- /.test(l)).map(l=>{const b=l.match(/^- \*\*(.+?)\*\*/);let t=b?b[1]:l.slice(2);t=t.replace(/\*\*|`/g,'').replace(/[:.]\s*$/,'');if(!b)t=t.split(/[.;:](\s|$)/)[0];return t.length>110?t.slice(0,107)+'…':t;}).slice(0,5);}catch{}
+ return notesCache={version:APP_VERSION,title,items};}
 function publicUrl(){return db.settings?.publicUrl||db.settings?.publicUrlAuto||'';}
 const notif=createNotifications({getDb:()=>db,save,newId:()=>id(),todayISO:()=>dateInTz(new Date()),canSeeTask:(u,t)=>canSeeTask(u,t),isActive:u=>isActive(u),roleOf:u=>roleOf(u)});
 const equip=createEquipment({getDb:()=>db,save,newId:()=>id(),todayISO:()=>dateInTz(new Date()),dataDir:DATA_DIR,roleOf:u=>roleOf(u),notify:(...a)=>notif.add(...a)});
@@ -332,7 +338,9 @@ const server=http.createServer(async (req,res)=>{
       return fail(res,404,'Não encontrado.');
     }
     if(user.mustChangePassword&&!(p===`/api/people/${user.id}/password`&&req.method==='POST'))return fail(res,428,'Define uma nova palavra-passe para continuar.');
-    if(p==='/api/rev'&&req.method==='GET')return send(res,200,{rev:rev()});
+    if(p==='/api/rev'&&req.method==='GET')return send(res,200,{rev:rev(),version:APP_VERSION});
+    // Novidades da versão instalada (primeira secção do CHANGELOG), para o aviso «Há uma nova versão».
+    if(p==='/api/version'&&req.method==='GET')return send(res,200,releaseNotes());
     if(p==='/api/notifications/read'&&req.method==='POST'){const ids=b.ids==='all'?'all':Array.isArray(b.ids)?b.ids.filter(x=>typeof x==='string').slice(0,200):null;if(!ids)return fail(res,400,'Pedido inválido.');const n=notif.markRead(user,ids);if(n)save();return send(res,200,{notifications:notif.forUser(user)});}
     if(p==='/api/notifications/clear'&&req.method==='POST'){if(notif.clear(user))save();return send(res,200,{notifications:notif.forUser(user)});}
     // Fotografias das tarefas: ficheiros em DATA_DIR/photos, servidos só a quem pode ver a tarefa.

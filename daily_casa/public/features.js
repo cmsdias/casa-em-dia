@@ -51,6 +51,7 @@ async function syncApply(){const y=window.scrollY;syncPending=false;syncBanner(f
 async function syncCheck(){
  if(demo||!store.user||document.hidden)return;
  let j;try{const r=await fetch('api/rev',{credentials:'same-origin',headers:{Accept:'application/json'},cache:'no-store'});if(r.status===401){store.user=null;renderAuth('login','A sessão terminou. Volta a entrar.');return;}if(!r.ok)return;j=await r.json();if(offline){offline=false;render();}}catch{return;}
+ if(j.version)versionCheck(j.version);
  if(!syncRev){syncRev=j.rev;return;}
  if(j.rev===syncRev){if(syncPending&&!syncBusy())syncApply().catch(()=>{});return;}
  if(syncBusy()){syncPending=true;syncBanner(true);return;}
@@ -385,3 +386,22 @@ function phoneField(id,name,value){const {code,number}=splitPhone(value);const c
 // Junta indicativo e número no campo escondido que o formulário envia.
 document.addEventListener('input',e=>{const w=e.target.closest?.('.phone-field');if(!w)return;const code=w.querySelector('.phone-code').value,num=w.querySelector('input[type=tel]').value.trim();w.querySelector('input[type=hidden]').value=num?(code?code+' ':'')+num.replace(/^\+\d+\s*/,''):'';},true);
 document.addEventListener('change',e=>{if(e.target.classList?.contains('phone-code'))e.target.closest('.phone-field').querySelector('input[type=tel]').dispatchEvent(new Event('input',{bubbles:true}));},true);
+
+/* 3.1.1 · Aviso de nova versão: quando o add-on é atualizado no Home Assistant, a app aberta (ou reaberta) pede para atualizar. */
+let versionShown='';
+function versionDismissed(v){try{return sessionStorage.getItem('dc-version-later')===v;}catch{return versionShown===v;}}
+async function versionCheck(v){
+ if(!APP_VER||v===APP_VER||versionShown===v||versionDismissed(v)||document.getElementById('version-holder'))return;
+ versionShown=v;let notes={title:'',items:[]};try{notes=await api('/api/version');}catch{}
+ const holder=document.createElement('div');holder.id='version-holder';
+ holder.innerHTML=`<div class="confirm-overlay"><div class="confirm-box version-box" role="alertdialog" aria-modal="true" aria-labelledby="version-title" aria-describedby="version-msg"><span class="version-badge">${ico('sparkle')} Versão ${esc(v)}</span><h2 id="version-title">Há uma nova versão da Daily Casa</h2><p id="version-msg">${notes.title?`<b>${esc(notes.title)}.</b> `:''}Atualiza para usares as novidades. Demora só uns segundos.</p>${notes.items?.length?`<ul class="version-notes">${notes.items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}<div class="confirm-actions"><button type="button" class="button" data-version="later">Mais tarde</button><button type="button" class="button primary" data-version="now">${ico('refresh')} Atualizar agora</button></div></div></div>`;
+ document.body.appendChild(holder);holder.querySelector('[data-version="now"]').focus();
+ holder.addEventListener('click',async e=>{const b=e.target.closest('[data-version]');if(!b)return;
+  if(b.dataset.version==='later'){try{sessionStorage.setItem('dc-version-later',v);}catch{}holder.remove();return;}
+  b.disabled=true;b.innerHTML=`${ico('refresh')} A atualizar…`;await versionReload();});
+}
+async function versionReload(){
+ try{if('caches'in window){const keys=await caches.keys();await Promise.all(keys.map(k=>caches.delete(k)));}}catch{}
+ try{const reg=await navigator.serviceWorker?.getRegistration();if(reg)await reg.update();}catch{}
+ location.reload();
+}
