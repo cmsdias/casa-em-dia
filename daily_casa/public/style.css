@@ -1791,3 +1791,25 @@ html.is-scrolled body::before{opacity:1}
 .version-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;letter-spacing:.02em;padding:5px 10px;border-radius:999px;background:var(--brand-green);color:var(--brand-paper)}
 .version-badge svg{width:14px;height:14px;color:var(--brand-gold)}
 .version-notes{margin:4px 0 16px;padding-left:20px;text-align:left;display:grid;gap:6px;font-size:14px;line-height:1.45;color:var(--muted)}
+/* 3.2 · Convite para instalar a app */
+.install-sheet{position:fixed;left:0;right:0;bottom:0;z-index:900;padding:0 12px calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;pointer-events:none;transform:translateY(110%);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.install-sheet.open{transform:none}
+.install-card{position:relative;width:min(100%,440px);background:#fff;border-radius:24px;padding:20px 18px 16px;box-shadow:0 -4px 40px #0b130e33,0 18px 50px #0b130e40;pointer-events:auto;display:grid;gap:14px}
+.install-close{position:absolute;top:10px;right:10px;width:36px;height:36px;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:24px;line-height:1;cursor:pointer}
+.install-head{display:flex;gap:14px;align-items:center;padding-right:30px}
+.install-icon{width:58px;height:58px;border-radius:14px;flex:none;box-shadow:0 4px 12px #17261e33}
+.install-head h2{margin:0 0 3px;font-size:19px;letter-spacing:-.02em}
+.install-head p{margin:0;font-size:14px;line-height:1.45;color:var(--muted)}
+.install-steps{list-style:none;margin:0;padding:12px;border-radius:16px;background:var(--brand-paper);display:grid;gap:10px;counter-reset:st}
+.install-steps li{display:flex;align-items:center;gap:12px;font-size:14px;line-height:1.35}
+.install-steps li>span:last-child{display:block;min-width:0}
+.install-steps small{display:block;margin-top:2px;font-size:12px;color:var(--muted)}
+.install-key{width:36px;height:36px;border-radius:10px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;flex:none;color:#0a84ff}
+.install-key svg{width:20px;height:20px}
+.install-key-app{padding:0;overflow:hidden;border:0}.install-key-app img{width:36px;height:36px}
+.install-hint{margin:0;font-size:13px;color:var(--muted)}.install-hint a{font-weight:600}
+.install-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.install-actions .button{width:100%;justify-content:center}
+.install-pointer{width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:10px solid #fff;margin-top:-1px;animation:installBob 1.4s ease-in-out infinite}
+@keyframes installBob{50%{transform:translateY(4px)}}
+@media (prefers-reduced-motion:reduce){.install-sheet{transition:none}.install-pointer{animation:none}}
