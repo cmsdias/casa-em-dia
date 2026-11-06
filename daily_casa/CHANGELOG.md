@@ -1,3 +1,9 @@
+# 3.5.0 — Escolher as notificações
+
+- Nova secção «Sobre o que te avisamos» no perfil: cada pessoa escolhe que tipos de notificação recebe no telemóvel (tarefas atribuídas, rotinas, tarefas do dia, concluídas, aprovações, ocorrências, equipamentos, aniversários, calendário da casa).
+- Só aparecem os tipos que se aplicam ao perfil de cada pessoa.
+- Os avisos de segurança e os códigos de recuperação são sempre enviados; no sino continua a aparecer tudo.
+
 # 3.4.1 — Ecrã de entrada no Safari e avisos diários
 
 - Ecrã de entrada no Safari: as barras do browser em cima e em baixo ficam com a cor do verde e do cartão, sem faixas escuras.
