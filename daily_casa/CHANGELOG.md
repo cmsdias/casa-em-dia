@@ -1,3 +1,9 @@
+# 3.6.0 — Convites e «Ver como»
+
+- Convidar por email: o administrador indica o email e o perfil; a pessoa recebe uma ligação (7 dias) para criar a conta e entrar. Convites por aceitar com «Reenviar» e «Cancelar»; aviso quando é aceite.
+- «Ver como» no perfil do administrador: ver a app como gestor, morador ou colaborador, só na interface; etiqueta dourada com «Voltar».
+- Ecrã de entrada: o fundo da página passa a verde-escuro (atrás das horas, nas barras do Safari e ao puxar) e desaparece o risco no topo.
+
 # 3.5.0 — Escolher as notificações
 
 - Nova secção «Sobre o que te avisamos» no perfil: cada pessoa escolhe que tipos de notificação recebe no telemóvel (tarefas atribuídas, rotinas, tarefas do dia, concluídas, aprovações, ocorrências, equipamentos, aniversários, calendário da casa).

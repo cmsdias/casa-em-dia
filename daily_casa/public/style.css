@@ -1823,12 +1823,8 @@ html{touch-action:pan-x pan-y}
 .remember-box svg{width:15px;height:15px}
 .remember-row input:checked+.remember-box{background:var(--brand-green);border-color:var(--brand-green);color:var(--brand-paper)}
 .remember-row input:focus-visible+.remember-box{outline:2px solid var(--brand-gold);outline-offset:2px}
-/* 3.4.1 · Ecrã de entrada no Safari: as barras do browser (topo e fundo) ficam com a cor do verde de cima e do cartão de baixo.
-   O Safari usa a cor do fundo da página e de elementos fixos encostados às margens. */
-body:has(.auth-layout){background:var(--brand-paper)}
-.auth-layout::before,.auth-layout::after{content:"";position:fixed;left:0;right:0;height:3px;z-index:1;pointer-events:none}
-.auth-layout::before{top:0;background:var(--brand-green)}
-.auth-layout::after{bottom:0;background:var(--brand-paper)}
+/* 3.6 · Ecrã de entrada: fundo da página em verde-escuro (o que aparece atrás das horas, das barras do Safari e ao puxar); o cartão mantém-se. */
+body:has(.auth-layout){background:var(--brand-green)}
 /* 3.5 · Sobre o que te avisamos */
 .notif-types{display:grid;gap:2px;margin-top:6px;padding-top:14px;border-top:1px solid var(--line)}
 .notif-types-title{margin:0 0 6px;font-size:15px;letter-spacing:-.01em}
@@ -1836,3 +1832,22 @@ body:has(.auth-layout){background:var(--brand-paper)}
 .notif-type-ico{width:28px;height:28px;display:grid;place-items:center;color:var(--muted)}
 .notif-type-ico svg{width:20px;height:20px}
 .notif-types .field-help{margin:8px 0 0}
+/* 3.6 · Convites */
+.people-add-actions{display:flex;flex-wrap:wrap;gap:10px}
+.invites-card{margin-top:18px}
+.invite-list{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:10px}
+.invite-list li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.invite-list li:first-child{border-top:0}
+.invite-list li>div{display:grid;gap:2px;min-width:0}
+.invite-list small{color:var(--muted);font-size:12px}
+.invite-actions{display:flex;align-items:center;gap:6px;flex:none}
+.invite-link{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--ink);user-select:all;-webkit-user-select:all}
+/* 3.6 · Ver como */
+.viewas-field{display:grid;gap:8px;margin-top:6px;padding-top:14px;border-top:1px solid var(--line)}
+.viewas-field .appearance-state{margin:0}
+.viewas-field .viewas-seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-flow:row;grid-auto-columns:auto}
+.viewas-seg button{padding:9px 6px;font-size:13px}
+.viewas-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:95;display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;border-radius:999px;background:var(--brand-gold);color:#17261E;font-size:13px;box-shadow:0 8px 24px #0b130e40;white-space:nowrap}
+.viewas-banner svg{width:16px;height:16px}
+.viewas-banner button{border:0;border-radius:999px;background:#17261E;color:#F8F7F2;font:inherit;font-weight:600;padding:7px 12px;cursor:pointer}
+@media (min-width:651px){.viewas-banner{bottom:24px}}

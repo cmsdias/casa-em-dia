@@ -22,6 +22,14 @@ A 3.0.0 é um add-on novo (`daily_casa`). Os dados passam com uma cópia de segu
 4. Em **Casa → Pessoas**, crie (com nome, email e palavra-passe temporária) as contas das restantes pessoas da casa e atribua o perfil adequado.
 5. Opcional: em **Definições → A casa**, ajuste as divisões e categorias e importe uma lista de tarefas em JSON.
 
+## Convidar pessoas
+
+Em **Casa → Pessoas → Convidar por email** (administrador): indique o email, o nome (opcional) e o perfil. A pessoa recebe um email com uma ligação válida durante 7 dias, escolhe a sua palavra-passe e entra logo. Se o email não estiver configurado, a app mostra a ligação para a enviar por outro meio (por exemplo, WhatsApp). Os convites por aceitar aparecem em Pessoas, com **Reenviar** e **Cancelar**; o administrador é avisado quando o convite é aceite. Continua a ser possível criar a conta com uma palavra-passe temporária.
+
+## Ver como outro perfil
+
+Em **O teu perfil → Ver como** (administrador), escolha Gestor, Morador ou Colaborador para ver a app como essas pessoas a veem. Só muda a interface neste dispositivo: os dados e as permissões continuam os do administrador. Uma etiqueta dourada indica o modo; **Voltar** regressa ao modo de administrador.
+
 ## Perfis
 
 | Perfil | O que pode fazer |

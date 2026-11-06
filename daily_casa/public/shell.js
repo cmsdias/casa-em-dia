@@ -305,3 +305,70 @@ actionHandlers.push(async(name,el)=>{
  try{if(demo){const u=me();u.notifPrefs={...(u.notifPrefs||{}),[k]:on};}else{const r=await api('/api/me','PATCH',{notifPrefs:{[k]:on}});if(r.people)store.people=r.people;}}
  catch(e){el.setAttribute('aria-checked',String(!on));toast(e.message);}return true;
 });
+
+/* 3.6 · Convites por email (administrador) e aceitação do convite. */
+let invitesData=null;
+function invitesCard(){
+ if(demo)return '';
+ if(!invitesData){queueMicrotask(async()=>{try{invitesData=await api('/api/invites');}catch{invitesData={invites:[]};}if(page==='people'&&!modal)render();});return '';}
+ const list=invitesData.invites||[];if(!list.length)return '';
+ return `<div class="settings-card invites-card"><h3>Convites por aceitar</h3><ul class="invite-list">${list.map(x=>`<li><div><b>${esc(x.name||x.email)}</b><small>${x.name?esc(x.email)+' · ':''}${esc(x.roleLabel)} · enviado ${esc(relTime(x.sentAt))} · válido até ${esc(new Date(x.expiresAt).toLocaleDateString('pt-PT'))}</small></div><span class="invite-actions"><button type="button" class="button small" data-action="invite-resend" data-id="${esc(x.id)}">Reenviar</button><button type="button" class="icon-btn" data-action="invite-cancel" data-id="${esc(x.id)}" aria-label="Cancelar o convite de ${esc(x.email)}">×</button></span></li>`).join('')}</ul></div>`;
+}
+modalRenderers['invite']=holder=>{
+ const done=modal.result;
+ if(done){const r=done;holder.innerHTML=modalShell({title:r.mailed?'Convite enviado':'Convite criado',sub:r.mailed?`Enviámos um email para ${r.invite.email} com as instruções.`:(r.mailError?`O email não seguiu: ${r.mailError}`:'O envio de email não está configurado.')+' Partilha a ligação abaixo com a pessoa.',body:`<div class="field"><label>Ligação do convite</label><pre class="code-block invite-link">${esc(r.link)}</pre><small class="field-help">Válida durante 7 dias. Quem a abrir escolhe a palavra-passe e entra como ${esc(r.invite.roleLabel.toLowerCase())}.</small></div><div class="modal-actions"><button type="button" class="button" data-action="invite-copy">${ico('copy')} Copiar ligação</button><button type="button" class="button primary" data-action="close">Concluído</button></div>`});return;}
+ holder.innerHTML=modalShell({title:'Convidar por email',sub:'A pessoa recebe um email com uma ligação para criar a conta e escolher a palavra-passe.',body:`<form id="invite-form"><div class="field"><label for="inv-email">Email</label><input id="inv-email" name="email" type="email" required autocapitalize="none" spellcheck="false" placeholder="nome@exemplo.pt"/></div><div class="field"><label for="inv-name">Nome (opcional)</label><input id="inv-name" name="name" maxlength="80" placeholder="Para personalizar o email"/></div><div class="field"><label for="inv-role">Perfil</label><select id="inv-role" name="role">${option('resident','Morador','resident')}${option('manager','Gestor da casa','resident')}${option('collaborator','Colaborador','resident')}</select><small class="field-help">Podes mudar o perfil mais tarde em Pessoas.</small></div><div class="modal-actions"><button class="button" type="button" data-action="close">Cancelar</button><button class="button primary" type="submit">${ico('mail')} Enviar convite</button></div></form>`});
+ holder.querySelector('#invite-form').addEventListener('submit',async e=>{e.preventDefault();const b=e.target.querySelector('[type=submit]');b.disabled=true;
+  try{const r=await api('/api/invites','POST',Object.fromEntries(new FormData(e.target)));invitesData={...invitesData,invites:r.invites};modal={type:'invite',result:r};render();}catch(err){toast(err.message);b.disabled=false;}});
+ setTimeout(()=>holder.querySelector('#inv-email')?.focus(),50);
+};
+actionHandlers.push(async(name,el)=>{
+ if(name==='invite-open'){modal={type:'invite'};render();return true;}
+ if(name==='invite-copy'){const pre=document.querySelector('.invite-link');await copyText(pre?.textContent||'','Ligação copiada.',pre);return true;}
+ if(name==='invite-resend'){el.disabled=true;try{const r=await api(`/api/invites/${el.dataset.id}/resend`,'POST',{});invitesData={...invitesData,invites:r.invites};modal={type:'invite',result:r};render();}catch(e){toast(e.message);el.disabled=false;}return true;}
+ if(name==='invite-cancel'){if(!await confirmDialog({title:'Cancelar este convite?',message:'A ligação enviada deixa de funcionar.',confirmLabel:'Cancelar convite',cancelLabel:'Manter'}))return true;try{const r=await api(`/api/invites/${el.dataset.id}`,'DELETE');invitesData={...invitesData,invites:r.invites};render();toast('Convite cancelado.');}catch(e){toast(e.message);}return true;}
+ return false;
+});
+// Página para quem recebe o convite: escolhe o nome e a palavra-passe e entra.
+async function renderInvite(token){
+ const shell=(inner)=>`<div class="auth-layout"><section class="auth-aside"><div class="brand brand-primary"><img class="brand-primary-logo" src="logo-primary-light.svg" alt="Daily Casa" /></div><div><h1>A casa em dia,<br/><em>todos os dias.</em></h1><p>Um espaço comum para organizar pendências, dividir tarefas e celebrar o que já está feito.</p></div><small>O teu espaço, os teus dados, o teu ritmo.</small></section><section class="auth-form"><div class="auth-inner"><img class="auth-mobile-logo" src="logo-primary-dark.svg" alt="Daily Casa" />${inner}</div></section></div>`;
+ document.querySelector('meta[name=theme-color]')?.setAttribute('content','#17261E');
+ let inv;try{inv=await api('/api/invites/'+encodeURIComponent(token));}catch(e){app.innerHTML=shell(`<div class="eyebrow">DAILY CASA · CONVITE</div><h2>Convite indisponível.</h2><p>${esc(e.message)}</p><a class="button primary auth-submit" href="./">${ico('login')}<span>Ir para o login</span></a>`);return;}
+ app.innerHTML=shell(`<div class="eyebrow">DAILY CASA · CONVITE</div><h2>Cria a tua conta.</h2><p>${inv.invitedBy?`${esc(inv.invitedBy)} convidou-te`:'Foste convidado'} para a Daily Casa como <b>${esc(inv.roleLabel.toLowerCase())}</b>.</p><form id="invite-accept"><div class="field"><label for="ia-name">O teu nome</label><input id="ia-name" name="name" autocomplete="name" required minlength="2" value="${esc(inv.name)}" placeholder="Como queres ser identificado"/></div><div class="field"><label for="ia-email">Email</label><input id="ia-email" name="email" type="email" autocomplete="username" value="${esc(inv.email)}" readonly/></div><div class="field"><label for="ia-pass">Palavra-passe</label><input id="ia-pass" name="password" type="password" autocomplete="new-password" minlength="10" required placeholder="Mínimo de 10 caracteres"/></div><button class="button primary auth-submit" type="submit">${ico('check')}<span>Criar conta e entrar</span></button><div class="auth-message" id="auth-error"></div></form>`);
+ const f=document.getElementById('invite-accept');(inv.name?f.querySelector('#ia-pass'):f.querySelector('#ia-name')).focus();
+ f.addEventListener('submit',async e=>{e.preventDefault();const b=f.querySelector('[type=submit]');b.disabled=true;
+  try{const v=Object.fromEntries(new FormData(f));await api('/api/invites/'+encodeURIComponent(token)+'/accept','POST',{name:v.name,password:v.password});location.replace(location.pathname);}
+  catch(err){document.getElementById('auth-error').textContent=err.message;b.disabled=false;}});
+}
+
+/* 3.6 · «Ver como» (administrador): esconde controlos e páginas para ver a app como gestor, morador ou colaborador.
+   É só na interface deste dispositivo: os dados e as permissões no servidor continuam os do administrador. */
+const VIEW_ROLES={manager:'Gestor',resident:'Morador',collaborator:'Colaborador'};
+const viewAsGet=()=>{try{return sessionStorage.getItem('dc-view-as')||'';}catch{return '';}};
+const viewAsSet=v=>{try{v?sessionStorage.setItem('dc-view-as',v):sessionStorage.removeItem('dc-view-as');}catch{}};
+const realRole=()=>store.user?.realRole||store.user?.role;
+function applyViewAs(){
+ if(!store?.user)return;const v=viewAsGet();
+ if(store.user.realRole){store.user.role=store.user.realRole;}
+ if(!v||!VIEW_ROLES[v]||(store.user.realRole||store.user.role)!=='admin'){delete store.user.realRole;const self=(store.people||[]).find(p=>p.id===store.user.id);if(self&&self._realRole){self.role=self._realRole;delete self._realRole;}return;}
+ store.user.realRole='admin';store.user.role=v;
+ const self=(store.people||[]).find(p=>p.id===store.user.id);if(self){self._realRole=self._realRole||'admin';self.role=v;}
+}
+{const loadBefore=load;load=async function(...a){const r=await loadBefore.apply(this,a);applyViewAs();return r;};}
+{const renderBefore=render;render=function(...a){applyViewAs();const r=renderBefore.apply(this,a);viewAsBanner();return r;};}
+function viewAsBanner(){
+ const v=store?.user?.realRole?store.user.role:'';let el=document.getElementById('viewas-banner');
+ if(!v){el?.remove();return;}
+ if(!el){el=document.createElement('div');el.id='viewas-banner';el.className='viewas-banner';el.setAttribute('role','status');document.body.appendChild(el);}
+ el.innerHTML=`${ico('eye')}<span>A ver como <b>${esc(VIEW_ROLES[v]||v)}</b></span><button type="button" data-action="view-as" data-role="">Voltar</button>`;
+}
+function viewAsField(){
+ if(realRole()!=='admin'||demo)return '';const cur=store.user.realRole?store.user.role:'';
+ const opts=[['','Administrador'],['manager','Gestor'],['resident','Morador'],['collaborator','Colaborador']];
+ return `<div class="viewas-field"><h3 class="notif-types-title">Ver como</h3><p class="appearance-state">Esconde os controlos e as páginas que esse perfil não vê, para veres a app como as outras pessoas. Os dados por trás continuam os teus e nada é alterado.</p><div class="seg-control seg-small viewas-seg" role="radiogroup" aria-label="Ver a app como">${opts.map(([k,l])=>`<button type="button" role="radio" aria-checked="${cur===k}" data-action="view-as" data-role="${k}">${l}</button>`).join('')}</div></div>`;
+}
+actionHandlers.push(async(name,el)=>{
+ if(name!=='view-as')return false;const v=el.dataset.role||'';viewAsSet(v);
+ if(!v&&store.user?.realRole){store.user.role=store.user.realRole;delete store.user.realRole;}
+ modal=null;page='today';render();window.scrollTo(0,0);toast(v?`A ver a app como ${VIEW_ROLES[v].toLowerCase()}.`:'De volta ao modo de administrador.');return true;
+});
