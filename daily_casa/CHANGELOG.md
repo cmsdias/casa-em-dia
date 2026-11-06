@@ -1,3 +1,9 @@
+# 3.4.1 — Ecrã de entrada no Safari e avisos diários
+
+- Ecrã de entrada no Safari: as barras do browser em cima e em baixo ficam com a cor do verde e do cartão, sem faixas escuras.
+- Os avisos diários (tarefas do dia, aniversários, calendário do mês) só chegam ao telemóvel a partir da hora do resumo diário (por omissão 08:30), nunca de madrugada.
+- Documentação: lista de todas as notificações e de quem as recebe.
+
 # 3.4.0 — Zoom elástico e sessão
 
 - Zoom elástico: com dois dedos amplia-se o ecrã e, ao largar, volta suavemente ao tamanho normal.

@@ -86,6 +86,13 @@ Quem carregar em «Esqueci-me da palavra-passe» recebe um código de 6 dígitos
   - Exige o endereço seguro (`https://…`, ver «Acesso fora de casa»).
   - No iPhone/iPad (iOS 16.4 ou mais recente), a app tem de estar **instalada no ecrã principal** e ser aberta pelo ícone; só então aparece o interruptor.
   - Ao ligar, o telemóvel pede autorização e chega logo uma notificação de teste.
+- **O que chega** (o mesmo que aparece no sino):
+  - **Tarefas:** tarefa atribuída a si; a sua vez numa rotina com rotação; alguém concluiu uma tarefa que criou.
+  - **Aprovações** (com as regras da casa ligadas): pedido de atribuição a um colaborador e trabalho de colaborador «por aprovar» (administrador e gestor); a decisão sobre o seu pedido ou trabalho (quem pediu ou fez).
+  - **Ocorrências:** nova ocorrência (administrador e gestor; urgente se a gravidade for alta); ocorrência que reportou foi resolvida.
+  - **Equipamentos** (administrador e gestor): revisão marcada (30 dias antes) e garantia a terminar.
+  - **Avisos diários,** a partir da hora do resumo diário (por omissão 08:30): tarefas para hoje e atrasadas; aniversários (hoje e amanhã; não para colaboradores); no início do mês, o calendário da casa (administrador e gestor).
+  - **Segurança** (administrador): alguém pediu para recuperar a palavra-passe; endereço ou conta bloqueados por tentativas falhadas.
 - **Pela app Home Assistant (opcional):** continua disponível para quem o administrador associou em **Definições → Notificações e Home Assistant**. Quem já recebe as notificações da app deixa de as receber em duplicado pelo Home Assistant (fica o resumo diário e os códigos de recuperação).
 
 ## Dados e cópias de segurança

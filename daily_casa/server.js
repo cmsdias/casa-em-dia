@@ -622,9 +622,12 @@ process.on('uncaughtException',e=>console.error('Exceção não tratada:',e));
 for(const sig of ['SIGTERM','SIGINT'])process.on(sig,()=>{console.log(`${sig} recebido, a terminar.`);server.close(()=>process.exit(0));setTimeout(()=>process.exit(0),3000).unref();});
 // Cópia de segurança automática diária e integração com o Home Assistant (se disponível).
 try{const bk=backups.autoTick();if(bk)console.log('Cópia de segurança automática:',bk.name);}catch(e){console.error('Cópia automática falhou:',e.message);}
-setInterval(()=>{try{backups.autoTick();}catch(e){console.error('Cópia automática falhou:',e.message);}try{if(FIN.generateRecurring(db.finance,dateInTz(new Date()),id))save();}catch(e){console.error('Despesas fixas:',e.message);}try{notif.daily();}catch(e){console.error('Notificações diárias:',e.message);}try{equip.tick();}catch(e){console.error('Equipamentos:',e.message);}},30*60_000).unref();
+// Os avisos diários (tarefas do dia, aniversários, calendário do mês) só saem a partir da hora do resumo diário (por omissão 08:30),
+// para as notificações no telemóvel não chegarem de madrugada.
+function dailyHour(){if(process.env.DAILY_ANY_HOUR==='1')return true;const now=new Intl.DateTimeFormat('en-GB',{timeZone:process.env.TZ||'Europe/Lisbon',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date());return now>=(db.ha?.dailyTime||'08:30');}
+setInterval(()=>{try{backups.autoTick();}catch(e){console.error('Cópia automática falhou:',e.message);}try{if(FIN.generateRecurring(db.finance,dateInTz(new Date()),id))save();}catch(e){console.error('Despesas fixas:',e.message);}try{if(dailyHour())notif.daily();}catch(e){console.error('Notificações diárias:',e.message);}try{equip.tick();}catch(e){console.error('Equipamentos:',e.message);}},30*60_000).unref();
 try{equip.tick();}catch(e){console.error('Equipamentos:',e.message);}
-try{notif.daily();}catch(e){console.error('Notificações diárias:',e.message);}
+try{if(dailyHour())notif.daily();}catch(e){console.error('Notificações diárias:',e.message);}
 try{if(FIN.generateRecurring(db.finance,dateInTz(new Date()),id))save();}catch(e){console.error('Despesas fixas:',e.message);}
 const hhmm=()=>new Intl.DateTimeFormat('en-GB',{timeZone:HOUSE_TZ,hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date());
 ha=createHa({getDb:()=>db,todayISO:()=>dateInTz(new Date()),nowHM:hhmm,save});ha.start();
