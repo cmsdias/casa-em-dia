@@ -30,25 +30,17 @@ function createInvites({ getDb, save, newId }) {
   return { pending, create, resend, cancel, find, markAccepted, cancelForEmail, view, ROLES, TOKEN_RE };
 }
 
-// Email do convite (texto e HTML com as cores da marca).
+// Email do convite (texto e HTML no modelo da marca).
 function inviteEmail({ inviter, name, roleLabel, link }) {
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const { brandHtml, escH } = require('./mailer');
   const who = String(inviter || 'O administrador').split(' ')[0];
   const hello = name ? `Olá ${String(name).split(' ')[0]},` : 'Olá,';
   const subject = `${who} convidou-te para a Daily Casa`;
   const text = `${hello}\n\n${who} convidou-te para a Daily Casa, a app onde a casa organiza tarefas, rotinas e compras (perfil: ${roleLabel}).\n\nPara criares a tua conta, abre esta ligação e escolhe uma palavra-passe:\n${link}\n\nA ligação é válida durante 7 dias.\n\nDepois de entrares, no iPhone toca em Partilhar › Adicionar ao ecrã principal para teres a app sempre à mão.\n\nDaily Casa`;
-  const html = `<!doctype html><html lang="pt-PT"><body style="margin:0;background:#F8F7F2;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;color:#17261E">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F8F7F2;padding:32px 12px"><tr><td align="center">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #E6E2D6">
-<tr><td style="background:#17261E;padding:22px 28px;color:#F8F7F2;font-size:20px;font-weight:600;letter-spacing:-0.3px">daily casa<span style="color:#C9A568">.</span></td></tr>
-<tr><td style="padding:28px">
-<p style="margin:0 0 14px;font-size:16px">${esc(hello)}</p>
-<p style="margin:0 0 8px;font-size:15px;line-height:1.55;color:#3F4B43"><b>${esc(who)}</b> convidou-te para a Daily Casa, a app onde a casa organiza tarefas, rotinas e compras.</p>
-<p style="margin:0 0 22px;font-size:14px;color:#5F6A62">Perfil: ${esc(roleLabel)}</p>
-<p style="margin:0"><a href="${esc(link)}" style="display:inline-block;background:#17261E;color:#F8F7F2;text-decoration:none;font-weight:600;font-size:15px;padding:13px 22px;border-radius:999px">Criar a minha conta</a></p>
-<p style="margin:18px 0 0;font-size:13px;line-height:1.5;color:#5F6A62">A ligação é válida durante 7 dias. Depois de entrares, no iPhone toca em <b>Partilhar › Adicionar ao ecrã principal</b> para teres a app sempre à mão.</p>
-<p style="margin:18px 0 0;font-size:12px;line-height:1.5;color:#8A948D;word-break:break-all">Se o botão não funcionar, copia este endereço: ${esc(link)}</p>
-</td></tr></table></td></tr></table></body></html>`;
+  const html = brandHtml({ title: 'Tens lugar na casa.', preheader: `${who} convidou-te para a Daily Casa`,
+    lead: `${escH(hello)} <b>${escH(who)}</b> convidou-te para a Daily Casa, onde a casa organiza tarefas, rotinas e compras. Entras como <b>${escH(String(roleLabel).toLowerCase())}</b>.`,
+    cta: { label: 'Criar a minha conta', url: link },
+    foot: `A ligação é válida durante 7 dias. Depois de entrares, no iPhone toca em <b>Partilhar › Adicionar ao ecrã principal</b>.<br><span style="color:#8A948D;word-break:break-all">Se o botão não funcionar: ${escH(link)}</span>` });
   return { subject, text, html };
 }
 module.exports = { createInvites, inviteEmail, ROLES };
