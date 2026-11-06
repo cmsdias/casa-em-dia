@@ -175,13 +175,13 @@ function renderForgot(step,email='',msg=''){
  const box=document.querySelector('.auth-inner');if(!box)return;
  box.innerHTML=`<img class="auth-mobile-logo" src="logo-primary-dark.svg" alt="Daily Casa" /><div class="eyebrow">DAILY CASA · RECUPERAR ACESSO</div><h2>${step===1?'Esqueceste-te da palavra-passe?':'Escolhe uma nova palavra-passe.'}</h2>
  <p>${step===1?'Indica o teu email. Enviamos-te um código de 6 dígitos por email (e para a app Home Assistant do telemóvel, se estiver ligada). O administrador é avisado e também pode repor-te a palavra-passe.':'Escreve o código de 6 dígitos que recebeste e a nova palavra-passe.'}</p>
- <form id="forgot-form">${step===1?`<div class="field"><label>Email</label><input type="email" name="email" required autocomplete="username" autocapitalize="none" spellcheck="false" value="${esc(email)}" placeholder="nome@exemplo.pt"/></div>`:`<input type="hidden" name="email" value="${esc(email)}"/><div class="field"><label>Código</label><input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="\\d{6}" maxlength="6" required placeholder="000000"/></div><div class="field"><label>Nova palavra-passe</label><input type="password" name="password" autocomplete="new-password" minlength="10" required placeholder="Mínimo de 10 caracteres"/></div>`}
+ <form id="forgot-form">${step===1?`<div class="field"><label>Email</label><input type="email" name="email" required autocomplete="username" autocapitalize="none" spellcheck="false" value="${esc(email)}" placeholder="nome@exemplo.pt"/></div>`:`<input type="email" name="email" autocomplete="username" value="${esc(email)}" hidden/><div class="field"><label>Código</label><input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="\\d{6}" maxlength="6" required placeholder="000000"/></div><div class="field"><label>Nova palavra-passe</label><input type="password" name="password" autocomplete="new-password" minlength="10" required placeholder="Mínimo de 10 caracteres"/></div>`}
  <button class="button primary auth-submit" type="submit">${ico(step===1?'mail':'check')}<span>${step===1?'Enviar código':'Guardar e entrar'}</span></button><div class="auth-message ${msg?'ok':''}" id="auth-error">${esc(msg)}</div>
  <button type="button" class="auth-link" data-action="forgot-back">${ico('back')} Voltar ao login</button>${step===2?`<button type="button" class="auth-link" data-action="forgot-open">Pedir um novo código</button>`:''}</form>`;
- const f=box.querySelector('#forgot-form');f.querySelector('input:not([type=hidden])')?.focus();
+ const f=box.querySelector('#forgot-form');f.querySelector('input:not([hidden])')?.focus();
  f.addEventListener('submit',async e=>{e.preventDefault();const v=Object.fromEntries(new FormData(f));const b=f.querySelector('[type=submit]');b.disabled=true;
   try{if(step===1){await api('/api/password/forgot','POST',{email:v.email});renderForgot(2,v.email,'Se o email estiver registado, enviámos um código válido durante 15 minutos. Vê também o spam. Se não chegar, o administrador já foi avisado.');}
-   else{await api('/api/password/reset','POST',v);await load();render();toast('Palavra-passe alterada. Bem-vindo de volta.');}}
+   else{await api('/api/password/reset','POST',v);location.replace(location.pathname+location.search);}}
   catch(err){const m=box.querySelector('#auth-error');m.classList.remove('ok');m.textContent=err.message;b.disabled=false;}});
 }
 
@@ -259,3 +259,27 @@ function installSheet(){
  function close(){el.classList.remove('open');setTimeout(()=>el.remove(),250);}
 }
 setInterval(()=>{if(!installShown&&store?.user&&!document.hidden)setTimeout(installSheet,3500);},4000);
+
+/* 3.4 · Zoom elástico: com dois dedos amplia-se o conteúdo; ao largar volta suavemente ao tamanho normal.
+   Substitui o zoom do browser (que no iPhone ficava preso ampliado). As fotografias e janelas abertas mantêm o seu comportamento. */
+(function(){
+ const skip=t=>!!(t&&t.closest&&t.closest('#photo-viewer,#crop-holder,.overlay,.confirm-overlay,#install-sheet,#version-holder,input,textarea,select'));
+ for(const ev of ['gesturestart','gesturechange'])document.addEventListener(ev,e=>{if(!skip(e.target))e.preventDefault();},{passive:false});
+ let g=null;
+ const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+ const mid=t=>({x:(t[0].clientX+t[1].clientX)/2,y:(t[0].clientY+t[1].clientY)/2});
+ document.addEventListener('touchstart',e=>{
+  if(e.touches.length!==2||skip(e.target))return;const el=document.querySelector('main.main');if(!el)return;
+  const r=el.getBoundingClientRect(),m=mid(e.touches);g={el,d:dist(e.touches),m};
+  el.style.transition='none';el.style.transformOrigin=`${m.x-r.left}px ${m.y-r.top}px`;el.style.willChange='transform';
+ },{passive:true});
+ document.addEventListener('touchmove',e=>{
+  if(!g||e.touches.length!==2)return;e.preventDefault();
+  let s=dist(e.touches)/g.d;s=s<1?1-(1-s)*.25:Math.min(s,4);const m=mid(e.touches);
+  g.el.style.transform=`translate(${(m.x-g.m.x).toFixed(1)}px,${(m.y-g.m.y).toFixed(1)}px) scale(${s.toFixed(3)})`;
+ },{passive:false});
+ const release=e=>{if(!g||e.touches.length>=2)return;const el=g.el;g=null;
+  el.style.transition='transform .5s cubic-bezier(.18,1.35,.4,1)';el.style.transform='';
+  setTimeout(()=>{if(!g){el.style.transition='';el.style.transformOrigin='';el.style.willChange='';}},550);};
+ document.addEventListener('touchend',release);document.addEventListener('touchcancel',release);
+})();

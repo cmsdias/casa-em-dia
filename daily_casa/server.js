@@ -151,10 +151,13 @@ function passwordHash(pw,salt=crypto.randomBytes(16).toString('hex')){return `${
 function verifyPw(pw,stored){const [salt,expected]=stored.split(':');const hash=passwordHash(pw,salt).split(':')[1]; return crypto.timingSafeEqual(Buffer.from(hash,'hex'),Buffer.from(expected,'hex'));}
 const DUMMY_HASH=passwordHash('palavra-passe-inexistente','00000000000000000000000000000000');
 const resetCodes=new Map();
-function session(user){const payload=Buffer.from(JSON.stringify({id:user.id,v:user.authVersion||1,exp:Date.now()+14*86400_000})).toString('base64url');const mac=crypto.createHmac('sha256',db.secret).update(payload).digest('base64url');return `${payload}.${mac}`;}
+// «Manter sessão iniciada»: 60 dias com o visto; sem ele, a sessão dura até fechar o browser (no máximo 12 horas).
+const REMEMBER_MS=60*86400_000,SHORT_MS=12*3600_000;
+function tokenRemember(req){try{const t=((req.headers.cookie||'').match(/(?:^|;\s*)casa_session=([^;]+)/)||[])[1];return JSON.parse(Buffer.from(t.split('.')[0],'base64url').toString()).r!==0;}catch{return true;}}
+function session(user,remember=true){const payload=Buffer.from(JSON.stringify({id:user.id,v:user.authVersion||1,r:remember?1:0,exp:Date.now()+(remember?REMEMBER_MS:SHORT_MS)})).toString('base64url');const mac=crypto.createHmac('sha256',db.secret).update(payload).digest('base64url');return `${payload}.${mac}`;}
 function readUser(req){const token=((req.headers.cookie||'').match(/(?:^|;\s*)casa_session=([^;]+)/)||[])[1];if(!token)return null;
 try{const [payload,mac]=token.split('.');const sig=crypto.createHmac('sha256',db.secret).update(payload).digest('base64url');if(!mac||sig.length!==mac.length||!crypto.timingSafeEqual(Buffer.from(mac),Buffer.from(sig)))return null;const claim=JSON.parse(Buffer.from(payload,'base64url').toString());if(claim.exp<Date.now())return null;const u=db.people.find(x=>x.id===claim.id&&(x.authVersion||1)===claim.v);return u&&isActive(u)&&scheduleAllows(u)?u:null;}catch{return null;}}
-function cookie(req,token){const secure=NET.info(req).https?'; Secure':'';return `casa_session=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${token?14*86400:0}${secure}`;}
+function cookie(req,token,remember=true){const secure=NET.info(req).https?'; Secure':'';const age=!token?'; Max-Age=0':remember?`; Max-Age=${REMEMBER_MS/1000}`:'';return `casa_session=${token}; Path=/; HttpOnly; SameSite=Strict${age}${secure}`;}
 async function parseBody(req,limit=256_000){let size=0;let chunks=[];for await(const c of req){size+=c.length;if(size>limit)throw new Error('Pedido demasiado grande.');chunks.push(c);}try{return JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}catch{throw new Error('JSON inválido.');}}
 // O que cada pessoa vê das outras: contactos (email, telefone) só para o próprio, administrador e gestores;
 // a data de nascimento completa só para o próprio e o administrador (os restantes veem o dia e o mês, para os aniversários).
@@ -265,7 +268,7 @@ const server=http.createServer(async (req,res)=>{
         return fail(res,401,'Email ou palavra-passe errados.');}
       if(!isActive(u))return fail(res,403,'Esta conta foi desativada. Fala com o administrador da casa.');
       if(!scheduleAllows(u))return fail(res,403,'O teu acesso está disponível apenas em: '+scheduleText(u)+'.');
-      LIM.ip.success('login:'+ip);LIM.account.success(username);return send(res,200,{user:{id:u.id,name:u.name,role:u.role,mustChangePassword:!!u.mustChangePassword}},{'Set-Cookie':cookie(req,session(u))});
+      LIM.ip.success('login:'+ip);LIM.account.success(username);const remember=b.remember!==false&&b.remember!=='0'&&b.remember!=='off';return send(res,200,{user:{id:u.id,name:u.name,role:u.role,mustChangePassword:!!u.mustChangePassword}},{'Set-Cookie':cookie(req,session(u,remember),remember)});
     }
     if(p==='/api/logout'&&req.method==='POST')return send(res,200,{ok:true},{'Set-Cookie':cookie(req,'')});
     // Recuperar a palavra-passe: código de 6 dígitos enviado por email (se o envio estiver configurado nas opções do add-on)
@@ -606,7 +609,7 @@ const server=http.createServer(async (req,res)=>{
       if(target.id===user.id&&!verifyPw(String(b.currentPassword||'').slice(0,200),target.passwordHash))return fail(res,403,'A palavra-passe atual não está correta.');
       if(target.id===user.id&&String(b.password)===String(b.currentPassword||''))return fail(res,400,'A nova palavra-passe tem de ser diferente da atual.');
       target.passwordHash=passwordHash(b.password);target.authVersion=(target.authVersion||1)+1;target.mustChangePassword=target.id!==user.id;logAction(user,'person.password',target.id);save();
-      return send(res,200,{ok:true},target.id===user.id?{'Set-Cookie':cookie(req,session(target))}:{});
+      return send(res,200,{ok:true},target.id===user.id?{'Set-Cookie':cookie(req,session(target,tokenRemember(req)),tokenRemember(req))}:{});
     }
     return fail(res,404,'Rota não encontrada.');
   }catch(e){console.error('Request error:',e);return fail(res,400,e.message||'Ocorreu um erro.');}
