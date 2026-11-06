@@ -1,3 +1,7 @@
+# 3.6.1 — Ecrã de entrada com cartão flutuante
+
+- No telemóvel, o cartão do login fica a flutuar sobre o verde, com todos os cantos arredondados e uma margem à volta; cabe no ecrã sem scroll.
+
 # 3.6.0 — Convites e «Ver como»
 
 - Convidar por email: o administrador indica o email e o perfil; a pessoa recebe uma ligação (7 dias) para criar a conta e entrar. Convites por aceitar com «Reenviar» e «Cancelar»; aviso quando é aceite.

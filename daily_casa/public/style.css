@@ -1851,3 +1851,13 @@ body:has(.auth-layout){background:var(--brand-green)}
 .viewas-banner svg{width:16px;height:16px}
 .viewas-banner button{border:0;border-radius:999px;background:#17261E;color:#F8F7F2;font:inherit;font-weight:600;padding:7px 12px;cursor:pointer}
 @media (min-width:651px){.viewas-banner{bottom:24px}}
+/* 3.6.1 · Ecrã de entrada no telemóvel: cartão flutuante com todos os cantos arredondados, sobre o verde, sem scroll. */
+@media (max-width:650px){
+ .auth-form{border-radius:24px;flex:1 1 auto;margin-left:12px;margin-right:12px;margin-bottom:calc(10px + env(safe-area-inset-bottom,0px));padding:24px 20px 20px}
+ .auth-aside{padding-bottom:36px;gap:14px}
+ .auth-inner h2{margin-bottom:6px}
+ .auth-inner p{margin-bottom:16px;line-height:1.5}
+ .auth-inner .field{margin-bottom:10px}
+ .auth-inner .button{margin-top:6px}
+ .remember-row{min-height:36px}
+}
