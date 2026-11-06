@@ -1,3 +1,9 @@
+# 3.4.0 — Zoom elástico e sessão
+
+- Zoom elástico: com dois dedos amplia-se o ecrã e, ao largar, volta suavemente ao tamanho normal.
+- Visto «Manter sessão iniciada» no login: com ele a sessão dura 60 dias; sem ele termina ao fechar a app.
+- O iPhone passa a propor guardar a palavra-passe no Porta-chaves depois de entrar (também na recuperação da palavra-passe).
+
 # 3.3.0 — Notificações no telemóvel
 
 - Notificações push da própria app: tudo o que chega ao sino aparece também no telemóvel, mesmo com a app fechada.
