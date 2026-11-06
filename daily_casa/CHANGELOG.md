@@ -1,3 +1,9 @@
+# 3.1.1 — Aviso de nova versão
+
+- A app avisa quando há uma versão nova instalada no Home Assistant, com as principais novidades.
+- «Atualizar agora» limpa a cópia guardada no telemóvel e recarrega já com a versão nova.
+- «Mais tarde» volta a perguntar da próxima vez que a app for aberta.
+
 # 3.1.0 — Acesso pela Internet em segurança
 
 - **Limite de tentativas de entrada**, por endereço e por conta: 10 falhas do mesmo endereço em 15 minutos bloqueiam-no 15 minutos (o dobro a cada reincidência, até 24 horas); 20 falhas numa conta numa hora bloqueiam-na 30 minutos, venham de onde vierem. Resposta com o tempo de espera, aviso ao administrador no sino e botão «Desbloquear tudo». Também limitados: pedidos de recuperação (5 em 15 minutos) e tokens de integração errados.
