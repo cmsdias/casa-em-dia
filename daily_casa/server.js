@@ -69,6 +69,19 @@ const backups=createBackups({dataDir:DATA_DIR,getDb:()=>db,dateInTz});
 if(rawDb&&db.appVersion!==APP_VERSION){try{backups.create('upgrade',rawDb);}catch(e){console.error('Não foi possível guardar a cópia anterior à atualização:',e.message);}}
 rawDb=null;
 migrate();save();
+// 3.1 · Acesso pela Internet: proxy de confiança, limites de tentativas e email (Gmail) para recuperar a palavra-passe.
+const {createNet}=require('./lib/net');const {createLimiter,waitText}=require('./lib/ratelimit');const MAIL=require('./lib/mailer');
+function addonOptions(){try{return JSON.parse(fs.readFileSync(path.join(DATA_DIR,'options.json'),'utf8'))||{};}catch{return {};}}
+const NET=createNet({trusted:(process.env.TRUSTED_PROXIES||'172.30.33.0/24').split(',')});
+const MAILER=MAIL.createMailer({getOptions:()=>({...addonOptions(),...(process.env.SMTP_USER?{email_remetente:process.env.SMTP_USER,email_palavra_passe:process.env.SMTP_PASS}:{})}),host:process.env.SMTP_HOST||'smtp.gmail.com',port:+(process.env.SMTP_PORT||465),secure:process.env.SMTP_SECURE!=='0'});
+// Por IP: 10 falhas em 15 min bloqueiam 15 min (a duplicar a cada reincidência, até 24 h). Por conta: 20 falhas numa hora, de qualquer IP, bloqueiam 30 min.
+// Recuperação: 5 pedidos em 15 min por IP e por email.
+const LIM={ip:createLimiter({max:10,windowMs:15*60_000,blockMs:15*60_000,progressive:true}),account:createLimiter({max:20,windowMs:60*60_000,blockMs:30*60_000}),reset:createLimiter({max:5,windowMs:15*60_000,blockMs:30*60_000})};
+function tooMany(res,st){return send(res,429,{error:`Demasiadas tentativas. Tenta novamente dentro de ${waitText(st.retryAfter)}.`},{'Retry-After':String(st.retryAfter)});}
+const alertSent=new Map();
+function securityAlert(key,title,body){const t=Date.now();if(t-(alertSent.get(key)||0)<30*60_000)return;alertSent.set(key,t);
+ for(const a of db.people.filter(x=>roleOf(x)==='admin'&&isActive(x)))notif.add(a.id,'security',title,body,{page:'settings',section:'security'});save();}
+function publicUrl(){return db.settings?.publicUrl||db.settings?.publicUrlAuto||'';}
 const notif=createNotifications({getDb:()=>db,save,newId:()=>id(),todayISO:()=>dateInTz(new Date()),canSeeTask:(u,t)=>canSeeTask(u,t),isActive:u=>isActive(u),roleOf:u=>roleOf(u)});
 const equip=createEquipment({getDb:()=>db,save,newId:()=>id(),todayISO:()=>dateInTz(new Date()),dataDir:DATA_DIR,roleOf:u=>roleOf(u),notify:(...a)=>notif.add(...a)});
 const incid=createIncidents({getDb:()=>db,save,newId:()=>id(),photoDir:PHOTO_DIR,roleOf:u=>roleOf(u),notify:(...a)=>notif.add(...a),pushHa:(pid,title,msg)=>{Promise.resolve(ha?.notify(pid,title,msg,{tag:'casa-ocorrencia'})).catch(()=>{});},
@@ -126,16 +139,11 @@ function cleanStr(val,max=150){return String(val??'').trim().slice(0,max);}
 function passwordHash(pw,salt=crypto.randomBytes(16).toString('hex')){return `${salt}:${crypto.scryptSync(pw,salt,64).toString('hex')}`;}
 function verifyPw(pw,stored){const [salt,expected]=stored.split(':');const hash=passwordHash(pw,salt).split(':')[1]; return crypto.timingSafeEqual(Buffer.from(hash,'hex'),Buffer.from(expected,'hex'));}
 const DUMMY_HASH=passwordHash('palavra-passe-inexistente','00000000000000000000000000000000');
-// Limite de tentativas falhadas por utilizador (em memória): 8 falhas em 10 minutos bloqueiam novas tentativas até expirarem.
 const resetCodes=new Map();
-const LOGIN_WINDOW_MS=10*60_000,LOGIN_MAX_FAILURES=8;const loginAttempts=new Map();
-function loginBlocked(username){const e=loginAttempts.get(username);if(!e)return false;if(Date.now()-e.first>LOGIN_WINDOW_MS){loginAttempts.delete(username);return false;}return e.count>=LOGIN_MAX_FAILURES;}
-function loginFailed(username){const now=Date.now();const e=loginAttempts.get(username);if(!e||now-e.first>LOGIN_WINDOW_MS)loginAttempts.set(username,{first:now,count:1});else e.count++;if(loginAttempts.size>1000){for(const [k,v] of loginAttempts)if(now-v.first>LOGIN_WINDOW_MS)loginAttempts.delete(k);}}
-function loginSucceeded(username){loginAttempts.delete(username);}
 function session(user){const payload=Buffer.from(JSON.stringify({id:user.id,v:user.authVersion||1,exp:Date.now()+14*86400_000})).toString('base64url');const mac=crypto.createHmac('sha256',db.secret).update(payload).digest('base64url');return `${payload}.${mac}`;}
 function readUser(req){const token=((req.headers.cookie||'').match(/(?:^|;\s*)casa_session=([^;]+)/)||[])[1];if(!token)return null;
 try{const [payload,mac]=token.split('.');const sig=crypto.createHmac('sha256',db.secret).update(payload).digest('base64url');if(!mac||sig.length!==mac.length||!crypto.timingSafeEqual(Buffer.from(mac),Buffer.from(sig)))return null;const claim=JSON.parse(Buffer.from(payload,'base64url').toString());if(claim.exp<Date.now())return null;const u=db.people.find(x=>x.id===claim.id&&(x.authVersion||1)===claim.v);return u&&isActive(u)&&scheduleAllows(u)?u:null;}catch{return null;}}
-function cookie(req,token){const secure=(req.headers['x-forwarded-proto']==='https'||req.socket.encrypted)?'; Secure':'';return `casa_session=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${token?14*86400:0}${secure}`;}
+function cookie(req,token){const secure=NET.info(req).https?'; Secure':'';return `casa_session=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${token?14*86400:0}${secure}`;}
 async function parseBody(req,limit=256_000){let size=0;let chunks=[];for await(const c of req){size+=c.length;if(size>limit)throw new Error('Pedido demasiado grande.');chunks.push(c);}try{return JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}catch{throw new Error('JSON inválido.');}}
 // O que cada pessoa vê das outras: contactos (email, telefone) só para o próprio, administrador e gestores;
 // a data de nascimento completa só para o próprio e o administrador (os restantes veem o dia e o mês, para os aniversários).
@@ -168,7 +176,7 @@ function publicPeople(){return db.people.map(({id,name,username,role,avatar,phot
 const PHOTO_MAX=200_000;
 function cleanPhoto(v){if(v===null||v==='')return '';if(typeof v!=='string'||v.length>PHOTO_MAX||!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(v))throw Error('Fotografia inválida ou demasiado grande.');return v;}
 function publicTasks(){return db.tasks;}
-function state(){return {people:publicPeople(),tasks:publicTasks(),history:db.history.slice(-200),shopping:db.shopping,workLogs:db.workLogs,audit:db.audit.slice(-300),settings:db.settings||{rooms:[],categories:[]},serverTime:new Date().toISOString()};}
+function state(){return {people:publicPeople(),tasks:publicTasks(),history:db.history.slice(-200),shopping:db.shopping,workLogs:db.workLogs,audit:db.audit.slice(-300),settings:db.settings||{rooms:[],categories:[]},publicUrl:publicUrl(),serverTime:new Date().toISOString()};}
 function patchTask(t,b){
   if('title'in b){if(!cleanStr(b.title,180))throw Error('Introduz o nome da tarefa.');t.title=cleanStr(b.title,180);}
   if('room'in b)t.room=cleanStr(b.room,70);
@@ -212,6 +220,7 @@ const server=http.createServer(async (req,res)=>{
   let url;try{url=new URL(req.url,'http://localhost');}catch{return fail(res,400,'URL inválido.');}
   const p=url.pathname;
   if(p==='/health'){return send(res,200,{ok:true});}
+  {const o=NET.info(req).origin;if(o&&db.settings&&db.settings.publicUrlAuto!==o&&db.people.length){db.settings.publicUrlAuto=o;save();}}
   if(!p.startsWith('/api/')){if(req.method!=='GET')return fail(res,405,'Método não permitido.');return staticFile(req,res,p);}
   if(!['GET','POST','PATCH','DELETE'].includes(req.method))return fail(res,405,'Método não permitido.');
   if(req.method!=='GET'){
@@ -222,7 +231,7 @@ const server=http.createServer(async (req,res)=>{
   const bodyLimit=p==='/api/backups/upload'?30_000_000:/^\/api\/incidents\/[^/]+\/photos$/.test(p)?3_000_000:/^\/api\/equipment\/[^/]+\/docs$/.test(p)?12_000_000:/^\/api\/tasks\/[^/]+\/photos$/.test(p)?3_000_000:256_000;
   let b={};if(req.method!=='GET')try{b=await parseBody(req,bodyLimit);}catch(e){return fail(res,400,e.message);}
   try{
-    if(p==='/api/bootstrap'&&req.method==='GET')return send(res,200,{setup:db.people.length===0,user:(()=>{const u=readUser(req);return u?{id:u.id,name:u.name,role:u.role,mustChangePassword:!!u.mustChangePassword}:null;})()});
+    if(p==='/api/bootstrap'&&req.method==='GET')return send(res,200,{setup:db.people.length===0,publicUrl:publicUrl(),mail:MAILER.status().configured,user:(()=>{const u=readUser(req);return u?{id:u.id,name:u.name,role:u.role,mustChangePassword:!!u.mustChangePassword}:null;})()});
     if(p==='/api/setup'&&req.method==='POST'){
       if(db.people.length)return fail(res,409,'Aplicação já configurada.');
       const name=cleanStr(b.name,80),password=String(b.password||'');let email;try{email=cleanEmail(b.email);}catch(e){return fail(res,400,e.message);}
@@ -231,41 +240,56 @@ const server=http.createServer(async (req,res)=>{
       const u={id:id(),name,username,email,role:'admin',avatar:'●',passwordHash:passwordHash(password),authVersion:1};db.people.push(u);save();return send(res,200,{user:{id:u.id,name:u.name,role:u.role}},{'Set-Cookie':cookie(req,session(u))});
     }
     if(p==='/api/login'&&req.method==='POST'){
-      const username=cleanStr(b.email||b.username,120).toLowerCase();
-      if(loginBlocked(username))return fail(res,429,'Demasiadas tentativas. Tenta novamente dentro de alguns minutos.');
+      const username=cleanStr(b.email||b.username,120).toLowerCase();const ip=NET.info(req).client;
+      let st=LIM.ip.status('login:'+ip);if(st.blocked)return tooMany(res,st);
+      st=LIM.account.status(username);if(st.blocked)return tooMany(res,st);
       const u=findByLogin(username);
       // Verifica sempre uma palavra-passe (mesmo para utilizadores inexistentes) para não revelar contas pelo tempo de resposta.
       const ok=verifyPw(String(b.password||'').slice(0,200),u?u.passwordHash:DUMMY_HASH)&&!!u;
-      if(!ok){loginFailed(username);return fail(res,401,'Email ou palavra-passe errados.');}
+      if(!ok){
+        const a=LIM.ip.fail('login:'+ip),c=LIM.account.fail(username);
+        if(a.justBlocked)securityAlert('ip:'+ip,'Entrada bloqueada para um endereço',`${ip} errou a palavra-passe 10 vezes seguidas e ficou bloqueado durante ${waitText(a.retryAfter)}.`);
+        if(c.justBlocked&&u)securityAlert('acct:'+u.id,`Conta de ${u.name.split(' ')[0]} bloqueada`,`Houve 20 tentativas falhadas numa hora. A conta fica bloqueada durante ${waitText(c.retryAfter)}; podes desbloquear em Definições › Acesso e segurança.`);
+        if(a.blocked)return tooMany(res,a);if(c.blocked)return tooMany(res,c);
+        return fail(res,401,'Email ou palavra-passe errados.');}
       if(!isActive(u))return fail(res,403,'Esta conta foi desativada. Fala com o administrador da casa.');
       if(!scheduleAllows(u))return fail(res,403,'O teu acesso está disponível apenas em: '+scheduleText(u)+'.');
-      loginSucceeded(username);return send(res,200,{user:{id:u.id,name:u.name,role:u.role,mustChangePassword:!!u.mustChangePassword}},{'Set-Cookie':cookie(req,session(u))});
+      LIM.ip.success('login:'+ip);LIM.account.success(username);return send(res,200,{user:{id:u.id,name:u.name,role:u.role,mustChangePassword:!!u.mustChangePassword}},{'Set-Cookie':cookie(req,session(u))});
     }
     if(p==='/api/logout'&&req.method==='POST')return send(res,200,{ok:true},{'Set-Cookie':cookie(req,'')});
-    // Recuperar a palavra-passe sem serviço de email: código de 6 dígitos enviado para a app Home Assistant do telemóvel da pessoa
-    // (se estiver configurado) e aviso ao administrador. A resposta é sempre a mesma, para não revelar que emails existem.
+    // Recuperar a palavra-passe: código de 6 dígitos enviado por email (se o envio estiver configurado nas opções do add-on)
+    // e para a app Home Assistant do telemóvel (se estiver ligada); o administrador é avisado. A resposta é sempre a mesma e
+    // os envios correm em segundo plano, para não revelar pelo tempo de resposta que emails existem.
     if(p==='/api/password/forgot'&&req.method==='POST'){
-      const key='reset:'+cleanStr(b.email,120).toLowerCase();if(loginBlocked(key))return fail(res,429,'Demasiados pedidos. Tenta novamente dentro de alguns minutos.');loginFailed(key);
-      const u=findByLogin(b.email);let sent=false;
+      const email=cleanStr(b.email,120).toLowerCase(),ip=NET.info(req).client;
+      for(const k of ['ip:'+ip,'acct:'+email]){const st=LIM.reset.status(k);if(st.blocked)return tooMany(res,st);}
+      LIM.reset.fail('ip:'+ip);LIM.reset.fail('acct:'+email);
+      const u=findByLogin(email);
       if(u&&isActive(u)&&u.email){const code=String(crypto.randomInt(0,1e6)).padStart(6,'0');resetCodes.set(u.id,{hash:crypto.createHash('sha256').update(u.id+':'+code).digest('hex'),exp:Date.now()+15*60_000,tries:0});
-        try{sent=!!(await ha?.notify(u.id,'Daily Casa · código de recuperação',`O teu código é ${code}. É válido durante 15 minutos. Se não pediste, ignora esta mensagem.`,{tag:'casa-reset'}));}catch{}
-        for(const a of db.people.filter(x=>roleOf(x)==='admin'&&isActive(x)&&x.id!==u.id))notif.add(a.id,'security',`${u.name.split(' ')[0]} pediu para recuperar a palavra-passe`,sent?'Recebeu um código no telemóvel.':'Se for preciso, repõe-lhe a palavra-passe em Pessoas.',{page:'people'});
+        const mail=MAILER.status().configured,phone=!!db.ha?.notify?.[u.id];
+        if(mail)MAILER.send({to:u.email,...MAIL.resetEmail({name:u.name,code,appUrl:publicUrl()})}).catch(e=>console.error('Email de recuperação:',e.message));
+        Promise.resolve(ha?.notify(u.id,'Daily Casa · código de recuperação',`O teu código é ${code}. É válido durante 15 minutos. Se não pediste, ignora esta mensagem.`,{tag:'casa-reset'})).catch(()=>{});
+        const via=[mail&&'por email',phone&&'no telemóvel'].filter(Boolean).join(' e ');
+        for(const a of db.people.filter(x=>roleOf(x)==='admin'&&isActive(x)&&x.id!==u.id))notif.add(a.id,'security',`${u.name.split(' ')[0]} pediu para recuperar a palavra-passe`,via?`Recebeu um código ${via}.`:'Se for preciso, repõe-lhe a palavra-passe em Pessoas.',{page:'people'});
         logAction(u,'password.forgot',u.id);save();}
       return send(res,200,{ok:true});
     }
     if(p==='/api/password/reset'&&req.method==='POST'){
-      const u=findByLogin(b.email);const rc=u&&resetCodes.get(u.id);const key='reset:'+cleanStr(b.email,120).toLowerCase();
-      if(loginBlocked(key))return fail(res,429,'Demasiadas tentativas. Tenta novamente dentro de alguns minutos.');
+      const email=cleanStr(b.email,120).toLowerCase(),ip=NET.info(req).client;
+      for(const k of ['ip:'+ip,'acct:'+email]){const st=LIM.reset.status(k);if(st.blocked)return tooMany(res,st);}
+      const u=findByLogin(email);const rc=u&&resetCodes.get(u.id);
       const pw=String(b.password||'');if(pw.length<10)return fail(res,400,'A nova palavra-passe deve ter pelo menos 10 caracteres.');
       const ok=rc&&rc.exp>Date.now()&&rc.tries<5&&crypto.timingSafeEqual(Buffer.from(rc.hash),Buffer.from(crypto.createHash('sha256').update(u.id+':'+cleanStr(b.code,6)).digest('hex')));
-      if(!ok){if(rc)rc.tries++;loginFailed(key);return fail(res,400,'Código inválido ou expirado. Pede um novo código.');}
-      resetCodes.delete(u.id);u.passwordHash=passwordHash(pw);u.authVersion=(u.authVersion||1)+1;u.mustChangePassword=false;logAction(u,'password.reset',u.id);save();loginSucceeded(key);
+      if(!ok){if(rc)rc.tries++;const a=LIM.reset.fail('ip:'+ip),c=LIM.reset.fail('acct:'+email);if(a.blocked)return tooMany(res,a);if(c.blocked)return tooMany(res,c);return fail(res,400,'Código inválido ou expirado. Pede um novo código.');}
+      resetCodes.delete(u.id);u.passwordHash=passwordHash(pw);u.authVersion=(u.authVersion||1)+1;u.mustChangePassword=false;logAction(u,'password.reset',u.id);save();
+      LIM.reset.success('acct:'+email);LIM.account.clear(email);
       if(!isActive(u))return fail(res,403,'Esta conta foi desativada. Fala com o administrador da casa.');
       return send(res,200,{user:{id:u.id,name:u.name,role:roleOf(u)}},{'Set-Cookie':cookie(req,session(u))});
     }
     // Entrada a partir de automações do Home Assistant (autenticação por token, sem cookies).
     if(p.startsWith('/api/integracao/')){
-      if(!authIntegration(req))return fail(res,401,'Token de integração inválido.');
+      {const ip=NET.info(req).client,st=LIM.ip.status('int:'+ip);if(st.blocked)return tooMany(res,st);
+       if(!authIntegration(req)){const f=LIM.ip.fail('int:'+ip);if(f.blocked)return tooMany(res,f);return fail(res,401,'Token de integração inválido.');}}
       const robot=db.people.find(x=>roleOf(x)==='admin'&&isActive(x));if(!robot)return fail(res,409,'Sem administrador ativo.');
       const actor={id:robot.id,name:'Home Assistant'};
       if(p==='/api/integracao/tarefas'&&req.method==='POST'){
@@ -286,6 +310,27 @@ const server=http.createServer(async (req,res)=>{
       return fail(res,404,'Rota de integração não encontrada.');
     }
     const user=readUser(req);if(!user)return fail(res,401,'Inicia sessão para continuar.');
+    // Acesso e segurança (administrador): endereço externo, diagnóstico do proxy, email e bloqueios.
+    if(p==='/api/security'||p.startsWith('/api/security/')){
+      if(roleOf(user)!=='admin')return fail(res,403,'Apenas administradores.');
+      const view=async()=>{const ni=NET.info(req);let hostname='';try{hostname=(await ha?.info())?.hostname||'';}catch{}
+        return {net:{remote:ni.remote,client:ni.client,viaProxy:ni.viaProxy,https:ni.https,cloudflareHeaders:!!req.headers['cf-connecting-ip'],origin:ni.origin},hostname,
+          publicUrl:publicUrl(),publicUrlAuto:db.settings?.publicUrlAuto||'',publicUrlManual:db.settings?.publicUrl||'',mail:MAILER.status(),
+          blocked:[...LIM.ip.blocked().map(x=>({...x,kind:'ip'})),...LIM.account.blocked().map(x=>({...x,kind:'account'})),...LIM.reset.blocked().map(x=>({...x,kind:'reset'}))]};};
+      if(p==='/api/security'&&req.method==='GET')return send(res,200,await view());
+      if(p==='/api/security'&&req.method==='PATCH'){
+        const v=cleanStr(b.publicUrl,200).replace(/\/+$/,'');
+        if(v&&!/^https:\/\/[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+(?::\d{2,5})?$/i.test(v))return fail(res,400,'Indica um endereço completo começado por https://, por exemplo https://casa.exemplo.pt.');
+        db.settings=db.settings||{rooms:[],categories:[]};if(v)db.settings.publicUrl=v.toLowerCase();else delete db.settings.publicUrl;logAction(user,'security.publicUrl',v||'auto');save();return send(res,200,await view());
+      }
+      if(p==='/api/security/mail-test'&&req.method==='POST'){
+        if(!user.email)return fail(res,400,'Acrescenta primeiro o teu email no perfil.');
+        try{await MAILER.send({to:user.email,...MAIL.testEmail({name:user.name,appUrl:publicUrl()})});}catch(e){return fail(res,e.code==='NOT_CONFIGURED'?409:502,e.message);}
+        logAction(user,'security.mailTest',user.id);return send(res,200,{ok:true,to:user.email});
+      }
+      if(p==='/api/security/unblock'&&req.method==='POST'){LIM.ip.clear();LIM.account.clear();LIM.reset.clear();logAction(user,'security.unblock','all');save();return send(res,200,await view());}
+      return fail(res,404,'Não encontrado.');
+    }
     if(user.mustChangePassword&&!(p===`/api/people/${user.id}/password`&&req.method==='POST'))return fail(res,428,'Define uma nova palavra-passe para continuar.');
     if(p==='/api/rev'&&req.method==='GET')return send(res,200,{rev:rev()});
     if(p==='/api/notifications/read'&&req.method==='POST'){const ids=b.ids==='all'?'all':Array.isArray(b.ids)?b.ids.filter(x=>typeof x==='string').slice(0,200):null;if(!ids)return fail(res,400,'Pedido inválido.');const n=notif.markRead(user,ids);if(n)save();return send(res,200,{notifications:notif.forUser(user)});}

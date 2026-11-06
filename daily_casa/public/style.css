@@ -1783,3 +1783,6 @@ input::-ms-reveal{display:none}
 html:has(.auth-layout){--sb-rgb:23 38 30}
 body::before{height:calc(var(--sat) * 2.3);opacity:0;transition:opacity .25s ease;background:linear-gradient(to bottom,rgb(var(--sb-rgb)/.9) 0%,rgb(var(--sb-rgb)/.82) 25%,rgb(var(--sb-rgb)/.62) 45%,rgb(var(--sb-rgb)/.36) 65%,rgb(var(--sb-rgb)/.14) 82%,rgb(var(--sb-rgb)/0) 100%)}
 html.is-scrolled body::before{opacity:1}
+/* 3.1 · Acesso e segurança */
+.blocked-list{margin:6px 0 14px;padding-left:18px;display:grid;gap:6px;font-size:14px}
+.blocked-list small{color:var(--muted)}

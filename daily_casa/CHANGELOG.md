@@ -1,3 +1,11 @@
+# 3.1.0 — Acesso pela Internet em segurança
+
+- **Limite de tentativas de entrada**, por endereço e por conta: 10 falhas do mesmo endereço em 15 minutos bloqueiam-no 15 minutos (o dobro a cada reincidência, até 24 horas); 20 falhas numa conta numa hora bloqueiam-na 30 minutos, venham de onde vierem. Resposta com o tempo de espera, aviso ao administrador no sino e botão «Desbloquear tudo». Também limitados: pedidos de recuperação (5 em 15 minutos) e tokens de integração errados.
+- **Reconhece o Cloudflare Tunnel:** os cabeçalhos `CF-Connecting-IP` e `X-Forwarded-Proto` só são aceites vindos da rede interna dos add-ons (`172.30.33.0/24`). A app passa a ver o IP real de quem entra e o cookie de sessão fica `Secure` em HTTPS.
+- **Recuperar a palavra-passe por email** (Gmail): nas opções do add-on, email de envio, palavra-passe de aplicação (campo oculto) e nome do remetente («Daily Casa»). O email traz o código e a ligação para a app; continua também a ir para a app Home Assistant do telemóvel, se estiver ligada. Os envios correm em segundo plano para não revelar que emails existem.
+- **Nova secção Definições › Acesso e segurança** (administrador): endereço externo (detetado automaticamente ou indicado à mão), diagnóstico da ligação, estado do email com «Enviar email de teste» e lista do que está bloqueado.
+- **Sobre a app › Instalar no telemóvel** indica o endereço externo, que funciona dentro e fora de casa, em vez de `http://IP:3000`; texto sobre serviços externos revisto.
+
 # 3.0.0 — Daily Casa em todo o lado
 
 - O add-on passa a chamar-se `daily_casa` e os repositórios `cmsdias/daily-casa` (instalação) e `cmsdias/daily-casa-dev` (desenvolvimento). **É um add-on novo para o Home Assistant:** os dados passam com uma cópia de segurança — ver «Vem da Casa em Dia?» na documentação e `documentacao/MIGRACAO_3.0.md`.

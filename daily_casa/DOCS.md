@@ -47,7 +47,7 @@ As permissões são verificadas no servidor em cada pedido, não apenas escondid
 ## Acesso
 
 - A aplicação é aberta através do **Ingress** do Home Assistant (barra lateral ou app Companion). Não expõe nenhuma porta na rede.
-- Fora de casa, funciona através do acesso remoto que já usa para o Home Assistant.
+- Fora de casa, funciona através do acesso remoto que já usa para o Home Assistant, ou pelo endereço próprio da app (ver «Acesso fora de casa»).
 - A conta do Daily Casa é independente da conta do Home Assistant.
 
 ## Instalar no ecrã principal do telemóvel (sem o cabeçalho do Home Assistant)
@@ -61,6 +61,24 @@ Por omissão a app abre dentro do Home Assistant. Para a ter como app própria n
 4. iPhone: **Partilhar → Adicionar ao ecrã principal**. Android: **menu → Instalar aplicação**.
 
 A app fica com ícone próprio e em ecrã inteiro. Só funciona na rede de casa; fora de casa continue a usar a app Home Assistant. Para desligar, apague o número no campo do acesso direto.
+
+## Acesso fora de casa (Cloudflare Tunnel)
+
+Com o add-on **Cloudflared** e um domínio próprio, a app fica disponível em HTTPS dentro e fora de casa (por exemplo `https://casa.o-seu-dominio.xyz`).
+
+- No Cloudflared, aponte o endereço da app para a porta 3000. O mais robusto é usar o nome interno do add-on, que aparece em **Casa → Definições → Acesso e segurança** (`http://<nome-do-add-on>:3000`); `http://homeassistant:3000` também funciona com o acesso direto ligado.
+- A app só confia nos cabeçalhos do túnel (`CF-Connecting-IP`, `X-Forwarded-Proto`) quando o pedido vem da rede interna dos add-ons (`172.30.33.0/24`). Assim vê o IP real de quem entra e marca o cookie de sessão como `Secure`. Em **Acesso e segurança → Esta ligação** confirma-se se o túnel está a ser reconhecido.
+- O endereço externo é detetado na primeira vez que alguém entra pelo túnel e aparece em **Sobre a app → Instalar no telemóvel** e nos emails. Pode ser indicado à mão em **Acesso e segurança**.
+- **Proteção da entrada:** 10 tentativas falhadas a partir do mesmo endereço bloqueiam-no 15 minutos (o dobro a cada reincidência, até 24 horas); 20 falhas numa conta numa hora bloqueiam essa conta 30 minutos, de qualquer endereço. O administrador recebe um aviso no sino e pode desbloquear em **Acesso e segurança**. Os pedidos de recuperação de palavra-passe estão limitados a 5 em 15 minutos por endereço e por email. Os bloqueios ficam em memória e terminam quando a app reinicia.
+
+## Recuperar a palavra-passe por email (opcional)
+
+1. Crie (ou use) uma conta Gmail só para a app e ative a **verificação em dois passos**.
+2. Na conta Google: **Segurança → Palavras-passe de aplicações** → crie uma para «Daily Casa» e copie as 16 letras.
+3. Em **Definições → Aplicações → Daily Casa → Configuração**, preencha **Email de envio (Gmail)** e **Palavra-passe de aplicação** (o campo fica oculto); o **Nome do remetente** é «Daily Casa». Guarde e reinicie a app.
+4. Em **Casa → Definições → Acesso e segurança**, carregue em **Enviar email de teste para mim**.
+
+Quem carregar em «Esqueci-me da palavra-passe» recebe um código de 6 dígitos válido 15 minutos, por email e (se estiver ligada) na app Home Assistant do telemóvel. A palavra-passe de aplicação só existe nas opções do add-on: não é mostrada na app nem vai para as cópias de segurança da app (as cópias do Home Assistant incluem as opções do add-on).
 
 ## Dados e cópias de segurança
 
