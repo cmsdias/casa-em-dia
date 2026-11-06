@@ -1,3 +1,8 @@
+# 3.6.2 — Emails com a nova imagem
+
+- Os emails de recuperação, de teste e de convite têm o novo visual da Daily Casa: fundo verde, logótipo, cartão claro e botão dourado.
+- O logótipo vai dentro do email, por isso aparece logo, sem ser preciso «mostrar imagens».
+
 # 3.6.1 — Ecrã de entrada com cartão flutuante
 
 - No telemóvel, o cartão do login fica a flutuar sobre o verde, com todos os cantos arredondados e uma margem à volta; cabe no ecrã sem scroll.

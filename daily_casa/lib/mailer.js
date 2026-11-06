@@ -12,8 +12,8 @@ const encWord = s => /^[\x20-\x7e]*$/.test(s) ? s : `=?UTF-8?B?${b64(s)}?=`;
 const cleanHeader = s => String(s || '').replace(/[\r\n]+/g, ' ').trim();
 const validEmail = s => /^[^\s@<>()",;:]+@[^\s@<>()",;:]+\.[^\s@<>()",;:]+$/.test(String(s || ''));
 
-function buildMessage({ fromName, fromAddr, to, subject, text, html, date = new Date() }) {
-  const boundary = 'dc-' + crypto.randomBytes(12).toString('hex');
+function buildMessage({ fromName, fromAddr, to, subject, text, html, inline = [], date = new Date() }) {
+  const bound = () => 'dc-' + crypto.randomBytes(12).toString('hex');
   const domain = fromAddr.split('@')[1] || 'localhost';
   const headers = [
     `From: ${encWord(cleanHeader(fromName))} <${fromAddr}>`,
@@ -23,11 +23,23 @@ function buildMessage({ fromName, fromAddr, to, subject, text, html, date = new 
     `Message-ID: <${crypto.randomUUID()}@${domain}>`,
     'MIME-Version: 1.0',
     'Auto-Submitted: auto-generated',
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
   ];
-  const part = (type, body) => `--${boundary}\r\nContent-Type: ${type}; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n${wrap(b64(body))}`;
-  return `${headers.join('\r\n')}\r\n\r\n${part('text/plain', text)}${html ? part('text/html', html) : ''}--${boundary}--\r\n`;
+  const part = (type, body) => `Content-Type: ${type}; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n${wrap(b64(body))}`;
+  const alt = bound();
+  let htmlPart = html ? part('text/html', html) : '';
+  // Imagens incorporadas (logótipo): multipart/related, para aparecerem sem «mostrar imagens».
+  if (html && inline.length) {
+    const rel = bound();
+    htmlPart = `Content-Type: multipart/related; boundary="${rel}"\r\n\r\n--${rel}\r\n${part('text/html', html)}` +
+      inline.map(img => `--${rel}\r\nContent-Type: ${img.type}\r\nContent-Transfer-Encoding: base64\r\nContent-ID: <${img.cid}>\r\nContent-Disposition: inline; filename="${img.name}"\r\n\r\n${wrap(Buffer.from(img.data).toString('base64'))}`).join('') + `--${rel}--\r\n`;
+  }
+  const body = `--${alt}\r\n${part('text/plain', text)}${htmlPart ? `--${alt}\r\n${htmlPart}` : ''}--${alt}--\r\n`;
+  return `${headers.join('\r\n')}\r\nContent-Type: multipart/alternative; boundary="${alt}"\r\n\r\n${body}`;
 }
+
+const fs = require('node:fs'); const path = require('node:path');
+let logoCache = null;
+function logoInline() { try { logoCache ||= fs.readFileSync(path.join(__dirname, '..', 'public', 'email-logo.png')); return [{ cid: 'logo@dailycasa', type: 'image/png', name: 'daily-casa.png', data: logoCache }]; } catch { return []; } }
 
 function createMailer({ getOptions, host = 'smtp.gmail.com', port = 465, secure = true, rejectUnauthorized = true, timeoutMs = 20000 } = {}) {
   function config() {
@@ -43,7 +55,7 @@ function createMailer({ getOptions, host = 'smtp.gmail.com', port = 465, secure 
     const c = config();
     if (!c.ready) return Promise.reject(Object.assign(Error('O envio de email não está configurado.'), { code: 'NOT_CONFIGURED' }));
     if (!validEmail(to)) return Promise.reject(Error('Endereço de email inválido.'));
-    const message = buildMessage({ fromName: c.name, fromAddr: c.user, to, subject, text, html });
+    const message = buildMessage({ fromName: c.name, fromAddr: c.user, to, subject, text, html, inline: html ? logoInline() : [] });
     return new Promise((resolve, reject) => {
       const sock = secure ? tls.connect({ host, port, servername: host, rejectUnauthorized }) : netm.connect({ host, port });
       let buf = '', done = false, waiter = null;
@@ -86,28 +98,38 @@ function createMailer({ getOptions, host = 'smtp.gmail.com', port = 465, secure 
   return { send, status, config };
 }
 
-// Email com o código de recuperação (texto simples e HTML com as cores da marca).
+// Modelo de email da marca (estilo «verde imersivo»): fundo verde-escuro, logótipo, cartão claro com título
+// (última palavra em dourado), texto, bloco opcional (ex.: código), botão dourado centrado e nota final.
+const escH = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+function brandHtml({ title, lead, block = '', cta = null, foot = '', preheader = '' }) {
+  const t = escH(title).replace(/(\S+[.!?])$/, '<span style="color:#A9843F">$1</span>');
+  const F = "-apple-system,'Segoe UI',Helvetica,Arial,sans-serif";
+  return `<!doctype html><html lang="pt-PT"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><title>${escH(title)}</title></head>
+<body style="margin:0;padding:0;background:#17261E">${preheader ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0">${escH(preheader)}</div>` : ''}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#17261E;font-family:${F}"><tr><td align="center" style="padding:32px 14px">
+<img src="cid:logo@dailycasa" width="190" height="60" alt="daily casa" style="display:block;margin:0 auto;border:0;color:#F8F7F2;font-size:22px;font-weight:600">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin-top:24px;background:#F8F7F2;border-radius:22px"><tr><td style="padding:28px 24px;color:#17261E">
+<div style="font-size:28px;font-weight:700;letter-spacing:-1px;line-height:1.1">${t}</div>
+<p style="margin:12px 0 22px;font-size:15px;line-height:1.55;color:#3F4B43">${lead}</p>${block}
+${cta ? `<p style="margin:24px 0 0;text-align:center"><a href="${escH(cta.url)}" style="display:inline-block;background:#C9A568;color:#17261E;text-decoration:none;font-weight:700;font-size:15px;padding:14px 24px;border-radius:999px">${escH(cta.label)}</a></p>` : ''}
+${foot ? `<p style="margin:22px 0 0;font-size:13px;line-height:1.5;color:#5F6A62">${foot}</p>` : ''}
+</td></tr></table>
+<p style="margin:20px 0 0;font-size:12px;color:#A9B8AC">A casa em dia, todos os dias.</p>
+</td></tr></table></body></html>`;
+}
+const codeBlock = code => `<div style="font-family:'SFMono-Regular',Menlo,Consolas,monospace;font-size:32px;font-weight:700;letter-spacing:8px;text-align:center;background:#17261E;color:#F8F7F2;border-radius:14px;padding:16px 0">${escH(String(code).replace(/^(\d{3})(\d{3})$/, '$1 $2'))}</div>`;
+
+// Email com o código de recuperação.
 function resetEmail({ name, code, appUrl }) {
   const first = String(name || '').split(' ')[0] || 'Olá';
   const text = `Olá ${first},\n\nO teu código para escolher uma nova palavra-passe na Daily Casa é:\n\n${code}\n\nÉ válido durante 15 minutos.${appUrl ? `\n\nAbrir a app: ${appUrl}` : ''}\n\nSe não foste tu a pedir, ignora este email: a tua palavra-passe não muda.\n\nDaily Casa`;
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-  const html = `<!doctype html><html lang="pt-PT"><body style="margin:0;background:#F8F7F2;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;color:#17261E">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F8F7F2;padding:32px 12px"><tr><td align="center">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #E6E2D6">
-<tr><td style="background:#17261E;padding:22px 28px;color:#F8F7F2;font-size:20px;font-weight:600;letter-spacing:-0.3px">daily casa<span style="color:#C9A568">.</span></td></tr>
-<tr><td style="padding:28px">
-<p style="margin:0 0 14px;font-size:16px">Olá ${esc(first)},</p>
-<p style="margin:0 0 20px;font-size:15px;line-height:1.55;color:#3F4B43">O teu código para escolher uma nova palavra-passe:</p>
-<div style="font-size:34px;font-weight:700;letter-spacing:8px;background:#F8F7F2;border-radius:12px;padding:16px 0;text-align:center;font-family:'SFMono-Regular',Menlo,Consolas,monospace">${esc(code)}</div>
-<p style="margin:18px 0 0;font-size:14px;color:#5F6A62">É válido durante 15 minutos.</p>
-${appUrl ? `<p style="margin:22px 0 0"><a href="${esc(appUrl)}" style="display:inline-block;background:#17261E;color:#F8F7F2;text-decoration:none;font-weight:600;font-size:14px;padding:12px 20px;border-radius:999px">Abrir a Daily Casa</a></p>` : ''}
-<p style="margin:24px 0 0;font-size:13px;line-height:1.5;color:#5F6A62">Se não foste tu a pedir, ignora este email: a tua palavra-passe não muda.</p>
-</td></tr></table></td></tr></table></body></html>`;
+  const html = brandHtml({ title: 'Recupera o acesso.', preheader: `O teu código é ${code}`, lead: `Olá ${escH(first)}, usa este código para escolher uma nova palavra-passe. É válido durante 15 minutos.`, block: codeBlock(code), cta: appUrl ? { label: 'Abrir a Daily Casa', url: appUrl } : null, foot: 'Se não foste tu a pedir, ignora este email: a tua palavra-passe não muda.' });
   return { subject: 'Código para recuperar a palavra-passe', text, html };
 }
 function testEmail({ name, appUrl }) {
   const first = String(name || '').split(' ')[0] || 'Olá';
   const text = `Olá ${first},\n\nEste é um email de teste da Daily Casa. Se o recebeste, a recuperação de palavra-passe por email está a funcionar.${appUrl ? `\n\n${appUrl}` : ''}\n\nDaily Casa`;
-  return { subject: 'Email de teste', text };
+  const html = brandHtml({ title: 'Está tudo a funcionar.', lead: `Olá ${escH(first)}, este é um email de teste. A partir de agora, os códigos de recuperação e os convites chegam por aqui.` });
+  return { subject: 'Email de teste', text, html };
 }
-module.exports = { createMailer, buildMessage, resetEmail, testEmail, validEmail };
+module.exports = { createMailer, buildMessage, resetEmail, testEmail, validEmail, brandHtml, escH };
