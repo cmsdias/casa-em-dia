@@ -1,0 +1,12 @@
+configuration:
+  email_remetente:
+    name: Sender email (Gmail)
+    description: Gmail account used to send password recovery codes. Leave empty to disable email.
+  email_palavra_passe:
+    name: App password
+    description: 16-letter app password created in the Google account (Security › App passwords). Do not use the normal account password.
+  email_nome:
+    name: Sender name
+    description: Name shown as the sender of the emails.
+network:
+  3000/tcp: Direct access on the home network and for Cloudflare Tunnel. Leave empty to disable.

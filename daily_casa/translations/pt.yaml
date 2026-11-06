@@ -1,0 +1,12 @@
+configuration:
+  email_remetente:
+    name: Email de envio (Gmail)
+    description: Conta Gmail que envia os códigos de recuperação da palavra-passe. Deixe em branco para não enviar emails.
+  email_palavra_passe:
+    name: Palavra-passe de aplicação
+    description: Palavra-passe de aplicação de 16 letras criada na conta Google (Segurança › Palavras-passe de aplicações). Não use a palavra-passe normal da conta.
+  email_nome:
+    name: Nome do remetente
+    description: Nome que aparece como remetente dos emails.
+network:
+  3000/tcp: Acesso direto na rede de casa e para o Cloudflare Tunnel. Deixe em branco para desligar.
