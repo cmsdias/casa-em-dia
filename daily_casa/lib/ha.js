@@ -34,7 +34,9 @@ function createHa({getDb,todayISO,nowHM,save=()=>{},onError=console.error,fetchI
   }
   async function notify(personId,title,message,extra={}){
     const service=settings().notify?.[personId];if(!service||!available())return false;
-    if(db().people.find(x=>x.id===personId)?.pushOff&&extra.tag!=='casa-reset')return false; // a pessoa desligou as notificações no perfil (o código de recuperação passa sempre)
+    if(db().people.find(x=>x.id===personId)?.pushOff&&extra.tag!=='casa-reset')return false;
+    // Quem já recebe as notificações próprias da app (3.3) não as recebe em duplicado pela app Home Assistant.
+    if(!['casa-reset','resumo-diario','ha-test'].includes(extra.tag)&&db().push?.subs?.some(s=>s.userId===personId))return false; // a pessoa desligou as notificações no perfil (o código de recuperação passa sempre)
     if(!/^[a-z0-9_]+$/.test(service))return false;
     const i=await info();const url=i.panelUrl||'';
     // url (iOS) e clickAction (Android) abrem a app Daily Casa ao tocar na notificação.
