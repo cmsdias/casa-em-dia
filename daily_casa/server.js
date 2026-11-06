@@ -94,6 +94,10 @@ const WEBPUSH=createWebPush({getDb:()=>db,save,newId:()=>id(),subject:()=>{const
 const URGENT_TYPES=new Set(['security','incident']);
 const NOTIF_TYPES=['assigned','rotation','done','due','approval','incident','equipment','birthday','season'];
 const wantsPush=(userId,type)=>type==='security'||db.people.find(x=>x.id===userId)?.notifPrefs?.[type]!==false;
+// 3.6 · Convites por email.
+const INV=require('./lib/invites');const INVITES=INV.createInvites({getDb:()=>db,save,newId:()=>id()});
+function inviteLink(req,token){const base=publicUrl()||NET.info(req).origin||('http://'+String(req.headers.host||'').split(',')[0].trim());return `${base.replace(/\/+$/,'')}/?convite=${token}`;}
+function uniqueUsername(email,name){const base=usernameFrom(email,name);let u=base,n=2;while(db.people.some(p=>p.username===u))u=(base.slice(0,36)+n++);return u;}
 const notif=createNotifications({getDb:()=>db,save,newId:()=>id(),todayISO:()=>dateInTz(new Date()),canSeeTask:(u,t)=>canSeeTask(u,t),isActive:u=>isActive(u),roleOf:u=>roleOf(u),
  onAdd:n=>{if(!WEBPUSH.hasDevices(n.userId)||!wantsPush(n.userId,n.type))return;setImmediate(()=>WEBPUSH.sendToUser(n.userId,{title:n.title,body:n.body||'',tag:n.id,url:'./?n='+encodeURIComponent(n.id)},{urgency:URGENT_TYPES.has(n.type)?'high':'normal'}).catch(e=>console.error('Push:',e.message)));}});
 const equip=createEquipment({getDb:()=>db,save,newId:()=>id(),todayISO:()=>dateInTz(new Date()),dataDir:DATA_DIR,roleOf:u=>roleOf(u),notify:(...a)=>notif.add(...a)});
@@ -304,6 +308,22 @@ const server=http.createServer(async (req,res)=>{
       if(!isActive(u))return fail(res,403,'Esta conta foi desativada. Fala com o administrador da casa.');
       return send(res,200,{user:{id:u.id,name:u.name,role:roleOf(u)}},{'Set-Cookie':cookie(req,session(u))});
     }
+    // Aceitar um convite (sem sessão): ver os dados do convite e criar a conta.
+    {const im=p.match(/^\/api\/invites\/([A-Za-z0-9_-]{40,64})(\/accept)?$/);if(im){
+      const ip=NET.info(req).client;const st=LIM.reset.status('inv:'+ip);if(st.blocked)return tooMany(res,st);
+      const x=INVITES.find(im[1]);if(!x){LIM.reset.fail('inv:'+ip);return fail(res,404,'Este convite já não é válido. Pede ao administrador para te enviar outro.');}
+      const by=db.people.find(q=>q.id===x.createdBy);
+      if(!im[2]&&req.method==='GET')return send(res,200,{email:x.email,name:x.name||'',roleLabel:INV.ROLES[x.role]||'Morador',invitedBy:by?by.name.split(' ')[0]:''});
+      if(im[2]&&req.method==='POST'){
+        const name=cleanStr(b.name,80),pw=String(b.password||'');
+        if(name.length<2)return fail(res,400,'Indica o teu nome (pelo menos 2 letras).');if(pw.length<10)return fail(res,400,'A palavra-passe deve ter pelo menos 10 caracteres.');
+        if(db.people.some(q=>(q.email||'').toLowerCase()===x.email)){INVITES.markAccepted(x,null);save();return fail(res,409,'Já existe uma conta com este email. Entra com ela ou usa «Esqueci-me da palavra-passe».');}
+        const person={id:id(),name,username:uniqueUsername(x.email,name),email:x.email,passwordHash:passwordHash(pw),role:x.role,authVersion:1,avatar:'●',active:true};
+        db.people.push(person);INVITES.markAccepted(x,person.id);logAction(person,'invite.accept',person.id);
+        if(by&&isActive(by))notif.add(by.id,'security',`${name.split(' ')[0]} aceitou o convite`,`Já tem conta na Daily Casa (${INV.ROLES[x.role]||'Morador'}).`,{page:'people'});
+        save();return send(res,201,{user:{id:person.id,name:person.name,role:person.role}},{'Set-Cookie':cookie(req,session(person,true),true)});
+      }
+      return fail(res,405,'Método não permitido.');}}
     // Entrada a partir de automações do Home Assistant (autenticação por token, sem cookies).
     if(p.startsWith('/api/integracao/')){
       {const ip=NET.info(req).client,st=LIM.ip.status('int:'+ip);if(st.blocked)return tooMany(res,st);
@@ -560,13 +580,30 @@ const server=http.createServer(async (req,res)=>{
       if(target.id===user.id&&b.role!=='admin')return fail(res,403,'Não podes retirar o teu próprio acesso de administrador.');if(target.role==='admin'&&b.role!=='admin'&&db.people.filter(x=>roleOf(x)==='admin').length===1)return fail(res,403,'É obrigatório manter um administrador.');
       target.role=b.role;target.authVersion=(target.authVersion||1)+1;logAction(user,'person.role',target.id);save();return send(res,200,{people:peopleFor(user)});
     }
+    if(p==='/api/invites'||/^\/api\/invites\/[0-9a-f-]{36}(\/resend)?$/.test(p)){
+      if(roleOf(user)!=='admin')return fail(res,403,'Apenas administradores.');
+      const deliver=async(r)=>{const link=inviteLink(req,r.token);let mailed=false,mailError='';
+        if(MAILER.status().configured){try{await MAILER.send({to:r.invite.email,...INV.inviteEmail({inviter:user.name,name:r.invite.name,roleLabel:r.invite.roleLabel,link})});mailed=true;}catch(e){mailError=e.message;}}
+        return {invite:r.invite,link,mailed,mailError,invites:INVITES.pending()};};
+      if(p==='/api/invites'&&req.method==='GET')return send(res,200,{invites:INVITES.pending(),mail:MAILER.status().configured});
+      if(p==='/api/invites'&&req.method==='POST'){
+        let email;try{email=cleanEmail(b.email);}catch(e){return fail(res,400,e.message);}if(!email)return fail(res,400,'Indica o email da pessoa.');
+        if(db.people.some(q=>(q.email||'').toLowerCase()===email))return fail(res,409,'Já existe uma conta com esse email.');
+        const r=INVITES.create({email,name:cleanStr(b.name,80),role:b.role,by:user.id});logAction(user,'invite.create',r.invite.id);save();
+        return send(res,201,await deliver(r));
+      }
+      const iid=p.split('/')[3];
+      if(p.endsWith('/resend')&&req.method==='POST'){const r=INVITES.resend(iid);if(!r)return fail(res,404,'Convite não encontrado.');logAction(user,'invite.resend',iid);return send(res,200,await deliver(r));}
+      if(req.method==='DELETE'){if(!INVITES.cancel(iid))return fail(res,404,'Convite não encontrado.');logAction(user,'invite.cancel',iid);save();return send(res,200,{invites:INVITES.pending()});}
+      return fail(res,405,'Método não permitido.');
+    }
     if(p==='/api/people'&&req.method==='POST'){
       if(user.role!=='admin')return fail(res,403,'Apenas administradores.');
       const name=cleanStr(b.name,80),pw=String(b.password||'');let email;try{email=uniqueEmail(cleanEmail(b.email),null);}catch(e){return fail(res,e.status||400,e.message);}
       let username=b.username?cleanStr(b.username,40).toLowerCase():usernameFrom(email,name);
       if(name.length<2||!/^[a-z0-9._-]{3,40}$/.test(username)||pw.length<10||(!email&&!b.username))return fail(res,400,'Nome, email e palavra-passe temporária (mín. 10 caracteres) são obrigatórios.');
       if(db.people.some(p=>p.username===username))return fail(res,409,'Esse nome de utilizador já existe.');
-      const person={id:id(),name,username,email,passwordHash:passwordHash(pw),role:['manager','resident','collaborator'].includes(b.role)?b.role:'resident',authVersion:1,avatar:'●',active:true,mustChangePassword:true};db.people.push(person);logAction(user,'person.create',person.id);save();return send(res,201,{people:peopleFor(user)});
+      const person={id:id(),name,username,email,passwordHash:passwordHash(pw),role:['manager','resident','collaborator'].includes(b.role)?b.role:'resident',authVersion:1,avatar:'●',active:true,mustChangePassword:true};db.people.push(person);INVITES.cancelForEmail(email);logAction(user,'person.create',person.id);save();return send(res,201,{people:peopleFor(user)});
     }
     if(p==='/api/me'&&req.method==='PATCH'){
       const target=db.people.find(x=>x.id===user.id);const draft={...target};applyProfile(draft,b);Object.assign(target,draft);
