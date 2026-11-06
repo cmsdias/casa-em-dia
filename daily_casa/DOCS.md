@@ -93,6 +93,7 @@ Quem carregar em «Esqueci-me da palavra-passe» recebe um código de 6 dígitos
   - **Equipamentos** (administrador e gestor): revisão marcada (30 dias antes) e garantia a terminar.
   - **Avisos diários,** a partir da hora do resumo diário (por omissão 08:30): tarefas para hoje e atrasadas; aniversários (hoje e amanhã; não para colaboradores); no início do mês, o calendário da casa (administrador e gestor).
   - **Segurança** (administrador): alguém pediu para recuperar a palavra-passe; endereço ou conta bloqueados por tentativas falhadas.
+- **Escolher o que chega:** em **O teu perfil → Sobre o que te avisamos**, cada pessoa liga ou desliga cada tipo (só aparecem os que se aplicam ao seu perfil). Os avisos de segurança e os códigos de recuperação são sempre enviados; no sino continua a aparecer tudo.
 - **Pela app Home Assistant (opcional):** continua disponível para quem o administrador associou em **Definições → Notificações e Home Assistant**. Quem já recebe as notificações da app deixa de as receber em duplicado pelo Home Assistant (fica o resumo diário e os códigos de recuperação).
 
 ## Dados e cópias de segurança

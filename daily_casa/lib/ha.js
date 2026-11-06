@@ -36,7 +36,8 @@ function createHa({getDb,todayISO,nowHM,save=()=>{},onError=console.error,fetchI
     const service=settings().notify?.[personId];if(!service||!available())return false;
     if(db().people.find(x=>x.id===personId)?.pushOff&&extra.tag!=='casa-reset')return false;
     // Quem já recebe as notificações próprias da app (3.3) não as recebe em duplicado pela app Home Assistant.
-    if(!['casa-reset','resumo-diario','ha-test'].includes(extra.tag)&&db().push?.subs?.some(s=>s.userId===personId))return false; // a pessoa desligou as notificações no perfil (o código de recuperação passa sempre)
+    if(!['casa-reset','resumo-diario','ha-test'].includes(extra.tag)&&db().push?.subs?.some(s=>s.userId===personId))return false;
+    if(extra.type&&db().people.find(x=>x.id===personId)?.notifPrefs?.[extra.type]===false)return false; // a pessoa desligou as notificações no perfil (o código de recuperação passa sempre)
     if(!/^[a-z0-9_]+$/.test(service))return false;
     const i=await info();const url=i.panelUrl||'';
     // url (iOS) e clickAction (Android) abrem a app Daily Casa ao tocar na notificação.
@@ -67,7 +68,7 @@ function createHa({getDb,todayISO,nowHM,save=()=>{},onError=console.error,fetchI
   async function taskAssigned(task,actor){
     const s=settings();if(!available()||!s.events?.assigned||!task.assignedTo||task.assignedTo===actor.id)return;
     const p=db().people.find(x=>x.id===task.assignedTo);if(!p||p.active===false||!visibleTo(p,task))return;
-    try{await notify(p.id,'Nova tarefa para ti',`${task.title}${task.dueDate?' · até '+task.dueDate.split('-').reverse().join('/'):''}\nAtribuída por ${actor.name}`,{tag:'tarefa-'+task.id});}catch(e){onError('HA atribuição:',e.message);}
+    try{await notify(p.id,'Nova tarefa para ti',`${task.title}${task.dueDate?' · até '+task.dueDate.split('-').reverse().join('/'):''}\nAtribuída por ${actor.name}`,{tag:'tarefa-'+task.id,type:'assigned'});}catch(e){onError('HA atribuição:',e.message);}
   }
   function sensorStates(){
     const today=todayISO();

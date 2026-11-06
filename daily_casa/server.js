@@ -92,10 +92,12 @@ function publicUrl(){return db.settings?.publicUrl||db.settings?.publicUrlAuto||
 const {createWebPush}=require('./lib/webpush');
 const WEBPUSH=createWebPush({getDb:()=>db,save,newId:()=>id(),subject:()=>{const m=MAILER.status();return m.configured?'mailto:'+m.from:(publicUrl()||'mailto:daily-casa@localhost');},allowHttp:process.env.PUSH_ALLOW_HTTP==='1',onError:(...a)=>console.error(...a)});
 const URGENT_TYPES=new Set(['security','incident']);
+const NOTIF_TYPES=['assigned','rotation','done','due','approval','incident','equipment','birthday','season'];
+const wantsPush=(userId,type)=>type==='security'||db.people.find(x=>x.id===userId)?.notifPrefs?.[type]!==false;
 const notif=createNotifications({getDb:()=>db,save,newId:()=>id(),todayISO:()=>dateInTz(new Date()),canSeeTask:(u,t)=>canSeeTask(u,t),isActive:u=>isActive(u),roleOf:u=>roleOf(u),
- onAdd:n=>{if(!WEBPUSH.hasDevices(n.userId))return;setImmediate(()=>WEBPUSH.sendToUser(n.userId,{title:n.title,body:n.body||'',tag:n.id,url:'./?n='+encodeURIComponent(n.id)},{urgency:URGENT_TYPES.has(n.type)?'high':'normal'}).catch(e=>console.error('Push:',e.message)));}});
+ onAdd:n=>{if(!WEBPUSH.hasDevices(n.userId)||!wantsPush(n.userId,n.type))return;setImmediate(()=>WEBPUSH.sendToUser(n.userId,{title:n.title,body:n.body||'',tag:n.id,url:'./?n='+encodeURIComponent(n.id)},{urgency:URGENT_TYPES.has(n.type)?'high':'normal'}).catch(e=>console.error('Push:',e.message)));}});
 const equip=createEquipment({getDb:()=>db,save,newId:()=>id(),todayISO:()=>dateInTz(new Date()),dataDir:DATA_DIR,roleOf:u=>roleOf(u),notify:(...a)=>notif.add(...a)});
-const incid=createIncidents({getDb:()=>db,save,newId:()=>id(),photoDir:PHOTO_DIR,roleOf:u=>roleOf(u),notify:(...a)=>notif.add(...a),pushHa:(pid,title,msg)=>{Promise.resolve(ha?.notify(pid,title,msg,{tag:'casa-ocorrencia'})).catch(()=>{});},
+const incid=createIncidents({getDb:()=>db,save,newId:()=>id(),photoDir:PHOTO_DIR,roleOf:u=>roleOf(u),notify:(...a)=>notif.add(...a),pushHa:(pid,title,msg)=>{Promise.resolve(ha?.notify(pid,title,msg,{tag:'casa-ocorrencia',type:'incident'})).catch(()=>{});},
   makeTask:(f,user)=>{const t={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P2',estimatedMinutes:null,category:'Manutenção',thisWeek:false,subtasks:[],status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString(),createdBy:user.id,visibility:'shared'};patchTask(t,f);db.tasks.push(t);logAction(user,'task.create',t.id);notif.taskAssigned(t,user);Promise.resolve(ha?.taskAssigned(t,user)).catch(()=>{});return t;}});
 function roleOf(u){return u.role==='member'?'resident':u.role;}
 const isActive=u=>u.active!==false;
@@ -165,7 +167,7 @@ function personView(viewer,p){const self=viewer.id===p.id,admin=roleOf(viewer)==
  return {id:p.id,name:p.name,username:collab&&!self?'':p.username,role:roleOf(p),avatar:p.avatar||'●',photo:p.photo||'',active:p.active!==false,
   ...(admin?{accessDays:Array.isArray(p.accessDays)?p.accessDays:[],mustChangePassword:!!p.mustChangePassword}:{}),
   ...(self||admin||elevated(viewer)?{email:p.email||'',phone:p.phone||''}:{}),
-  ...(self?{pushOff:!!p.pushOff,pushReady:!!(db.ha?.notify?.[p.id]),webPush:!!db.push?.subs?.some(s=>s.userId===p.id)}:{}),
+  ...(self?{notifPrefs:p.notifPrefs||{},pushOff:!!p.pushOff,pushReady:!!(db.ha?.notify?.[p.id]),webPush:!!db.push?.subs?.some(s=>s.userId===p.id)}:{}),
  ...(self||admin?{birthDate:p.birthDate||''}:(!collab&&p.birthDate?{birthday:p.birthDate.slice(5)}:{}))};}
 function peopleFor(viewer){if(roleOf(viewer)!=='collaborator')return db.people.map(p=>personView(viewer,p));const allowed=db.tasks.filter(t=>canSeeTask(viewer,t));return db.people.filter(p=>p.id===viewer.id||allowed.some(t=>t.assignedTo===p.id||t.createdBy===p.id)).map(p=>personView(viewer,p));}
 function cleanEmail(v){const e=cleanStr(v,120).toLowerCase();if(e&&!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e))throw Error('Email inválido.');return e;}
@@ -182,6 +184,8 @@ function applyProfile(target,b){
  if('username'in b)target.username=cleanUsername(b.username,target.id);
  if('email'in b){const e=cleanEmail(b.email);if(!e&&target.email)throw Error('O email é usado para entrar: não pode ficar em branco.');target.email=uniqueEmail(e,target.id);}
  if('pushOff'in b)target.pushOff=b.pushOff===true;
+ // 3.5 · Tipos de notificação que a pessoa quer receber no telemóvel (o sino mostra sempre tudo).
+ if(b.notifPrefs&&typeof b.notifPrefs==='object'&&!Array.isArray(b.notifPrefs)){const prefs={...(target.notifPrefs||{})};for(const [k,v] of Object.entries(b.notifPrefs))if(NOTIF_TYPES.includes(k))prefs[k]=v!==false;target.notifPrefs=prefs;}
  if('phone'in b)target.phone=cleanPhone(b.phone);
  if('birthDate'in b)target.birthDate=cleanBirth(b.birthDate);
  if('photo'in b)target.photo=cleanPhoto(b.photo);}

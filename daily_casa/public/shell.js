@@ -18,6 +18,7 @@ Object.assign(paths,{
  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
  upload:'<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>',
  copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',
+ cake:'<path d="M4 21h16M5 21v-7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v7M5 16c1.5 1 3 1 4.5 0s3-1 4.5 0 3 1 5 0M12 12V8M12 5.5c.8-.8.8-1.7 0-2.5-.8.8-.8 1.7 0 2.5z"/>',
  eye:'<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
  'eye-off':'<path d="M3 3l18 18M10.6 6.1A9.6 9.6 0 0 1 12 6c6 0 9.5 6 9.5 6a16 16 0 0 1-3 3.6M6.5 7.6A15.5 15.5 0 0 0 2.5 12S6 18 12 18a9.3 9.3 0 0 0 4.2-1M9.9 9.9a3 3 0 0 0 4.2 4.2"/>'
 });
@@ -283,3 +284,24 @@ setInterval(()=>{if(!installShown&&store?.user&&!document.hidden)setTimeout(inst
   setTimeout(()=>{if(!g){el.style.transition='';el.style.transformOrigin='';el.style.willChange='';}},550);};
  document.addEventListener('touchend',release);document.addEventListener('touchcancel',release);
 })();
+
+/* 3.5 · Sobre o que te avisamos: cada pessoa escolhe que tipos de notificação recebe no telemóvel (o sino mostra sempre tudo). */
+function notifTypesField(){
+ const u=me();if(!u)return '';const role=u.role,mgr=role==='admin'||role==='manager',collab=role==='collaborator',prefs=u.notifPrefs||{};
+ const rows=[
+  ['assigned','list','Tarefas atribuídas','Quando alguém te atribui uma tarefa',true],
+  ['rotation','repeat','A tua vez nas rotinas','Quando uma rotina com rotação passa para ti',true],
+  ['due','clock','Tarefas do dia','De manhã, as tuas tarefas para hoje e as atrasadas',true],
+  ['done','check-square','Tarefas concluídas','Quando alguém conclui uma tarefa que criaste',!collab],
+  ['approval','users','Aprovações',mgr?'Pedidos de atribuição e trabalho por aprovar':'A decisão sobre os teus pedidos e o teu trabalho',true],
+  ['incident','alert','Ocorrências',mgr?'Novas ocorrências e as tuas quando são resolvidas':'Quando uma ocorrência que reportaste é resolvida',true],
+  ['equipment','tool','Equipamentos','Revisões marcadas e garantias a terminar',mgr],
+  ['birthday','cake','Aniversários','No dia e na véspera',!collab],
+  ['season','calendar','Calendário da casa','No início do mês, os trabalhos da época',mgr]].filter(r=>r[4]);
+ return `<div class="notif-types"><h3 class="notif-types-title">Sobre o que te avisamos</h3>${rows.map(([k,icon,t,d])=>{const on=prefs[k]!==false;return `<div class="pref-row notif-type-row"><span class="notif-type-ico" aria-hidden="true">${ico(icon)}</span><div><span class="field-label" id="np-${k}">${t}</span><small class="appearance-state">${d}</small></div><button type="button" class="switch" role="switch" aria-checked="${on}" aria-labelledby="np-${k}" data-action="notif-pref" data-type="${k}" ${demo?'':''}><span></span></button></div>`;}).join('')}<p class="field-help">Os avisos de segurança e os códigos de recuperação são sempre enviados. No sino continuas a ver tudo.</p></div>`;
+}
+actionHandlers.push(async(name,el)=>{
+ if(name!=='notif-pref')return false;const k=el.dataset.type,on=el.getAttribute('aria-checked')!=='true';el.setAttribute('aria-checked',String(on));
+ try{if(demo){const u=me();u.notifPrefs={...(u.notifPrefs||{}),[k]:on};}else{const r=await api('/api/me','PATCH',{notifPrefs:{[k]:on}});if(r.people)store.people=r.people;}}
+ catch(e){el.setAttribute('aria-checked',String(!on));toast(e.message);}return true;
+});
