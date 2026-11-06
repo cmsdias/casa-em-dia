@@ -1823,3 +1823,9 @@ html{touch-action:pan-x pan-y}
 .remember-box svg{width:15px;height:15px}
 .remember-row input:checked+.remember-box{background:var(--brand-green);border-color:var(--brand-green);color:var(--brand-paper)}
 .remember-row input:focus-visible+.remember-box{outline:2px solid var(--brand-gold);outline-offset:2px}
+/* 3.4.1 · Ecrã de entrada no Safari: as barras do browser (topo e fundo) ficam com a cor do verde de cima e do cartão de baixo.
+   O Safari usa a cor do fundo da página e de elementos fixos encostados às margens. */
+body:has(.auth-layout){background:var(--brand-paper)}
+.auth-layout::before,.auth-layout::after{content:"";position:fixed;left:0;right:0;height:3px;z-index:1;pointer-events:none}
+.auth-layout::before{top:0;background:var(--brand-green)}
+.auth-layout::after{bottom:0;background:var(--brand-paper)}
