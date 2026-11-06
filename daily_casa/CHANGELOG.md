@@ -1,3 +1,11 @@
+# 3.3.0 — Notificações no telemóvel
+
+- Notificações push da própria app: tudo o que chega ao sino aparece também no telemóvel, mesmo com a app fechada.
+- Novo interruptor «Notificações neste telemóvel» no perfil, por dispositivo, com notificação de teste ao ligar.
+- No iPhone funciona com a app instalada no ecrã principal e aberta pelo endereço seguro (https).
+- Ao tocar numa notificação, a app abre no sítio certo (tarefa, ocorrência, equipamento).
+- Sem duplicados: quem recebe as notificações da app deixa de as receber também pela app Home Assistant.
+
 # 3.2.0 — Convite para instalar a app
 
 - Ao abrir a Daily Casa no browser aparece um convite para a instalar no ecrã principal, até ser instalada.

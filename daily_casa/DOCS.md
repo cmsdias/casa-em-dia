@@ -80,6 +80,14 @@ Com o add-on **Cloudflared** e um domínio próprio, a app fica disponível em H
 
 Quem carregar em «Esqueci-me da palavra-passe» recebe um código de 6 dígitos válido 15 minutos, por email e (se estiver ligada) na app Home Assistant do telemóvel. A palavra-passe de aplicação só existe nas opções do add-on: não é mostrada na app nem vai para as cópias de segurança da app (as cópias do Home Assistant incluem as opções do add-on).
 
+## Notificações no telemóvel
+
+- **Notificações da app (recomendado):** em **O teu perfil**, ligue **Notificações neste telemóvel**. Tudo o que chega ao sino passa a aparecer também no telemóvel, mesmo com a app fechada. Cada pessoa liga no seu telemóvel; não depende da app Home Assistant.
+  - Exige o endereço seguro (`https://…`, ver «Acesso fora de casa»).
+  - No iPhone/iPad (iOS 16.4 ou mais recente), a app tem de estar **instalada no ecrã principal** e ser aberta pelo ícone; só então aparece o interruptor.
+  - Ao ligar, o telemóvel pede autorização e chega logo uma notificação de teste.
+- **Pela app Home Assistant (opcional):** continua disponível para quem o administrador associou em **Definições → Notificações e Home Assistant**. Quem já recebe as notificações da app deixa de as receber em duplicado pelo Home Assistant (fica o resumo diário e os códigos de recuperação).
+
 ## Dados e cópias de segurança
 
 - Todos os dados ficam em `/data/casa.json`, criado no primeiro arranque e mantido entre atualizações. As fotografias das tarefas ficam em `/data/photos` e os documentos dos equipamentos em `/data/docs` (incluídos nas cópias do Home Assistant, não nas cópias JSON da app).

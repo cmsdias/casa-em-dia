@@ -115,10 +115,53 @@ actionHandlers.push(async(name)=>{
 Object.assign(paths,{login:'<path d="M10 17l5-5-5-5M15 12H3"/><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/>'});
 // Interruptor por pessoa: as notificações chegam pela app Home Assistant do telemóvel (o administrador escolhe o telemóvel de cada um).
 function pushField(){
- const u=me();const ready=demo||!!u.pushReady;const on=ready&&!u.pushOff;
- const state=!ready?(store.haAvailable?'O administrador ainda não ligou o teu telemóvel':'Disponível na app instalada no Home Assistant'):on?'Ligadas · tarefas atribuídas e resumo diário':'Desligadas · continuas a ver tudo no sino';
- return `<div class="field pref-row"><div><span class="field-label" id="push-label">Notificações no telemóvel</span><small class="appearance-state" id="push-state">${esc(state)}</small></div><button type="button" class="switch" role="switch" aria-checked="${on}" aria-labelledby="push-label" data-action="push-toggle" ${ready?'':'disabled'}><span></span></button></div>`;
+ const u=me();const ready=!!u.pushReady;const on=ready&&!u.pushOff;
+ const ha=ready?`<div class="field pref-row"><div><span class="field-label" id="push-label">Notificações pela app Home Assistant</span><small class="appearance-state" id="push-state">${esc(on?(u.webPush?'Só o resumo diário (o resto chega pelas notificações da app)':'Ligadas · tarefas atribuídas e resumo diário'):'Desligadas')}</small></div><button type="button" class="switch" role="switch" aria-checked="${on}" aria-labelledby="push-label" data-action="push-toggle"><span></span></button></div>`:'';
+ return webPushField()+ha;
 }
+/* 3.3 · Notificações push próprias da app, por dispositivo. */
+const wpSupported=()=>'serviceWorker'in navigator&&'PushManager'in window&&'Notification'in window&&window.isSecureContext;
+const wpIOS=()=>/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const wpStandalone=()=>window.matchMedia?.('(display-mode: standalone)').matches||navigator.standalone===true;
+function wpBlocker(){
+ if(demo)return 'Disponível na app instalada no Home Assistant.';
+ if(!window.isSecureContext)return store.publicUrl?`Abre a app pelo endereço seguro (${store.publicUrl.replace(/^https:\/\//,'')}) para ativar.`:'Precisa de um endereço seguro (https://). Ver Definições → Acesso e segurança.';
+ if(wpIOS()&&!wpStandalone())return 'No iPhone, instala primeiro a app no ecrã principal (Partilhar → Adicionar ao ecrã principal) e abre-a pelo ícone.';
+ if(!wpSupported())return 'Este browser não suporta notificações.';
+ if(Notification.permission==='denied')return 'Bloqueadas nas definições do telemóvel para esta app.';
+ return '';
+}
+function webPushField(){
+ const block=wpBlocker();
+ if(!block)queueMicrotask(wpRefresh);
+ return `<div class="field pref-row"><div><span class="field-label" id="wp-label">Notificações neste telemóvel</span><small class="appearance-state" id="wp-state">${esc(block||'A verificar…')}</small></div><button type="button" class="switch" role="switch" id="wp-switch" aria-checked="false" aria-labelledby="wp-label" data-action="wp-toggle" ${block?'disabled':''}><span></span></button></div>`;
+}
+async function wpSub(){const reg=await navigator.serviceWorker.ready;return {reg,sub:await reg.pushManager.getSubscription()};}
+async function wpRefresh(){const sw=document.getElementById('wp-switch'),st=document.getElementById('wp-state');if(!sw)return;
+ try{const {sub}=await wpSub();const on=!!sub&&Notification.permission==='granted';sw.setAttribute('aria-checked',String(on));st.textContent=on?'Ligadas · tudo o que chega ao sino aparece também aqui':'Desligadas · liga para receber avisos mesmo com a app fechada';}catch{st.textContent='Não foi possível verificar.';}}
+const wpKey=k=>{const s=(k+'='.repeat((4-k.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/');return Uint8Array.from(atob(s),c=>c.charCodeAt(0));};
+const wpLabel=()=>{const ua=navigator.userAgent;return /iPhone/.test(ua)?'iPhone':/iPad/.test(ua)?'iPad':/Android/.test(ua)?'Android':/Mac/.test(ua)?'Mac':/Windows/.test(ua)?'Windows':'Browser';};
+async function wpEnable(){
+ const perm=await Notification.requestPermission();if(perm!=='granted')throw Error('Sem autorização para notificações. Podes ativá-las nas definições do telemóvel.');
+ const {reg,sub:old}=await wpSub();const {publicKey}=await api('/api/push');
+ if(old)await old.unsubscribe().catch(()=>{});
+ const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:wpKey(publicKey)});
+ await api('/api/push/subscribe','POST',{subscription:sub.toJSON(),label:wpLabel()});
+}
+async function wpDisable(){const {sub}=await wpSub();if(sub){await api('/api/push/unsubscribe','POST',{endpoint:sub.endpoint}).catch(()=>{});await sub.unsubscribe().catch(()=>{});}}
+// Se este telemóvel já tinha notificações ligadas, volta a registá-lo no servidor (ex.: depois de restaurar uma cópia).
+async function wpResync(){if(demo||wpBlocker()||Notification.permission!=='granted'||!store.user)return;try{const {sub}=await wpSub();if(sub)await api('/api/push/subscribe','POST',{subscription:sub.toJSON(),label:wpLabel()});}catch{}}
+let wpSynced=false;setInterval(()=>{if(!wpSynced&&store?.user){wpSynced=true;wpResync();}},3000);
+// Abrir a notificação certa quando se toca numa notificação push.
+function openNotifFromUrl(url){try{const id=new URL(url,location.href).searchParams.get('n');if(!id)return;const tryOpen=(n=0)=>{if(notifications().some(x=>x.id===id)){action('notif-open',{dataset:{id}});}else if(n<20)setTimeout(()=>tryOpen(n+1),300);};tryOpen();history.replaceState(null,'',location.pathname);}catch{}}
+navigator.serviceWorker?.addEventListener('message',e=>{if(e.data?.type==='open-notification')openNotifFromUrl(e.data.url);});
+if(new URLSearchParams(location.search).has('n'))setTimeout(()=>openNotifFromUrl(location.href),1500);
+actionHandlers.push(async(name,el)=>{
+ if(name==='wp-toggle'){const on=el.getAttribute('aria-checked')!=='true';el.disabled=true;const st=document.getElementById('wp-state');
+  try{if(on){st.textContent='A ligar…';await wpEnable();const r=await api('/api/push/test','POST',{}).catch(()=>null);toast(r?.sent?'Notificações ligadas. Enviámos uma de teste.':'Notificações ligadas neste telemóvel.');}else{await wpDisable();toast('Notificações desligadas neste telemóvel.');}}
+  catch(e){toast(e.message);}el.disabled=false;await wpRefresh();return true;}
+ return false;
+});
 actionHandlers.push(async(name,el)=>{
  if(name==='push-toggle'){const on=el.getAttribute('aria-checked')!=='true';el.setAttribute('aria-checked',String(on));
   try{if(demo){me().pushOff=!on;}else{const r=await api('/api/me','PATCH',{pushOff:!on});if(r.people)store.people=r.people;}const st=document.getElementById('push-state');if(st)st.textContent=on?'Ligadas · tarefas atribuídas e resumo diário':'Desligadas · continuas a ver tudo no sino';toast(on?'Notificações no telemóvel ligadas.':'Notificações no telemóvel desligadas.');}

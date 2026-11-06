@@ -88,7 +88,12 @@ function releaseNotes(){if(notesCache)return notesCache;let title='',items=[];
   items=lines.filter(l=>/^- /.test(l)).map(l=>{const b=l.match(/^- \*\*(.+?)\*\*/);let t=b?b[1]:l.slice(2);t=t.replace(/\*\*|`/g,'').replace(/[:.]\s*$/,'');if(!b)t=t.split(/[.;:](\s|$)/)[0];return t.length>110?t.slice(0,107)+'…':t;}).slice(0,5);}catch{}
  return notesCache={version:APP_VERSION,title,items};}
 function publicUrl(){return db.settings?.publicUrl||db.settings?.publicUrlAuto||'';}
-const notif=createNotifications({getDb:()=>db,save,newId:()=>id(),todayISO:()=>dateInTz(new Date()),canSeeTask:(u,t)=>canSeeTask(u,t),isActive:u=>isActive(u),roleOf:u=>roleOf(u)});
+// 3.3 · Notificações push próprias da app: tudo o que chega ao sino chega também aos telemóveis subscritos.
+const {createWebPush}=require('./lib/webpush');
+const WEBPUSH=createWebPush({getDb:()=>db,save,newId:()=>id(),subject:()=>{const m=MAILER.status();return m.configured?'mailto:'+m.from:(publicUrl()||'mailto:daily-casa@localhost');},allowHttp:process.env.PUSH_ALLOW_HTTP==='1',onError:(...a)=>console.error(...a)});
+const URGENT_TYPES=new Set(['security','incident']);
+const notif=createNotifications({getDb:()=>db,save,newId:()=>id(),todayISO:()=>dateInTz(new Date()),canSeeTask:(u,t)=>canSeeTask(u,t),isActive:u=>isActive(u),roleOf:u=>roleOf(u),
+ onAdd:n=>{if(!WEBPUSH.hasDevices(n.userId))return;setImmediate(()=>WEBPUSH.sendToUser(n.userId,{title:n.title,body:n.body||'',tag:n.id,url:'./?n='+encodeURIComponent(n.id)},{urgency:URGENT_TYPES.has(n.type)?'high':'normal'}).catch(e=>console.error('Push:',e.message)));}});
 const equip=createEquipment({getDb:()=>db,save,newId:()=>id(),todayISO:()=>dateInTz(new Date()),dataDir:DATA_DIR,roleOf:u=>roleOf(u),notify:(...a)=>notif.add(...a)});
 const incid=createIncidents({getDb:()=>db,save,newId:()=>id(),photoDir:PHOTO_DIR,roleOf:u=>roleOf(u),notify:(...a)=>notif.add(...a),pushHa:(pid,title,msg)=>{Promise.resolve(ha?.notify(pid,title,msg,{tag:'casa-ocorrencia'})).catch(()=>{});},
   makeTask:(f,user)=>{const t={id:id(),title:'',room:'Geral',notes:'',kind:'project',priority:'P2',estimatedMinutes:null,category:'Manutenção',thisWeek:false,subtasks:[],status:'todo',repeat:'none',dueDate:'',assignedTo:null,suggested:false,createdAt:new Date().toISOString(),createdBy:user.id,visibility:'shared'};patchTask(t,f);db.tasks.push(t);logAction(user,'task.create',t.id);notif.taskAssigned(t,user);Promise.resolve(ha?.taskAssigned(t,user)).catch(()=>{});return t;}});
@@ -157,7 +162,7 @@ function personView(viewer,p){const self=viewer.id===p.id,admin=roleOf(viewer)==
  return {id:p.id,name:p.name,username:collab&&!self?'':p.username,role:roleOf(p),avatar:p.avatar||'●',photo:p.photo||'',active:p.active!==false,
   ...(admin?{accessDays:Array.isArray(p.accessDays)?p.accessDays:[],mustChangePassword:!!p.mustChangePassword}:{}),
   ...(self||admin||elevated(viewer)?{email:p.email||'',phone:p.phone||''}:{}),
-  ...(self?{pushOff:!!p.pushOff,pushReady:!!(db.ha?.notify?.[p.id])}:{}),
+  ...(self?{pushOff:!!p.pushOff,pushReady:!!(db.ha?.notify?.[p.id]),webPush:!!db.push?.subs?.some(s=>s.userId===p.id)}:{}),
  ...(self||admin?{birthDate:p.birthDate||''}:(!collab&&p.birthDate?{birthday:p.birthDate.slice(5)}:{}))};}
 function peopleFor(viewer){if(roleOf(viewer)!=='collaborator')return db.people.map(p=>personView(viewer,p));const allowed=db.tasks.filter(t=>canSeeTask(viewer,t));return db.people.filter(p=>p.id===viewer.id||allowed.some(t=>t.assignedTo===p.id||t.createdBy===p.id)).map(p=>personView(viewer,p));}
 function cleanEmail(v){const e=cleanStr(v,120).toLowerCase();if(e&&!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e))throw Error('Email inválido.');return e;}
@@ -316,6 +321,11 @@ const server=http.createServer(async (req,res)=>{
       return fail(res,404,'Rota de integração não encontrada.');
     }
     const user=readUser(req);if(!user)return fail(res,401,'Inicia sessão para continuar.');
+    // Notificações push neste dispositivo (3.3).
+    if(p==='/api/push'&&req.method==='GET')return send(res,200,{publicKey:WEBPUSH.publicKey(),devices:WEBPUSH.devices(user.id).length});
+    if(p==='/api/push/subscribe'&&req.method==='POST'){try{const n=WEBPUSH.subscribe(user.id,b.subscription,cleanStr(b.label,60));logAction(user,'push.subscribe',user.id);return send(res,200,{devices:n});}catch(e){return fail(res,e.status||400,e.message);}}
+    if(p==='/api/push/unsubscribe'&&req.method==='POST')return send(res,200,{devices:WEBPUSH.unsubscribe(user.id,String(b.endpoint||''))});
+    if(p==='/api/push/test'&&req.method==='POST'){const n=await WEBPUSH.sendToUser(user.id,{title:'Daily Casa',body:'As notificações estão a funcionar neste telemóvel.',tag:'push-test',url:'./'});return n?send(res,200,{sent:n}):fail(res,409,'Nenhum telemóvel recebeu a notificação. Volta a ligar o interruptor neste telemóvel.');}
     // Acesso e segurança (administrador): endereço externo, diagnóstico do proxy, email e bloqueios.
     if(p==='/api/security'||p.startsWith('/api/security/')){
       if(roleOf(user)!=='admin')return fail(res,403,'Apenas administradores.');
@@ -386,7 +396,7 @@ const server=http.createServer(async (req,res)=>{
         if('dailyTime'in b){if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(b.dailyTime))return fail(res,400,'Hora inválida.');db.ha.dailyTime=b.dailyTime;}
         if('sensors'in b){db.ha.sensors=!!b.sensors;}
         logAction(user,'ha.update','global');save();if(db.ha.sensors)ha.pushSensors(true).catch(()=>{});return send(res,200,{ok:true});}
-      if(p==='/api/ha/test'&&req.method==='POST'){if(!db.ha.notify[b.personId])return fail(res,400,'Escolhe primeiro o telemóvel desta pessoa e guarda.');try{await ha.notify(b.personId,'Daily Casa','As notificações estão a funcionar.',{tag:'teste'});}catch(e){return fail(res,502,e.message);}return send(res,200,{ok:true});}
+      if(p==='/api/ha/test'&&req.method==='POST'){if(!db.ha.notify[b.personId])return fail(res,400,'Escolhe primeiro o telemóvel desta pessoa e guarda.');try{await ha.notify(b.personId,'Daily Casa','As notificações estão a funcionar.',{tag:'ha-test'});}catch(e){return fail(res,502,e.message);}return send(res,200,{ok:true});}
       if(p==='/api/ha/token'&&req.method==='POST'){db.ha.token=crypto.randomBytes(24).toString('base64url');logAction(user,'ha.token','global');save();return send(res,200,{token:db.ha.token});}
       return fail(res,404,'Rota não encontrada.');
     }

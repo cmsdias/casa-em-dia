@@ -5,7 +5,7 @@
 // «Limpar» só as tira do sino (cleared); continuam visíveis em «Ver todas» até expirarem.
 const MAX_PER_USER = 200, MAX_AGE_DAYS = 30;
 
-function createNotifications({ getDb, save, newId, todayISO, canSeeTask, isActive, roleOf }) {
+function createNotifications({ getDb, save, newId, todayISO, canSeeTask, isActive, roleOf, onAdd = () => {} }) {
   const db = () => getDb();
   const list = () => { const d = db(); if (!Array.isArray(d.notifications)) d.notifications = []; return d.notifications; };
   const state = () => { const d = db(); if (!d.notifState || typeof d.notifState !== 'object') d.notifState = {}; return d.notifState; };
@@ -19,7 +19,9 @@ function createNotifications({ getDb, save, newId, todayISO, canSeeTask, isActiv
   function add(userId, type, title, body = '', link = null, key = null) {
     const p = db().people.find(x => x.id === userId); if (!p || !isActive(p)) return false;
     if (key && list().some(n => n.userId === userId && n.key === key)) return false;
-    list().push({ id: newId(), userId, type, title, body, link, at: new Date().toISOString(), read: false, ...(key ? { key } : {}) });
+    const n = { id: newId(), userId, type, title, body, link, at: new Date().toISOString(), read: false, ...(key ? { key } : {}) };
+    list().push(n);
+    try { onAdd(n); } catch {}
     return true;
   }
   const taskLink = t => ({ page: t.kind === 'routine' ? 'routines' : 'tasks', taskId: t.id });
