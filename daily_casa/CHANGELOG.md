@@ -1,3 +1,10 @@
+# 3.2.0 — Convite para instalar a app
+
+- Ao abrir a Daily Casa no browser aparece um convite para a instalar no ecrã principal, até ser instalada.
+- No iPhone e no iPad mostra os passos (Partilhar › Adicionar ao ecrã principal › Adicionar); no Android e no computador tem o botão «Instalar».
+- Se a app for aberta pelo IP, sugere instalar a partir do endereço externo, que funciona dentro e fora de casa.
+- Não aparece com a app instalada nem dentro do Home Assistant; «Já instalei» deixa de o mostrar nesse browser.
+
 # 3.1.1 — Aviso de nova versão
 
 - A app avisa quando há uma versão nova instalada no Home Assistant, com as principais novidades.

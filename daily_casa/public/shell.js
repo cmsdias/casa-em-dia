@@ -180,3 +180,39 @@ actionHandlers.push(async(name,el)=>{
 });
 document.addEventListener('submit',async e=>{if(e.target.id!=='public-url-form')return;e.preventDefault();const v=new FormData(e.target).get('publicUrl')||'';
  try{securityData=await api('/api/security','PATCH',{publicUrl:String(v).trim()});store.publicUrl=securityData.publicUrl;render();toast(v?'Endereço guardado.':'A usar o endereço detetado.');}catch(err){toast(err.message);}});
+
+/* 3.2 · Convite para instalar a app no ecrã principal.
+   Aparece alguns segundos depois de entrar, sempre que a app é aberta no browser, até ser instalada.
+   - Android/Chrome/Edge: botão «Instalar» com o pedido nativo do browser (beforeinstallprompt).
+   - iPhone/iPad: passos para Partilhar › Adicionar ao ecrã principal (o Safari não permite instalar por botão).
+   - Aberta como app instalada (ecrã inteiro), dentro do Home Assistant (iframe) ou em browsers sem instalação: não aparece.
+   - «Já instalei» deixa de mostrar neste browser (no iPhone o Safari não consegue saber que a app foi instalada). */
+let installEvt=null,installShown=false;
+const isStandalone=()=>window.matchMedia?.('(display-mode: standalone)').matches||window.navigator.standalone===true;
+const installLS={get:k=>{try{return localStorage.getItem(k);}catch{return null;}},set:(k,v)=>{try{localStorage.setItem(k,v);}catch{}}};
+const installSS={get:k=>{try{return sessionStorage.getItem(k);}catch{return null;}},set:(k,v)=>{try{sessionStorage.setItem(k,v);}catch{}}};
+function installPlatform(){const ua=navigator.userAgent||'';const ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ if(ios)return 'ios';if(installEvt)return 'prompt';if(/Macintosh/.test(ua)&&/Safari/.test(ua)&&!/Chrome|Chromium|Edg|Firefox/.test(ua))return 'macsafari';return '';}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;});
+window.addEventListener('appinstalled',()=>{installLS.set('dc-installed','1');document.getElementById('install-sheet')?.remove();});
+if(isStandalone())installLS.set('dc-installed','1');
+const SHARE_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M7 10H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1"/></svg>';
+function installSheet(){
+ if(installShown||isStandalone()||window.top!==window.self||installLS.get('dc-installed')||installSS.get('dc-install-later')||!store?.user||document.getElementById('install-sheet')||document.getElementById('version-holder')||modal)return;
+ const pf=installPlatform();if(!pf)return;installShown=true;
+ const pub=store.publicUrl||'';const onPub=pub&&location.origin===pub;
+ const better=pub&&!onPub?`<p class="install-hint">Para funcionar também fora de casa, instala a partir de <a href="${esc(pub)}">${esc(pub.replace(/^https:\/\//,''))}</a>.</p>`:'';
+ const steps=pf==='ios'?`<ol class="install-steps"><li><span class="install-key">${SHARE_SVG}</span><span>Toca em <b>Partilhar</b> na barra do Safari<small>Se não o vires, toca primeiro em <b>⋯</b></small></span></li><li><span class="install-key">${ico('plus-square')}</span><span>Escolhe <b>Adicionar ao ecrã principal</b></span></li><li><span class="install-key install-key-app"><img src="apple-touch-icon.png" alt="" /></span><span>Toca em <b>Adicionar</b>. A Daily Casa fica junto às outras apps</span></li></ol>`
+  :pf==='macsafari'?`<ol class="install-steps"><li><span class="install-key">${SHARE_SVG}</span><span>No menu <b>Ficheiro</b>, escolhe <b>Adicionar à Dock</b></span></li></ol>`:'';
+ const el=document.createElement('div');el.id='install-sheet';el.className='install-sheet';el.setAttribute('role','dialog');el.setAttribute('aria-labelledby','install-title');
+ el.innerHTML=`<div class="install-card"><button type="button" class="install-close" data-install="later" aria-label="Agora não">×</button>
+  <div class="install-head"><img class="install-icon" src="apple-touch-icon.png" alt="" /><div><h2 id="install-title">Instala a Daily Casa</h2><p>Abre num toque, em ecrã inteiro, como as outras apps${pub?', dentro e fora de casa':''}.</p></div></div>
+  ${steps}${better}
+  <div class="install-actions">${pf==='prompt'?`<button type="button" class="button" data-install="later">Agora não</button><button type="button" class="button primary" data-install="go">${ico('download')} Instalar</button>`:`<button type="button" class="button" data-install="done">Já instalei</button><button type="button" class="button primary" data-install="later">Percebi</button>`}</div></div>${pf==='ios'?'<div class="install-pointer" aria-hidden="true"></div>':''}`;
+ document.body.appendChild(el);requestAnimationFrame(()=>el.classList.add('open'));
+ el.addEventListener('click',async e=>{const b=e.target.closest('[data-install]');if(!b)return;const k=b.dataset.install;
+  if(k==='go'&&installEvt){installEvt.prompt();const r=await installEvt.userChoice.catch(()=>({}));installEvt=null;if(r.outcome==='accepted'){installLS.set('dc-installed','1');close();toast('A instalar a Daily Casa…');}return;}
+  if(k==='done')installLS.set('dc-installed','1');else installSS.set('dc-install-later','1');close();});
+ function close(){el.classList.remove('open');setTimeout(()=>el.remove(),250);}
+}
+setInterval(()=>{if(!installShown&&store?.user&&!document.hidden)setTimeout(installSheet,3500);},4000);
